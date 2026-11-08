@@ -365,18 +365,22 @@ def t_speed(d):
 # ------------------------------------------------------------------- driver
 
 def main():
-    # Two readers on one MIDI node split the stream: this process would see
+    # Two readers on one rawmidi node split the stream: this process would see
     # none of the machine's notes or clock while the studio holds the port,
     # and the listening checks would all "fail" for a reason that has nothing
     # to do with the machine. Refuse to start rather than report that.
-    import subprocess
-    held = subprocess.run(["fuser", "/dev/snd/midiC1D0"], capture_output=True,
-                          text=True).stdout.split()
-    others = [pid for pid in held if pid.strip() and int(pid) != __import__("os").getpid()]
-    if others:
-        print(f"the MIDI port is held by pid {', '.join(others)} (the studio?). "
-              f"Stop it first: this test needs the port to itself.")
-        return 2
+    # CoreMIDI fans input out to every client, so this only applies to rawmidi.
+    from tr8s import config
+    if config.midi_backend() == "rawmidi":
+        import subprocess
+        held = subprocess.run(["fuser", "/dev/snd/midiC1D0"], capture_output=True,
+                              text=True).stdout.split()
+        others = [pid for pid in held
+                  if pid.strip() and int(pid) != __import__("os").getpid()]
+        if others:
+            print(f"the MIDI port is held by pid {', '.join(others)} (the studio?). "
+                  f"Stop it first: this test needs the port to itself.")
+            return 2
     d = tools.device()
     st = Studio()
     d.transport.on_realtime = st.monitor.feed

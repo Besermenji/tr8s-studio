@@ -781,3 +781,44 @@ changes: the fingerprint index is refreshed on every pattern write or read
 slot's print until the next stop), and a heard edit updates the print of the
 variation it lands in. Measure the scores before touching the thresholds:
 `fingerprint.score` over the live rows from `/api/state` takes ten lines.
+
+
+## CoreMIDI is not rawmidi: port names, whole SysEx, fan-out, and a hang on close
+
+The macOS backend (python-rtmidi over CoreMIDI) went in as a second
+implementation of the port layer, with the demux left where the arrival-order
+rule lives. Four things were measured on the machine first.
+
+Port names. The TR-8S lists as two ports, in both the input and output lists:
+`TR-8S` and `TR-8S CTRL`. `TR-8S` is the main one, the counterpart of
+`TR-8S MIDI 1`: clock, notes, CC (the beat counter, knob follow) and SysEx
+replies. `TR-8S CTRL` also answers SysEx but sends about 13 unsolicited DT1
+messages a second at `01 00 00 07` while playing and no clock or notes, so
+discovery takes the exact name `TR-8S`, then the first port containing `TR-8S`
+without `CTRL`, and otherwise fails with the ports it saw.
+
+SysEx delivery. CoreMIDI hands over every SysEx as one complete `F0`..`F7`
+message. A 24 KB pattern read arrived as 30 whole messages up to 1185 bytes:
+no fragments, no realtime bytes inside a SysEx, and no queue overflow in
+callback mode. The backend does no reassembly anyway, because the demux's own
+`F0`/`F7` state machine copes with parts, and a test feeds it a SysEx split
+three ways with clock and notes between the parts. Do not rely on the whole
+messages; they are what one macOS version did.
+
+Fan-out. Two clients opened on `TR-8S` each received every message. On Linux a
+second reader splits the rawmidi stream and garbles both; here it does not. So
+the "run one program at a time" advice is a rawmidi fact, `firmware_retry`
+words its garbled-reply error by backend, and the self-test's `fuser` guard
+runs only for rawmidi.
+
+The hang. `MidiIn.close_port()` holds the GIL while CoreMIDI's
+`MIDIPortDispose` waits for a Python callback that is already running, and
+that callback is waiting for the GIL. Permanent hang, and the TR-8S's
+continuous clock makes a callback in flight nearly certain. Calling
+`cancel_callback()` first, then `time.sleep(0.1)` (which releases the GIL so
+the running callback finishes; afterwards new messages go to rtmidi's own
+queue without touching Python), then `close_port()` closed in 0.10 s every
+time. The same hang can happen when a `MidiIn` with a callback is garbage
+collected at interpreter exit, so the backend registers an `atexit` close and
+`close()` is safe to call twice. Anything that tears down a callback-mode
+port should be tried against a machine that is playing, not an idle one.
