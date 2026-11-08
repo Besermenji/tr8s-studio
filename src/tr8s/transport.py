@@ -7,12 +7,13 @@ See docs/PROTOCOL.md for the wire format and how it was derived.
 
 from __future__ import annotations
 
-import os
 import threading
 import time
 from dataclasses import dataclass, field
 
-from . import config
+from .midi_backends import TransportError, make_backend
+
+__all__ = ["Transport", "TransportError"]
 
 ROLAND = 0x41
 MODEL_TR8S = (0x00, 0x00, 0x00, 0x45)
@@ -49,10 +50,6 @@ DATA_OFFSETS = {1 << i: [1, i] for i in range(11)}
 PROGRESS_OFFSET = [1, 16]
 
 MAX_SLOT = 127
-
-
-class TransportError(RuntimeError):
-    pass
 
 
 def decode7(addr) -> int:
@@ -128,23 +125,23 @@ def unpack7(packed: bytes) -> bytes:
 @dataclass
 class Transport:
     """
-    A duplex rawmidi connection.
+    A duplex MIDI connection over a backend (src/tr8s/midi_backends.py): ALSA
+    rawmidi on Linux, CoreMIDI through python-rtmidi on macOS. The backend owns
+    the port; this class owns the protocol.
 
     The TR-8S streams MIDI clock and active sensing continuously, so every read
     discards bytes >= 0xF8 BEFORE judging whether data is still arriving --
     otherwise an idle timeout never expires and reads block forever.
     """
 
-    path: str | None = None
+    path: str | None = None         # the port; the backend's own kind of name
     device_id: int = DEFAULT_DEVICE_ID
-    fd: int | None = None
+    backend: object = None          # a MidiBackend; made on open() if None
     on_realtime: object = None      # callable(bytes) for clock/start/stop
     on_channel: object = None       # callable(bytes) for channel voice messages
     _in_sysex: bool = False
     _buf: bytearray = field(default_factory=bytearray, repr=False)
     _lock: object = field(default_factory=threading.Lock, repr=False)
-    _stop: object = field(default_factory=threading.Event, repr=False)
-    _thread: object = None
     # Serialises whole request/response cycles. A SysEx exchange is stateful:
     # send, then read until the reply is complete. Two threads interleaving
     # (say a background pattern index and a user's step edit) would each
@@ -159,85 +156,57 @@ class Transport:
         self.close()
 
     def open(self):
-        if self.fd is not None:
+        if self.backend is not None and self.backend.is_open:
             return
-        self.path = self.path or config.find_port()
-        try:
-            self.fd = os.open(self.path, os.O_RDWR)
-        except FileNotFoundError as e:
-            raise TransportError(f"{self.path} not found; is the TR-8S on?") from e
-        except PermissionError as e:
-            raise TransportError(
-                f"no permission on {self.path}; add your user to the 'audio' group"
-            ) from e
-        os.set_blocking(self.fd, False)
-        # One reader thread owns the fd, and everything in this process shares
-        # it. The OS will happily let a second process open the same node, but
-        # incoming bytes go to whichever reader asks first -- two readers split
-        # the stream and both see corruption. Run one process at a time.
-        self._stop.clear()
+        self.backend = self.backend or make_backend(self.path)
+        self.path = self.path or self.backend.name
         self._buf.clear()
-        self._thread = threading.Thread(target=self._reader, daemon=True,
-                                        name="tr8s-reader")
-        self._thread.start()
+        self._in_sysex = False
+        self.backend.open(self._feed)
 
-    def _reader(self):
-        while not self._stop.is_set():
-            try:
-                chunk = os.read(self.fd, 4096)
-            except BlockingIOError:
-                time.sleep(0.0005)
-                continue
-            except OSError:
-                break
-            if not chunk:
-                continue
-            # Deliver realtime and channel bytes IN ARRIVAL ORDER. An earlier
-            # version sorted each chunk into a clock pile and a note pile and
-            # handed over the clocks first: every note in a 4 KB read was then
-            # stamped with the step after the chunk's LAST clock, not the clock
-            # it arrived beside. At 174 BPM a chunk spans several steps, so the
-            # live picture smeared by up to a beat. Order is the whole point.
-            sysex = bytearray()
-            events = []              # (is_realtime, bytes) in order, coalesced
-            for b in chunk:
-                if b >= 0xF8:
-                    if events and events[-1][0]:
-                        events[-1][1].append(b)
-                    else:
-                        events.append((True, bytearray([b])))
-                    continue
-                if b == 0xF0:
-                    self._in_sysex = True
-                if self._in_sysex:
-                    sysex.append(b)
-                    if b == 0xF7:
-                        self._in_sysex = False
+    def _feed(self, chunk: bytes):
+        """Take bytes from the backend, in the order they arrived, and route
+        them: SysEx into the buffer, realtime and channel bytes to listeners."""
+        # Deliver realtime and channel bytes IN ARRIVAL ORDER. An earlier
+        # version sorted each chunk into a clock pile and a note pile and
+        # handed over the clocks first: every note in a 4 KB read was then
+        # stamped with the step after the chunk's LAST clock, not the clock
+        # it arrived beside. At 174 BPM a chunk spans several steps, so the
+        # live picture smeared by up to a beat. Order is the whole point.
+        sysex = bytearray()
+        events = []              # (is_realtime, bytes) in order, coalesced
+        for b in chunk:
+            if b >= 0xF8:
+                if events and events[-1][0]:
+                    events[-1][1].append(b)
                 else:
-                    if events and not events[-1][0]:
-                        events[-1][1].append(b)
-                    else:
-                        events.append((False, bytearray([b])))
-            if sysex:
-                with self._lock:
-                    self._buf += sysex
-            for is_rt, payload in events:
-                cb = self.on_realtime if is_rt else self.on_channel
-                if payload and cb:
-                    try:
-                        cb(bytes(payload))
-                    except Exception:
-                        pass      # a broken listener must not kill the reader
+                    events.append((True, bytearray([b])))
+                continue
+            if b == 0xF0:
+                self._in_sysex = True
+            if self._in_sysex:
+                sysex.append(b)
+                if b == 0xF7:
+                    self._in_sysex = False
+            else:
+                if events and not events[-1][0]:
+                    events[-1][1].append(b)
+                else:
+                    events.append((False, bytearray([b])))
+        if sysex:
+            with self._lock:
+                self._buf += sysex
+        for is_rt, payload in events:
+            cb = self.on_realtime if is_rt else self.on_channel
+            if payload and cb:
+                try:
+                    cb(bytes(payload))
+                except Exception:
+                    pass      # a broken listener must not kill the reader
 
     def close(self):
-        self._stop.set()
-        th = self._thread
-        if th is not None:
-            th.join(timeout=1.0)
-            self._thread = None
-        if self.fd is not None:
-            os.close(self.fd)
-            self.fd = None
+        if self.backend is not None:
+            self.backend.close()
 
     # ---------------------------------------------------------------- io
 
@@ -253,7 +222,7 @@ class Transport:
         return out
 
     def send(self, msg: bytes):
-        os.write(self.fd, msg)
+        self.backend.send(msg)
 
     def collect(self, idle: float = 1.2, hard_cap: float = 20.0) -> bytes:
         """Gather buffered non-realtime bytes until `idle` seconds pass quietly."""
@@ -411,10 +380,17 @@ class Transport:
                 self.drain()
                 time.sleep(0.3 * (i + 1))
         if last and "garbled" in str(last):
+            if getattr(self.backend, "kind", "rawmidi") == "rawmidi":
+                raise TransportError(
+                    f"{last}: still garbled after {attempts} tries, so another "
+                    f"program is probably reading the same MIDI port. Run one "
+                    f"at a time.")
+            # CoreMIDI fans input out to every client, so a second program
+            # does not split the stream there; the cause is something else.
             raise TransportError(
-                f"{last}: still garbled after {attempts} tries, so another "
-                f"program is probably reading the same MIDI port. Run one at "
-                f"a time.")
+                f"{last}: still garbled after {attempts} tries; the replies "
+                f"stayed garbled, so check the connection (cable, power, and "
+                f"that the TR-8S is on the right MIDI port).")
         raise last
 
     # --------------------------------------------------------------- blobs

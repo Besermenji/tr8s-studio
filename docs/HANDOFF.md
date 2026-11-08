@@ -60,7 +60,9 @@ python3 -m tr8s.cli tools               # every tool + JSON schema
 python3 -m pytest tests/                # 490+ passed, 7 skipped (~60s)
 ```
 
-MIDI port is auto-discovered under `/dev/snd/midiC*D*` (override `TR8S_PORT`).
+MIDI port is auto-discovered: under `/dev/snd/midiC*D*` on Linux, by CoreMIDI
+name (`TR-8S`) on macOS through python-rtmidi (`pip install -e '.[mac]'`).
+Override with `TR8S_PORT` (a node path on Linux, a port name on macOS).
 Data dir is `$TR8S_DATA` else XDG. `--offline` runs the UI with no machine.
 
 ## What works (verified live this session)

@@ -123,42 +123,13 @@ def test_the_reader_delivers_clock_and_notes_in_arrival_order():
     step after the chunk's LAST clock. Order across the two callbacks is the
     whole point, so check the interleaving, not just that both arrive.
     """
-    import os
-    from tr8s.transport import Transport
-
-    r, w = os.pipe()
-    t = Transport.__new__(Transport)
-    t.fd = r
-    t.on_realtime = None
-    t.on_channel = None
-    t._in_sysex = False
-    t._buf = bytearray()
-    import threading
-    t._lock = threading.Lock()
-    t._stop = threading.Event()
-
+    t = Transport(path="fake")
     order = []
     t.on_realtime = lambda d: order.extend(("clk",) * len(d))
     t.on_channel = lambda d: order.append(("note", bytes(d)))
 
-    # clock, note, clock, clock, note -- in one chunk. Stop the reader after
-    # that chunk: on a real device an empty read never happens, but on a
-    # closed pipe it is EOF and the loop would spin forever.
-    os.write(w, bytes([0xF8, 0x99, 36, 100, 0xF8, 0xF8, 0x99, 38, 100]))
-    os.close(w)
-    os.set_blocking(r, False)
-    real_read = os.read
-
-    def one_chunk(fd, n):
-        data = real_read(fd, n)
-        t._stop.set()
-        return data
-    os.read = one_chunk
-    try:
-        t._reader()
-    finally:
-        os.read = real_read
-        os.close(r)
+    # clock, note, clock, clock, note -- in one chunk
+    t._feed(bytes([0xF8, 0x99, 36, 100, 0xF8, 0xF8, 0x99, 38, 100]))
 
     kinds = [x if x == "clk" else "note" for x in order]
     assert kinds == ["clk", "note", "clk", "clk", "note"], kinds

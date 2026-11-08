@@ -35,6 +35,21 @@ hw:1,0,1   "TR-8S MIDI 2"    seq 20:1    (no device node; use amidi)
 simplest transport; ALSA rawmidi subdevice 1 has no device node, so reaching
 port 2 needs `amidi -p hw:1,0,1`.
 
+On macOS the same device shows up in CoreMIDI (python-rtmidi, in and out lists
+alike) as two ports:
+
+```
+"TR-8S"        clock, notes, CC (beat counter CC 2, knob follow), SysEx replies
+"TR-8S CTRL"   answers SysEx, carries no clock or notes
+```
+
+**[V]** `TR-8S` is the counterpart of `TR-8S MIDI 1`: use it. **[V]** `TR-8S CTRL`
+also answers SysEx, but emits about 13 unsolicited DT1 messages a second at
+address `01 00 00 07` while the machine plays, so it is not a port to read
+replies from. **[V]** CoreMIDI delivers each SysEx as one whole `F0`..`F7`
+message (a 24 KB pattern read arrived as 30 messages of up to 1185 bytes) with
+no realtime bytes inside, and gives every client its own copy of the input.
+
 ### Message format
 
 ```

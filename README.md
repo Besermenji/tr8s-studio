@@ -175,6 +175,18 @@ scripts/restart.sh                     # finds the MIDI port, starts the studio
 # open http://127.0.0.1:8733
 ```
 
+On macOS the TR-8S is reached through CoreMIDI, which needs the optional
+`python-rtmidi` extra and a Python 3.10 or newer:
+
+```bash
+brew install python
+python3 -m venv .venv && .venv/bin/pip install -e '.[mac]' claude-agent-sdk anthropic
+```
+
+`TR8S_PORT` overrides the MIDI port: a rawmidi node (`/dev/snd/midiC1D0`) on
+Linux, a CoreMIDI port name (`TR8S_PORT="TR-8S"`) on macOS. The backend is
+chosen by platform; `TR8S_MIDI_BACKEND=rawmidi|rtmidi` overrides that.
+
 For the assistant, either have [Claude Code](https://claude.com/code)
 installed and signed in (`claude auth login`), or paste an API key in the
 studio's connect panel. `scripts/restart.sh --offline` runs the UI without a
