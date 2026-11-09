@@ -17,3 +17,4 @@ tones.json
 *.pid
 *.log
 .claude/
+fm1-spike.jsonl
