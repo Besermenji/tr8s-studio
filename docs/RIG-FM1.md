@@ -13,8 +13,12 @@ machine into a small live techno rig, in two modes:
 The cables are the same in both modes, and the laptop never sends MIDI clock.
 Unplugging it changes nothing about timing.
 
-Nothing here is built yet. The work is split into issues in
-[`docs/issues/`](issues/), numbered in the order they unblock each other.
+Status, 2026-11-09: the macOS backend (issue 00) is built and merged. The FM-1 side is a plan with
+its first pieces in place: a Mini-Tone fork that builds and passes its host tests, a spike script, and a draft
+protocol ([`FM1-BUILD.md`](FM1-BUILD.md), [`FM1-PROTOCOL.md`](FM1-PROTOCOL.md)). Nothing has run on the FM-1 yet.
+
+The work is split into issues in [`docs/issues/`](issues/), numbered in the order they unblock each other. On
+GitHub they are 00 → #1, 01 → #2, 02 → #3, 03 → #4, 04 → #5, 05 → #27, 06 → #28.
 
 Each fact about hardware or firmware we have not run ourselves is marked, in the
 spirit of [`PROTOCOL.md`](PROTOCOL.md):
@@ -219,13 +223,22 @@ can be added later.
 - **[D]** The FM-1's flash has a single bank and the board has no debug
   header. Custom firmwares expect stock V15 first.
 - **[D]** **Units sold since autumn have a different flash chip, the
-  UC25HQ80.** A firmware that only recognises the older Puya chip keeps saves
-  in RAM, loses them at power-off, and refuses later installs (Felucca issue
-  #320). Felucca recognises the new chip only from 1.8.2-beta. **Mini-Tone
-  forks Felucca 1.5.** If our unit has the new chip, backporting the detection
-  is the first patch, before Mini-Tone is ever flashed.
-- **[?]** Recovery paths (safe mode, the restore to stock) need confirming for
-  Mini-Tone specifically.
+  UC25HQ80** (JEDEC `0xB36014`, the older part is the Puya `0x856014`). A
+  firmware that only recognises the Puya keeps saves in RAM and does not start
+  updates (Felucca issue #320). Felucca recognises the new chip only from
+  1.8.2-beta. **Mini-Tone 1.0.5 recognises only the Puya**
+  (`firmware/src/project.c`, `persist_boot`), and a `grep` finds no JEDEC check
+  in its update loader **[I]**. We do not know our unit's chip, so **our fork
+  accepts both from its first build** (patch (a), done, host-tested, see
+  [`FM1-BUILD.md`](FM1-BUILD.md)) and `fm1_install.py --info` now reports the
+  chip after the first flash. It is harmless on a Puya unit.
+- **[D]** Recovery, from Mini-Tone's README: if the FM-1 stays black after an
+  interrupted update, a computer sees a USB device **WL80UBOOT** (ID
+  `4C4A:8057`); retry the installer with another data cable, else FM-1
+  Transporter (a XIAO RP2040 wired to the USB lines) reads and writes the
+  flash. **[?]** Whether the pads are reachable on our unit. The way back to
+  stock is `fm1_install.py FM-1.fwsc`, which checks the official file's
+  sha256.
 
 ### Fork policy
 
@@ -233,11 +246,17 @@ Fork to `Besermenji/Mini-Tone`, keep `upstream`, and add the smallest patches
 that make the rig work. Offer each one upstream. Candidates, each only if the
 spike (issue 02) shows it is missing:
 
-- **(a)** UC25HQ80 detection, backported from Felucca 1.8.2-beta.
+- **(a)** UC25HQ80 detection, backported from Felucca 1.8.2-beta. **Done**,
+  in the fork's first build (moved into issue 02, with the chip id reported to
+  the installer).
 - **(b)** Program Change selects a project or song section at the end of the
-  bar, so the FM-1 follows the TR-8S's pattern changes on stage.
+  bar, so the FM-1 follows the TR-8S's pattern changes on stage. **[I] needed:**
+  `midi_uart.c` only measures a Program Change and no handler was found.
 - **(c)** SysEx to write a whole project (steps, track parameters, song
-  sections) and save it.
+  sections) and save it. Most of it exists already (`TRACK_STEP`,
+  `TRACK_PARAM`, `SONG`, `PROJECT`); **EUCLID and STOCHASTIC have no parameter
+  ids**, so those cannot be written today. A project save also stops the
+  transport.
 - **(d)** A fixed CC for track mute and unmute, if MIDI LEARN cannot cover it,
   so EMP16 pads can bring parts in.
 
@@ -287,10 +306,12 @@ The TR-8S sends its notes, Program Changes and CCs on its pattern channel,
 10 by default. The FM-1 must not listen there, or the TR-8S's kick plays the
 FM-1 and its knobs move the FM-1's parameters.
 
-Mini-Tone listens to the tracks on a block of channels. **[D/?]** Its README
-lists the blocks as CH1-4, CH5-8, CH9-12 and CH13-16 in one place, and as
-CH1-6, CH5-10, CH9-14 and CH13-16 in another. Either way, use the block that
-starts at 1 and **never one that includes 10**.
+Mini-Tone listens to the tracks on a block of channels (`ROUT`, global 14).
+**[D/?]** Its current docs list CH1-6, CH5-10, CH9-14 and CH13-16, plus SEL
+(every channel plays the selected track); older text lists CH1-4, CH5-8, CH9-12
+and CH13-16. With six tracks, use **CH1-6**. **CH5-10 and CH9-14 include
+channel 10, so never use them**, and never SEL. Which blocks the build really
+has is one of the spike's questions ([`FM1-PROTOCOL.md`](FM1-PROTOCOL.md)).
 
 | Channel | Who | What |
 |---|---|---|

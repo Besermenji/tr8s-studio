@@ -24,27 +24,40 @@ Risks (RIG-FM1.md, "Risks before the first flash"):
 - custom firmware expects stock V15;
 - **on units with the newer UC25HQ80 flash chip, a firmware that does not
   recognise it loses saves and blocks later installs.** Felucca recognises it
-  only from 1.8.2-beta, and Mini-Tone forks 1.5.
+  only from 1.8.2-beta, and Mini-Tone 1.0.5 does not (`project.c`,
+  `persist_boot`). Since we do not know our unit's chip, **the fork accepts
+  both chips from its first build** (patch (a), moved here from issue 03). It
+  is harmless on a Puya unit, so the chip no longer gates the flash.
 
 ## Tasks
 
 **Fork and build**
 
-- [ ] Fork to `Besermenji/Mini-Tone`. Keep `upstream` as a remote.
-- [ ] Build locally: JieLi's toolchain natively on Linux x86-64, or in a
+- [x] Fork to `Besermenji/Mini-Tone`. Keep `upstream` as a remote.
+- [x] Build locally: JieLi's toolchain natively on Linux x86-64, or in a
       `linux/amd64` Docker container on macOS. Follow the repo's BUILDING.md.
-- [ ] Run its host tests and simulator, if it has them, before touching
-      hardware.
-- [ ] Write the exact build steps that worked into `docs/FM1-BUILD.md` in this
+- [x] Run its host tests and simulator, if it has them, before touching
+      hardware. (The suite has four failures on stock Mini-Tone on this Mac,
+      and the fork has the same four: see `docs/FM1-BUILD.md`. No emulator:
+      Emscripten is not installed.)
+- [x] Write the exact build steps that worked into `docs/FM1-BUILD.md` in this
       repo.
+- [x] **Patch (a), UC25HQ80 detection**, with a host test, and **(a2)**: the
+      flash's JEDEC id in bytes 24–26 of the installer handshake, printed by
+      `fm1_install.py --info`. Built; not yet on hardware.
+- [x] `midi/fm1_spike.py`: the throwaway spike script (read-only by default,
+      no realtime bytes, every frame logged) and a draft `docs/FM1-PROTOCOL.md`.
 
 **Flash safely**
 
-- [ ] Gate: the flash chip ID from issue 01. **If it is UC25HQ80, stop here and
-      do fork patch (a) in issue 03 first.**
-- [ ] Back up the FM-1's projects. Confirm stock V15.
-- [ ] Confirm the recovery paths before flashing: safe mode, and the restore to
-      stock V15.
+- [ ] Back up the FM-1's projects. Confirm stock V15 (`fm1_install.py
+      --info` says `FM-1_015`).
+- [ ] Get M-VAVE's official `FM-1.fwsc` and check its sha256 against the
+      installer's `STOCK_V15_SHA256`. This is the way back.
+- [ ] Confirm the recovery paths before flashing: the WL80UBOOT boot mode, FM-1
+      Transporter, and the restore to stock V15.
+- [ ] Flash the locally built `.fwsc` with `fm1_install.py`. `--info` then
+      reports the **flash chip**: write it into RIG-FM1.md (answers issue 01).
 - [ ] Flash the locally built `.fwsc` with the local installer tool or the web
       installer.
 - [ ] Power-cycle it. Confirm a saved project survives.

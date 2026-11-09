@@ -56,8 +56,10 @@ FM-1 audio out ──► TR-8S EXT IN L/R
 
 **FM-1 safety, before 02 flashes anything**
 
-- [ ] Read the FM-1's flash chip ID: Puya or UC25HQ80. This decides whether
-      fork patch (a) in issue 03 comes first.
+- [ ] Read the FM-1's flash chip ID: Puya or UC25HQ80. Stock V15 does not
+      report it. Our Mini-Tone fork does (`fm1_install.py --info`, after issue
+      02's flash), and accepts both chips, so this no longer gates the flash.
+      Record the ID in RIG-FM1.md.
 - [ ] Back up the FM-1's projects and confirm it is on stock V15.
 
 ## Acceptance

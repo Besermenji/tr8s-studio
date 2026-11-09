@@ -12,9 +12,9 @@ See [`docs/RIG-FM1.md`](../RIG-FM1.md), section 2, "Fork policy".
 
 ## Tasks
 
-- [ ] **(a) UC25HQ80 flash detection.** Only if our FM-1 has that chip.
-      Backport the detection from Felucca 1.8.2-beta (JEDEC ID `0xB36014`,
-      Felucca issue #320). This patch is flashed before anything else.
+- [x] **(a) UC25HQ80 flash detection.** Done in issue 02, in the fork's first
+      build (JEDEC ID `0xB36014`, Felucca issue #320), together with the chip
+      id in the installer handshake. Remaining here: offer it upstream.
 - [ ] **(b) Program Change follow.** A Program Change on a configurable channel
       selects a project or song section at the end of the current bar, so the
       FM-1 follows the TR-8S's pattern changes on stage. Off by default.
