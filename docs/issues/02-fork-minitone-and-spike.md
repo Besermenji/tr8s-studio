@@ -50,14 +50,15 @@ Risks (RIG-FM1.md, "Risks before the first flash"):
 
 **Flash safely**
 
-- [ ] Back up the FM-1's projects. Confirm stock V15 (`fm1_install.py
-      --info` says `FM-1_015`).
-- [ ] Get M-VAVE's official `FM-1.fwsc` and check its sha256 against the
-      installer's `STOCK_V15_SHA256`. This is the way back.
+- [x] Back up the FM-1's projects (nothing was saved on it). Confirm stock V15
+      (`fm1_install.py --info` says `FM-1_015`).
+- [x] Get M-VAVE's official `FM-1.fwsc` and check its sha256 against the
+      installer's `STOCK_V15_SHA256`. This is the way back. (M-VAVE's V16 also
+      exists; going back from V16 to V15 is reported to break V15's polyphony.)
 - [ ] Confirm the recovery paths before flashing: the WL80UBOOT boot mode, FM-1
       Transporter, and the restore to stock V15.
-- [ ] Flash the locally built `.fwsc` with `fm1_install.py`. `--info` then
-      reports the **flash chip**: write it into RIG-FM1.md (answers issue 01).
+- [x] Flash the locally built `.fwsc` with `fm1_install.py`. `--info` then
+      reports the **flash chip**: Puya P25Q80, written into RIG-FM1.md.
 - [ ] Flash the locally built `.fwsc` with the local installer tool or the web
       installer.
 - [ ] Power-cycle it. Confirm a saved project survives.

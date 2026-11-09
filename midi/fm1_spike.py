@@ -15,6 +15,7 @@ USB-MIDI SysEx editor protocol, and record what really works (issue #3).
     python3 fm1_spike.py mix TRACK [LEVEL MUTE --write]
     python3 fm1_spike.py global-get ID              CLK = 2, ROUT = 14
     python3 fm1_spike.py global-set ID VALUE --write
+    python3 fm1_spike.py desc SCOPE ID              name, range and enum values (scope 0 track param, 1 global)
     python3 fm1_spike.py song                       query the song sections
     python3 fm1_spike.py project-query SLOT
     python3 fm1_spike.py project-save SLOT --write --slot SLOT   writes the FM-1's flash
@@ -199,6 +200,24 @@ def show_info(a):
         print("(could not decode further; use the raw bytes)")
 
 
+def show_desc(a):
+    print("raw:", hexs(a))
+    try:                                        # scope, id, fmt, min v14, max v14, def v14, label, unit, enum names
+        scope, pid, fmt = a[0], a[1], a[2]
+        lo, hi, df = from_v14(a[3], a[4]), from_v14(a[5], a[6]), from_v14(a[7], a[8])
+        label, i = cstring(a, 9)
+        unit, i = cstring(a, i)
+        print(f"scope={scope} id={pid} fmt={fmt} range={lo}..{hi} default={df} label={label!r} unit={unit!r}")
+        names = []
+        while i < len(a):
+            n, i = cstring(a, i)
+            names.append(n)
+        if names:
+            print("values:", {k: v for k, v in enumerate(names)})
+    except (ValueError, IndexError):
+        print("(could not decode; use the raw bytes)")
+
+
 def show_step(a):
     print("raw:", hexs(a))
     if len(a) >= 10:
@@ -265,6 +284,8 @@ def run(a):
             need_write(a, "global-set")
             r = fm.request(CMDS["SET"], [1, a.id] + v14(a.value))
             print("raw:", hexs(r), "value after clamping:", from_v14(r[2], r[3]) if len(r) >= 4 else "?")
+        elif c == "desc":
+            show_desc(fm.request(CMDS["DESC"], [a.scope, a.id]))
         elif c == "song":
             print("raw:", hexs(fm.request(CMDS["SONG"], [4])))
         elif c == "project-query":
@@ -357,6 +378,7 @@ def main(argv=None):
     p.add_argument("track", type=int); p.add_argument("id", type=int); p.add_argument("value", type=int)
     p = sub.add_parser("mix")
     p.add_argument("track", type=int); p.add_argument("level", type=int, nargs="?"); p.add_argument("mute", type=int, nargs="?")
+    p = sub.add_parser("desc"); p.add_argument("scope", type=int); p.add_argument("id", type=int)
     p = sub.add_parser("global-get"); p.add_argument("id", type=int)
     p = sub.add_parser("global-set"); p.add_argument("id", type=int); p.add_argument("value", type=int)
     p = sub.add_parser("project-query"); p.add_argument("slot", type=int)

@@ -1,8 +1,8 @@
 # Building and flashing the FM-1 firmware (Mini-Tone fork)
 
 Written 2026-11-09, for issue #3. Everything in **Part A** was run on this Mac (Apple silicon, macOS 15,
-Docker Desktop 29.8.2) and the results are real. **Part B** is the hardware runbook: nothing in it has been
-run yet, so every step there is a plan until it says otherwise.
+Docker Desktop 29.8.2) and the results are real. **Part B** is the hardware runbook. Steps 1–7 have been run
+(see the log at the end); the rest are still a plan.
 
 The firmware is [Mini-Tone](https://github.com/eldontyrellcorp/Mini-Tone) (GPL-3.0, a Felucca fork). Our fork is
 `Besermenji/Mini-Tone`, kept at `~/projects/Mini-Tone`, with `upstream` pointing at the original. Why Mini-Tone:
@@ -91,6 +91,13 @@ which is the only evidence.
 
 Every step that writes to the FM-1 is confirmed with the person at the keyboard first.
 
+**Two stock versions exist.** M-VAVE released **V16** (`FM-1_016`, sha256
+`d017fb65e70aca97ee29d944470c3515a74581df5c0576bf70de917c7b2b61d5`) on 2026-10-21, and V15 is no longer the only
+stock. A public report ([m-vave/fm1_open#16](https://github.com/m-vave/fm1_open/issues/16), one user, unconfirmed
+by us) says that **going back from V16 to V15 leaves V15 playing one note at a time** on every track. So do not
+install V15 over V16 casually, and do not treat V15 as a free way back from a V16 unit. Our unit was on V15
+(`FM-1_015`) when we flashed, so V15 is its way back. `fm1_install.py` trusts only the V15 hash without `--force`.
+
 **Before anything**
 
 1. Get M-VAVE's official stock package `FM-1.fwsc` (V15) and check its sha256 is
@@ -123,3 +130,24 @@ Every step that writes to the FM-1 is confirmed with the person at the keyboard 
 **Back to stock**
 
 10. `.venv/bin/python tools/fm1_install.py ~/path/to/FM-1.fwsc`.
+
+## Run log
+
+**2026-11-09, the first flash.** Done with the person at the keyboard, and only the FM-1 on USB.
+
+| Step | Result |
+|---|---|
+| `fm1_install.py --info` before | `FM-1_015  [running]  port: FM-1`, `flash: not reported` (stock V15) |
+| Way back | official V15 `FM-1.fwsc` verified (699,956 B, sha256 `db1642b2…`, identity `FM-1_015`). Copies of V15 and V16 are kept read-only in `~/fm1-firmware/` |
+| Our build | `build/felucca.fwsc`, commit `3e3498f`, 610,101 B, sha256 `d25d2033…`, identity `FM-1_900` |
+| `fm1_install.py build/felucca.fwsc --yes` | checked the package, switched to update mode, wrote 0–100 %, restarted: `done: the FM-1 runs FM-1_900` |
+| `--info` after | `FM-1_900  [running]  port: Felucca`, **`flash: JEDEC 856014  Puya P25Q80`** |
+| Read-only protocol spike | `info`, `ping`, `track`, `track-dump`, `step-get`, `global-get` (`CLK`, `ROUT`), `desc`, `song`, `project-query`, `learn-get`, `mix`: all answered. Results in [`FM1-PROTOCOL.md`](FM1-PROTOCOL.md) |
+
+Findings:
+
+- **This unit has the Puya chip**, so stock Mini-Tone would have worked on it too. The UC25HQ80 allowlist is
+  still right for the fleet. The chip id in the handshake works end to end on hardware.
+- The FM-1's CoreMIDI port is named `FM-1` under stock V15 and `Felucca` under Mini-Tone. Use `--port Felucca`.
+
+Not yet done: the power-cycle persistence test (step 8) and everything that writes.
