@@ -21,6 +21,7 @@ USB-MIDI SysEx editor protocol, and record what really works (issue #3).
     python3 fm1_spike.py project-save SLOT --write --slot SLOT   writes the FM-1's flash
     python3 fm1_spike.py learn-get
     python3 fm1_spike.py ping
+    python3 fm1_spike.py note CH NOTE [--vel N] [--dur S]   play one note on channel 1-6 (makes sound, stores nothing)
     python3 fm1_spike.py listen [SECONDS]           print incoming non-clock traffic
     python3 fm1_spike.py raw CMD [BYTE ...] --write
 
@@ -38,6 +39,7 @@ SAFETY
   * Read-only by default.  Anything that changes the FM-1 needs --write, and
     project-save also needs --slot to repeat the slot (flash write, ~2 s,
     stops the transport).
+  * `note` plays a sound and changes nothing stored; it only sends note on/off on channels 1-6.
   * It never sends MIDI realtime bytes (F8-FC): the studio must never become a
     second clock.  Every data byte is checked to be < 0x80.
   * Every frame sent and received is appended to fm1-spike.jsonl, which is the
@@ -300,6 +302,13 @@ def run(a):
         elif c == "raw":
             need_write(a, "raw")
             print("raw:", hexs(fm.request(a.rcmd, a.bytes)))
+        elif c == "note":
+            if not 1 <= a.ch <= 6 or not 0 <= a.note < 128 or not 1 <= a.vel < 128:
+                raise SpikeError("note: channel 1-6 (never 10, the TR-8S's), note 0-127, velocity 1-127")
+            fm.send(bytes([0x90 | (a.ch - 1), a.note, a.vel]))
+            time.sleep(a.dur)
+            fm.send(bytes([0x80 | (a.ch - 1), a.note, 0]))
+            print(f"played note {a.note} on channel {a.ch} for {a.dur}s")
         elif c == "listen":
             end = time.time() + a.seconds
             print(f"listening {a.seconds:.0f}s (clock and active sensing are not shown) ...")
@@ -383,6 +392,8 @@ def main(argv=None):
     p = sub.add_parser("global-set"); p.add_argument("id", type=int); p.add_argument("value", type=int)
     p = sub.add_parser("project-query"); p.add_argument("slot", type=int)
     p = sub.add_parser("project-save"); p.add_argument("slot", type=int)
+    p = sub.add_parser("note"); p.add_argument("ch", type=int); p.add_argument("note", type=int)
+    p.add_argument("--vel", type=int, default=100); p.add_argument("--dur", type=float, default=1.0)
     p = sub.add_parser("listen"); p.add_argument("seconds", type=float, nargs="?", default=30)
     p = sub.add_parser("raw"); p.add_argument("rcmd", type=int); p.add_argument("bytes", type=int, nargs="*")
     a = ap.parse_args(argv)

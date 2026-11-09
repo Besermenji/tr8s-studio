@@ -46,7 +46,7 @@ Frames are what `fm1_spike.py` sends (track numbers are 0-based; Mini-Tone has s
 | Select a track | `TRACK` (27) + track | `F0 7D 46 4C 1B 02 F7` | **[D]**, hardware-checked upstream |
 | Read a whole track's parameters | `TRACK_DUMP` (29) | `F0 7D 46 4C 1D 01 F7` | **[V]** read; engine, preset, then 111 × v14 |
 | Read a step of any track | `TRACK_STEP` (30) get | `F0 7D 46 4C 1E 01 04 F7` | **[V]** 16 bytes: track, index, n, 4 notes, time (0 NOTE, 1 TIE, 2 REST), flags, vel, 3 hits, chance, ratchet, nudge + 8 |
-| **Write a step** of any track: notes, accent, slide, vel | `TRACK_STEP` (30) set | `F0 7D 46 4C 1E 01 04 01 3C 00 00 00 00 03 64 F7` | **[D]**; see "Open questions" |
+| **Write a step** of any track: notes, accent, slide, vel | `TRACK_STEP` (30) set | `F0 7D 46 4C 1E 01 04 01 3C 00 00 00 00 03 64 F7` | **[V]** the 10-byte form is accepted, the reply is the full 16-byte step, and a read back matches (accent and slide flags are stored). Written to track 1 while stopped; played back correctly (see Q2–Q4) |
 | Read or set a parameter of any track (no selection change) | `TRACK_PARAM` (31) | get `… 1F 01 5E F7`; set `… 1F 01 5E 01 40 F7` | **[D]**, hardware-checked upstream |
 | Level and **mute** of a track | `TRACK_MIX` (28) | get `… 1C 01 F7`; set `… 1C 01 64 40 01 F7` | get **[V]** (`00 68 40 00`: track, level v14, mute); set **[D]**, not run |
 | Clock source | `GET`/`SET` scope 1, id 2 `CLK`: 0 INT, 1 USB, 2 TRS | `… 03 01 02 02 40 F7` | get and values **[V]**, default INT; set **[D]**, not run |
@@ -82,9 +82,9 @@ Frames are what `fm1_spike.py` sends (track numbers are 0-based; Mini-Tone has s
 | # | Question | Today | How |
 |---|---|---|---|
 | 1 | `INFO`: the real reply, `NTRK` 6, 25 engine names | **[V]** | done |
-| 2 | `TRACK_STEP` set: the docs give the argument count as 9 bytes (index, n, 4 notes, time, flags, vel) in the table but call the legacy step "8-byte". Which does a *track* write accept, and does the reply echo it? | **[?]** | `step-set` to an unselected track |
+| 2 | `TRACK_STEP` set: which argument count does a track write accept, and does the reply echo it? | **[V]** track, index, n, 4 notes, time, flags, vel (10 bytes); the reply echoes the step, plus hits, chance, ratchet, nudge | done |
 | 3 | A step written to a **playing, unselected** track: audible when? this step, the next pass, only after a stop? | **[?]** | write while the TR-8S plays |
-| 4 | Do **accent (flag 1) and slide (flag 2)** come through on the TB303 engine, and does a slide need a following note? | **[?]** | listen |
+| 4 | Do **accent (flag 1) and slide (flag 2)** come through on the TB303 engine, and does a slide need a following note? Stored: **[V]**. Heard on the FM6 voice: velocity differences yes; accent and slide on the **TB303 engine** not yet tested (track 1 was FM6) | **[?]** | switch a track to TB303, write, record |
 | 5 | `TRACK_PARAM` engine change: is "set the engine" `SET` of `G_ENGSEL` (selected track only) or can any track change engine without selecting it? | **[I]** the doc says `G_ENGSEL` changes the selected track's engine | `track`, `global-set` |
 | 6 | **Program Change.** `midi_uart.c` only sizes a Program Change (`Cx Dx: 1 byte`); no handler in `midi_control.c` mentions it. Does the FM-1 react at all? | **[I]** no: fork patch (b) is needed | `listen`, send a PC from the TR-8S |
 | 7 | **Mute from MIDI.** Is there a fixed CC? Can `LEARN_SET` map a CC to a track's mute parameter (`P_MUTE`), and do the EMP16 pads (note on/off, or CC 0/127) drive it? | **[?]** | `learn-get`, then learn on the device |
