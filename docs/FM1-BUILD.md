@@ -153,5 +153,11 @@ Findings:
 | `fm1_spike.py --write --slot 0 project-save 0` | reply `01 00 01`; slot 0 went from empty to used (a flash write, FM-1 not playing) |
 | Power cycle, then `project-query` | **slot 0 still used, slot 1 still empty**: saves survive power-off on our build. (A full power-down, by the user's account.) |
 
-Not yet done: everything else that writes (steps, parameters, mute, song sections, load), and the Program Change
-and clock tests.
+| Step writes | 16 steps (notes, accent, slide, velocity) written to track 1 and read back identically; a four-step line played back at the right pitches and relative levels (microphone) |
+| Mute, clock, routing | `TRACK_MIX` mute and unmute, `CLK` INT/USB/TRS and `ROUT` CH1-6/SEL, each set, read back and restored |
+| Save and load | slot 1 saved as a backup of the working music; slot 0 loaded (track 1 back on FM6, steps empty); slot 1 loaded (TB303 and the line restored). Slot 1 now holds the TB303 line |
+| USB audio | **does not work on this Mac.** With USB SERIAL off the FM-1 exposes an audio stream interface and Apple's driver reports it ready, but CoreAudio never lists a device (macOS 15.7.5) |
+| Left on the FM-1 | USB SERIAL **OFF** (the serial console is gone; MENU > SYSTEM > USB SERIAL turns it back on); project slots 0 and 1 saved; track 1 on TB303 with the 16-step line |
+
+Not yet done: **hearing accents and slides on the TB303** (needs sound), a write to a track that is playing, Program
+Change, a MIDI mute (CC or note), `SONG` sections, and a clock test with the TR-8S.

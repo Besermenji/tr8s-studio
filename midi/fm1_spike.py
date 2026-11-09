@@ -19,6 +19,7 @@ USB-MIDI SysEx editor protocol, and record what really works (issue #3).
     python3 fm1_spike.py song                       query the song sections
     python3 fm1_spike.py project-query SLOT
     python3 fm1_spike.py project-save SLOT --write --slot SLOT   writes the FM-1's flash
+    python3 fm1_spike.py project-load SLOT --write  replaces the working music with the saved slot
     python3 fm1_spike.py learn-get
     python3 fm1_spike.py ping
     python3 fm1_spike.py note CH NOTE [--vel N] [--dur S]   play one note on channel 1-6 (makes sound, stores nothing)
@@ -297,6 +298,9 @@ def run(a):
             if a.slot_confirm != a.slot:
                 raise SpikeError("project-save writes flash: repeat the slot with --slot")
             print("raw:", hexs(fm.request(CMDS["PROJECT"], [1, a.slot], timeout=6.0)))
+        elif c == "project-load":
+            need_write(a, "project-load")
+            print("raw:", hexs(fm.request(CMDS["PROJECT"], [0, a.slot], timeout=4.0)), " (op, slot, used)")
         elif c == "learn-get":
             print("raw:", hexs(fm.request(CMDS["LEARN_GET"])))
         elif c == "raw":
@@ -392,6 +396,7 @@ def main(argv=None):
     p = sub.add_parser("global-set"); p.add_argument("id", type=int); p.add_argument("value", type=int)
     p = sub.add_parser("project-query"); p.add_argument("slot", type=int)
     p = sub.add_parser("project-save"); p.add_argument("slot", type=int)
+    p = sub.add_parser("project-load"); p.add_argument("slot", type=int)
     p = sub.add_parser("note"); p.add_argument("ch", type=int); p.add_argument("note", type=int)
     p.add_argument("--vel", type=int, default=100); p.add_argument("--dur", type=float, default=1.0)
     p = sub.add_parser("listen"); p.add_argument("seconds", type=float, nargs="?", default=30)
