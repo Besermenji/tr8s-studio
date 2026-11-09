@@ -61,7 +61,7 @@ Risks (RIG-FM1.md, "Risks before the first flash"):
       reports the **flash chip**: Puya P25Q80, written into RIG-FM1.md.
 - [ ] Flash the locally built `.fwsc` with the local installer tool or the web
       installer.
-- [ ] Power-cycle it. Confirm a saved project survives.
+- [x] Power-cycle it. Confirm a saved project survives. (2026-11-09: slot 0 saved over the protocol and still used after a power cycle.)
 
 **Spike the protocol**
 

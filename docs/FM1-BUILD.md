@@ -150,4 +150,8 @@ Findings:
   still right for the fleet. The chip id in the handshake works end to end on hardware.
 - The FM-1's CoreMIDI port is named `FM-1` under stock V15 and `Felucca` under Mini-Tone. Use `--port Felucca`.
 
-Not yet done: the power-cycle persistence test (step 8) and everything that writes.
+| `fm1_spike.py --write --slot 0 project-save 0` | reply `01 00 01`; slot 0 went from empty to used (a flash write, FM-1 not playing) |
+| Power cycle, then `project-query` | **slot 0 still used, slot 1 still empty**: saves survive power-off on our build. (A full power-down, by the user's account.) |
+
+Not yet done: everything else that writes (steps, parameters, mute, song sections, load), and the Program Change
+and clock tests.

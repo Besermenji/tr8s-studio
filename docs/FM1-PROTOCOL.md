@@ -53,7 +53,7 @@ Frames are what `fm1_spike.py` sends (track numbers are 0-based; Mini-Tone has s
 | MIDI IN channel block | `GET`/`SET` scope 1, id 14 `ROUT`: 0 CH1-6, 1 SEL, 2 CH5-10, 3 CH9-14, 4 CH13-16 | `… 03 01 0E 00 40 F7` | get and values **[V]**, **default CH1-6**; set **[D]**, not run |
 | Names and ranges of any parameter or enum | `DESC` (5) | `… 05 01 0E F7` | **[V]** scope 0 and 1; `fm1_spike.py desc SCOPE ID` |
 | Song sections | `SONG` (33) ops 4..7 | query `… 21 04 F7` | query **[V]** (`04 00 00 00 00 00`: op, rc, count, running, section, remaining; none set); set **[D]**, not run |
-| Save or load a project slot (0..3) | `PROJECT` (9) | save `… 09 01 00 F7`; query `… 09 02 00 F7` | query **[V]** (slots 0 and 1 empty on a fresh unit); save and load **[D]**, not run |
+| Save or load a project slot (0..3) | `PROJECT` (9) | save `… 09 01 00 F7`; query `… 09 02 00 F7` | query **[V]** (slots 0 and 1 empty on a fresh unit); **save slot 0 [V]**: reply `01 00 01` (op, slot, used), and slot 0 was still used after a power cycle (slot 1 stayed empty); load **[D]**, not run |
 | Map a CC to a parameter (16 entries) | `LEARN_GET` (78) / `LEARN_SET` (79) | `… 4F 00 4A 03 62 F7` | get **[V]**, map empty, tag `43 01 10` advertised (16 entries); set **[D]**, not run |
 
 ### What the docs say that the rig depends on
@@ -90,7 +90,7 @@ Frames are what `fm1_spike.py` sends (track numbers are 0-based; Mini-Tone has s
 | 7 | **Mute from MIDI.** Is there a fixed CC? Can `LEARN_SET` map a CC to a track's mute parameter (`P_MUTE`), and do the EMP16 pads (note on/off, or CC 0/127) drive it? | **[?]** | `learn-get`, then learn on the device |
 | 8 | **MIDI IN blocks.** The build offers CH1-6, SEL, CH5-10, CH9-14, CH13-16, **default CH1-6**. CH5-10 and CH9-14 **include channel 10**, the TR-8S's, so use CH1-6. The older "CH1-4 / CH5-8" text is stale. | **[V]** | `desc 1 14` |
 | 9 | Is `G_CLOCK` / `G_ROUTE` stored **per project** or device-wide, and does loading a project change them? (`G_ROUTE` is described as part of the project in the README, and as settings in the editor docs.) | **[?]** | set, save, load another slot, read back |
-| 10 | `PROJECT` save/load: survives a power cycle? How long is the reply? does a save with the transport running stop it and reply? | **[D]** | `project-save`, power-cycle |
+| 10 | `PROJECT` save/load: survives a power cycle? How long is the reply? does a save with the transport running stop it and reply? | save and power cycle **[V]** (transport was stopped); load and save-while-playing not run | `project-save`, power-cycle |
 | 11 | `SONG` set of sections A–D: accepted while the transport runs? rc values? | **[D]** | `song` then a set |
 | 12 | Clock pinned to TRS: is a clock on USB then ignored? | **[D]** | set `G_CLOCK` 2, send a USB clock from a test source (not the studio) |
 | 13 | CC map: do 74, 71, 75, 5, 91, 93, 94, 7 act on **every engine** (TB303, SWARM, FMTONE, WAVETONE, DUALVCO, ANALOG4)? | **[D]** | `track-dump` before/after |
