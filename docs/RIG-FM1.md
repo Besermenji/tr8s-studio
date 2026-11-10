@@ -15,7 +15,7 @@ Unplugging it changes nothing about timing.
 
 Status, 2026-11-09: the macOS backend (issue 00) is built and merged. The FM-1 side is a plan with
 its first pieces in place: a Mini-Tone fork that builds and passes its host tests, a spike script, and a draft
-protocol ([`FM1-BUILD.md`](FM1-BUILD.md), [`FM1-PROTOCOL.md`](FM1-PROTOCOL.md)). On 2026-11-09 our Mini-Tone build was flashed (V15 → `FM-1_900`) and the protocol's read commands were run; no write command has been run yet.
+protocol ([`FM1-BUILD.md`](FM1-BUILD.md), [`FM1-PROTOCOL.md`](FM1-PROTOCOL.md)). On 2026-11-09 our Mini-Tone build was flashed (V15 → `FM-1_900`) and the protocol's read commands and the writes it marks **[V]** (steps, mute, clock, routing, project save and load) were run. The part generator and the Mini-Tone encoder are in `src/tr8s/synth/` (issue 04); its `.syx` output for an acid line and a bass was sent to the unit on 2026-11-10 and read back identical (engine switch and track length too). A tied three-note pad was written and read back identical too. Nobody has listened to any of it yet.
 
 The work is split into issues in [`docs/issues/`](issues/), numbered in the order they unblock each other. On
 GitHub they are 00 → #1, 01 → #2, 02 → #3, 03 → #4, 04 → #5, 05 → #27, 06 → #28.

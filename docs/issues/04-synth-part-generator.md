@@ -51,9 +51,13 @@ See [`docs/RIG-FM1.md`](../RIG-FM1.md), section 1.
 - [ ] `to_mid(parts)`: a multi-channel Standard MIDI File, one track per FM-1
       channel. Accents are velocity, slides are overlapping notes. This part can
       start before issue 02 finishes.
-- [ ] `to_syx(project)`: the SysEx frames that write a whole project, in the
-      form issue 02 documents in `docs/FM1-PROTOCOL.md`. This includes the
-      EUCLID and STOCHASTIC settings, so the FM-1 keeps generating on stage.
+- [ ] `to_syx(parts)`: the `TRACK_STEP` frames that write every step of every
+      part, in the form verified on hardware in `docs/FM1-PROTOCOL.md`. RAM
+      only: saving (`PROJECT`) stops the transport, so `save_frame` is separate.
+      `setup_frames` adds the engine and track length (documented, not yet run).
+- [ ] EUCLID and STOCHASTIC generator settings: **blocked on issue 03 (c)**.
+      They have no SysEx parameter ids, so they cannot be written until the
+      fork adds them. The Euclidean option exists on the generator side.
 
 **Tests**
 
