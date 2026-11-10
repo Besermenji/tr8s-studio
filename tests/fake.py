@@ -128,3 +128,84 @@ def make_device(patterns=None, kits=None):
     d = Device(transport=t)
     d.open()
     return d, t
+
+
+# ------------------------------------------------------------------ FM-1
+
+class FakeFm1:
+    """
+    An FM-1 at the `rtmidi` level, so the real `Fm1Port` runs against it. It
+    answers every editor frame with the same cmd, as the firmware does: a step
+    write is echoed (plus the five extra fields the real reply carries), a
+    project save is answered `01 slot 01`, anything else echoes its args.
+
+      silent    answer nothing (a port with no FM-1 behind it)
+      mangle    the first step write is echoed with a different note
+      clamp     a track parameter (the length) is answered with a different value
+    """
+
+    def __init__(self, silent=False, mangle=False, clamp=False):
+        self.sent: list = []
+        self.silent, self.mangle, self.clamp = silent, mangle, clamp
+        self._cb = None
+
+    def receive(self, msg):
+        from tr8s.synth.minitone import CMDS, HEADER
+        self.sent.append(bytes(msg))
+        if self.silent or self._cb is None:
+            return
+        f = bytes(msg)
+        if f[:4] != HEADER:
+            return
+        cmd, args = f[4], f[5:-1]
+        if cmd == CMDS["TRACK_STEP"] and len(args) == 10:
+            reply = bytearray(args) + bytes([1, 100, 1, 0, 0])
+            if self.mangle:
+                reply[3] = (reply[3] + 1) % 128
+                self.mangle = False
+        elif cmd == CMDS["PROJECT"] and args[0] == 1:
+            reply = bytes([1, args[1], 1])
+        elif cmd == CMDS["TRACK_PARAM"] and self.clamp and len(args) == 4:
+            reply = bytes(args[:2]) + bytes([(args[2] + 1) % 128, args[3]])
+        else:
+            reply = args
+        self._cb((list(HEADER) + [cmd] + list(reply) + [0xF7], 0.0))
+
+
+def fake_fm1_rtmidi(monkeypatch, fm1=None, ports=("Felucca", "TR-8S")):
+    """Install a fake `rtmidi` module wired to `fm1` (a FakeFm1); returns it."""
+    import sys
+    import types
+    fm1 = fm1 or FakeFm1()
+
+    class _In:
+        def get_ports(self):
+            return list(ports)
+
+        def get_port_name(self, i):
+            return ports[i]
+
+        def ignore_types(self, **kw):
+            pass
+
+        def set_callback(self, fn):
+            fm1._cb = fn
+
+        def cancel_callback(self):
+            fm1._cb = None
+
+        def open_port(self, i):
+            pass
+
+        def close_port(self):
+            pass
+
+    class _Out(_In):
+        def send_message(self, msg):
+            fm1.receive(msg)
+
+    mod = types.ModuleType("rtmidi")
+    mod.MidiIn, mod.MidiOut = _In, _Out
+    monkeypatch.setitem(sys.modules, "rtmidi", mod)
+    monkeypatch.setattr("tr8s.synth.port.CANCEL_SETTLE", 0)
+    return fm1

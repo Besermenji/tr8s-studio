@@ -39,10 +39,12 @@ from ..melody import MelodyError
 from ..melody import read as melody_read
 from ..melody import write as melody_write
 from ..pattern import VARIATIONS, Pattern
+from ..synth.port import Fm1Error
 from ..tones import Catalog
 
 REGISTRY: dict[str, dict] = {}
 _session: Device | None = None
+_fm1 = None
 
 
 class ToolError(RuntimeError):
@@ -91,11 +93,36 @@ def set_device(dev):
     _session = dev
 
 
+def fm1():
+    """The FM-1's port, opened on first use (needs the `mac` extra and the FM-1 plugged in)."""
+    global _fm1
+    if _fm1 is None:
+        from ..synth.port import Fm1Port
+        _fm1 = Fm1Port()
+    return _fm1
+
+
+def set_fm1(port):
+    """Point the registry at a specific FM-1 port -- used by tests."""
+    global _fm1
+    _fm1 = port
+
+
+def close_fm1():
+    global _fm1
+    port, _fm1 = _fm1, None
+    if port is not None:
+        port.close()
+
+
 def close():
     global _session
-    if _session is not None:
-        _session.close()
+    try:
+        if _session is not None:
+            _session.close()
+    finally:
         _session = None
+        close_fm1()
 
 
 def call(name: str, args: dict | None = None):
@@ -116,7 +143,7 @@ def call(name: str, args: dict | None = None):
     _capture_for_undo(name, args)
     try:
         return fn(**args)
-    except (DeviceError, MelodyError, ValueError) as e:
+    except (DeviceError, MelodyError, Fm1Error, ValueError) as e:
         raise ToolError(f"{name}: {e}") from e
 
 

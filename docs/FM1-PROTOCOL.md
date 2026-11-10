@@ -37,7 +37,7 @@ F0 7D 46 4C <cmd> <args...> F7        7D = non-commercial SysEx ID, 46 4C = "FL"
 | data bytes | all 7-bit | **[D]** |
 | v14 | `[lo, hi]` holding value + 8192, LSB first: `value = (lo \| hi << 7) − 8192` (so 0 is `00 40`) | **[D]**, matches `fm1_spike.py --selftest` |
 | string | ASCII, ended by a 0 byte | **[D]** |
-| port | CoreMIDI lists the FM-1 as `FM-1` under stock V15 and as **`Felucca`** under Mini-Tone: pass `--port Felucca` | **[V]** one input, one output |
+| port | CoreMIDI lists the FM-1 as `FM-1` under stock V15 and as **`Felucca`** under Mini-Tone. The studio and the spike (both through `tr8s.synth.port`) default to `Felucca`; `FM1_PORT` or `--port` chooses another | **[V]** one input, one output |
 
 The example frame the upstream doc gives (`LEARN_SET`, `F0 7D 46 4C 4F 00 4A 03 62 F7`) is reproduced byte for
 byte by `fm1_spike.py`. That checks our encoder against the doc, not the device against the doc.

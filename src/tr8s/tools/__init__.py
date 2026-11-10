@@ -19,12 +19,12 @@ module names, and a plain `from . import device` would rebind one to the other.
 
 from ._core import (DEFAULT_KEYS, DEFAULT_LINE, REGISTRY, ToolError,  # noqa: F401
                     _capture_for_undo, _library_dir, _slot, call, close, device,
-                    opt, schemas, set_device, tool)
+                    fm1, opt, schemas, set_device, set_fm1, tool)
 
 import importlib as _importlib
 
 for _ns in ("device", "pattern", "kit", "track", "library", "tones", "lines",
-            "styles", "calibration", "audio", "history"):
+            "styles", "calibration", "audio", "history", "synth"):
     _importlib.import_module(f"{__name__}.{_ns}")
 del _ns, _importlib
 

@@ -20,8 +20,42 @@ from ..tones import Catalog
 from ._core import (DEFAULT_KEYS, DEFAULT_LINE, REGISTRY, ToolError,
                     _library_dir, _slot, opt, tool)
 from ._core import device as _device_helper
+from ..synth.port import Fm1Error
 from .kit import kit_auto_build
 from .pattern import pattern_arrange, pattern_audit, pattern_set_header, pattern_set_line
+from .synth import build as synth_build
+from .synth import push as synth_push
+from .synth import summary as synth_summary
+
+SYNTH_ARG = {
+    "type": "object",
+    "description": "also build the FM-1 (Mini-Tone) parts for this track from the "
+                   "same key, energy and seed. The TR-8S's own melodic line then "
+                   "defaults to none, since the synths carry it. Not every song "
+                   "needs a 303: `voicing` picks the parts.",
+    "properties": {
+        "target": {"type": "string", "enum": ["minitone"]},
+        "voicing": {"type": "string",
+                    "description": "synth.parts voicing; defaults to the drum style"},
+        "project": {"type": "integer", "minimum": 0, "maximum": 3,
+                    "description": "send the parts to the connected FM-1 and SAVE them to "
+                                   "this project slot (stops its transport, writes flash). "
+                                   "Omit to only build them."},
+        "length": {"type": "integer", "enum": [16, 32, 64]},
+        "override": {"type": "object", "description": "as in synth.parts"},
+    },
+    "additionalProperties": False,
+}
+
+
+def _synth_spec(synth, style, key, energy, seed) -> dict:
+    """The `synth` argument with its defaults filled in; the record `library.save` keeps."""
+    if synth.get("target", "minitone") != "minitone":
+        raise ToolError(f"unknown synth target {synth['target']!r}; only 'minitone'")
+    return {"target": "minitone", "voicing": synth.get("voicing") or style, "key": key,
+            "energy": energy, "seed": seed, "length": synth.get("length", 16),
+            "override": synth.get("override") or {}, "project": synth.get("project")}
+
 
 @tool("track.create",
       "Make a complete track in one call: a kit chosen from the measured tone "
@@ -50,9 +84,11 @@ from .pattern import pattern_arrange, pattern_audit, pattern_set_header, pattern
                                                "none"]}),
        "melodic_track": opt({"type": "string", "enum": TRACKS}),
        "seed": opt({"type": "integer"}),
-       "set_tempo": opt({"type": "boolean"})}, mutates=True)
+       "set_tempo": opt({"type": "boolean"}),
+       "synth": opt(SYNTH_ARG)}, mutates=True)
 def track_create(slot, style, name=None, key=None, energy=0.7, kit_slot=None,
-                 line=None, melodic_track="LT", seed=None, set_tempo=True):
+                 line=None, melodic_track="LT", seed=None, set_tempo=True,
+                 synth=None):
     import random as _random
     from ..style import STYLES
 
@@ -60,12 +96,20 @@ def track_create(slot, style, name=None, key=None, energy=0.7, kit_slot=None,
         raise ToolError(f"unknown style {style!r}; have {', '.join(STYLES)}")
     s = _slot(slot)
     key = key or DEFAULT_KEYS.get(style, "C minor")
-    line = line or DEFAULT_LINE.get(style, "bass")
+    # with FM-1 parts the synths carry the melody; an explicit `line` still wins
+    line = line or ("none" if synth is not None else DEFAULT_LINE.get(style, "bass"))
     if seed is None:
         seed = _random.randrange(1 << 30)
     name = (name or style.upper())[:8]
     out = {"slot": s, "panel": slot_to_panel(s), "style": style, "key": key,
            "energy": energy, "seed": seed, "name": name, "steps": []}
+
+    # 0. the FM-1 parts are pure, so a bad voicing fails here, before anything is written
+    parts = None
+    if synth is not None:
+        spec = _synth_spec(synth, style, key, energy, seed)
+        parts = synth_build(spec["voicing"], key, energy, seed, spec["length"],
+                            spec["override"])
 
     # 1. the kit FIRST and completely. Committing a kit re-points the last
     #    pattern transferred at it, so no pattern may be written until every
@@ -111,7 +155,23 @@ def track_create(slot, style, name=None, key=None, energy=0.7, kit_slot=None,
                            "variations": written, "warnings": warnings}
             out["steps"].append(f"wrote a {line} line on {melodic_track}")
 
-    # 5. say what is wrong with it
+    # 5. the FM-1 parts, from the same key, seed and energy as the drums
+    if parts is not None:
+        out["synth"] = {**spec, "tempo": out["tempo"], **synth_summary(parts)}
+        if spec["project"] is None:
+            out["steps"].append(f"built FM-1 parts ({spec['voicing']}); not sent")
+        else:
+            try:
+                out["synth"].update(synth_push(parts, spec["project"]))
+                out["steps"].append(f"wrote the FM-1 parts ({spec['voicing']}) "
+                                    f"and saved FM-1 project slot {spec['project']}")
+            except (Fm1Error, ValueError) as e:
+                # the TR-8S side is done; say what the FM-1 did not take
+                out["synth_error"] = str(e)
+                out["steps"].append(f"the FM-1 write FAILED ({e}); it may hold part of the parts "
+                                    "in working memory, and nothing was saved")
+
+    # 6. say what is wrong with it
     try:
         out["audit"] = pattern_audit(s, variation="C")
         out["steps"].append("audited the main variation")
@@ -140,9 +200,10 @@ def track_create(slot, style, name=None, key=None, energy=0.7, kit_slot=None,
        "line": opt({"type": "string",
                     "enum": ["bass", "acid", "stab", "arp", "none", "keep"]}),
        "melodic_track": opt({"type": "string", "enum": TRACKS}),
-       "name": opt({"type": "string"})}, mutates=True)
+       "name": opt({"type": "string"}),
+       "synth": opt(SYNTH_ARG)}, mutates=True)
 def track_remix(slot, style, into=None, energy=None, key=None, seed=None,
-                line=None, melodic_track="LT", name=None):
+                line=None, melodic_track="LT", name=None, synth=None):
     import random as _random
     src = _slot(slot)
     dst = _slot(into) if into is not None else src
@@ -167,10 +228,12 @@ def track_remix(slot, style, into=None, energy=None, key=None, seed=None,
     out = track_create(dst, style, name=name or original.name,
                        key=key, energy=energy, kit_slot=None,
                        line=line, melodic_track=melodic_track, seed=seed,
-                       set_tempo=False)
+                       set_tempo=False, synth=synth)
     out["remixed_from"] = {"slot": src, "panel": slot_to_panel(src),
                            "name": original.name}
     out["kept"] = {"kit": original.kit + 1, "tempo": original.tempo}
+    if "synth" in out:
+        out["synth"]["tempo"] = original.tempo      # the drums keep it; the arrangement's rolled tempo is unused
     if dst == src:
         out["warning"] = ("the original was overwritten -- pass `into` next "
                           "time to keep both. history.undo puts it back.")

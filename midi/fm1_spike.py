@@ -28,8 +28,8 @@ USB-MIDI SysEx editor protocol, and record what really works (issue #3).
     python3 fm1_spike.py send-syx FILE --write      send a .syx from tr8s.synth.minitone.to_syx, one frame at a time,
                                                     waiting for each reply (step, track select, engine and length only; never a save, clock or channel)
 
-Port: first MIDI port whose name contains "FM-1" (override: --port TEXT or
-FM1_PORT).  Needs `pip install python-rtmidi` (the repo's `.[mac]` extra).
+Port: the first MIDI port whose name contains "Felucca" (our Mini-Tone build), else "FM-1"
+(stock firmware); override with --port TEXT or FM1_PORT.  Needs `pip install python-rtmidi` (the repo's `.[mac]` extra).
 
 Wire format (upstream web/EDITOR_PROTOCOL.md, Felucca / Mini-Tone):
 
@@ -59,25 +59,20 @@ import time
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "src"))
 from tr8s.synth.minitone import (CMDS, HEADER, NAMES, Fm1FrameError, check_edit_frame,   # noqa: E402,F401
                                  frame, from_v14, split_syx, v14)
+from tr8s.synth.port import Fm1EchoError, Fm1Error, Fm1Port, parse_reply   # noqa: E402,F401
 
 LOG = os.environ.get("FM1_SPIKE_LOG", "fm1-spike.jsonl")
 
 READ_ONLY = {"INFO", "GET", "DUMP", "DESC", "STEP_GET", "PING", "TRACK_DUMP", "LEARN_GET"}
 
 
-class SpikeError(RuntimeError):
+class SpikeError(Fm1Error):
     pass
 
 
 # ----------------------------------------------------------------- encoding ---
-# v14, from_v14 and frame live in tr8s.synth.minitone: one encoder for the spike and the studio.
-
-
-def parse_reply(pkt):
-    """(cmd, args) of a frame with our header, else None"""
-    if len(pkt) < 6 or pkt[:4] != HEADER or pkt[-1] != 0xF7:
-        return None
-    return pkt[4], pkt[5:-1]
+# v14, from_v14 and frame live in tr8s.synth.minitone, and parse_reply and the port in
+# tr8s.synth.port: one copy for the spike and the studio.
 
 
 def hexs(b):
@@ -91,66 +86,11 @@ def cstring(b, i=0):
 
 # --------------------------------------------------------------------- port ---
 
-class Fm1:
+class Fm1(Fm1Port):
+    """The studio's port (tr8s.synth.port), logging every frame to fm1-spike.jsonl."""
+
     def __init__(self, name):
-        try:
-            import rtmidi
-        except ImportError:
-            raise SpikeError("python-rtmidi is not installed (pip install -e '.[mac]')")
-        self.q = queue.Queue()
-        self.mi, self.mo = rtmidi.MidiIn(), rtmidi.MidiOut()
-        i, o = self._find(self.mi, name), self._find(self.mo, name)
-        self.mi.ignore_types(sysex=False, timing=False, active_sense=True)
-
-        def cb(event, _data=None):
-            self.q.put(bytes(event[0]))
-        self.mi.set_callback(cb)
-        self.mi.open_port(i)
-        self.mo.open_port(o)
-        self.name = self.mi.get_port_name(i)
-
-    @staticmethod
-    def _find(dev, name):
-        ports = dev.get_ports()
-        for n, p in enumerate(ports):
-            if name.lower() in p.lower():
-                return n
-        raise SpikeError(f"no MIDI port containing {name!r}; ports: {ports}")
-
-    def send(self, data):
-        if any(0xF8 <= b <= 0xFC for b in data):
-            raise SpikeError("refusing to send MIDI realtime")
-        log("tx", data)
-        self.mo.send_message(list(data))
-
-    def request(self, cmd, args=(), timeout=2.0):
-        """one request, then the first reply with our header and the same cmd; clock and
-        other traffic are logged and skipped"""
-        self.send(frame(cmd, args))
-        end = time.time() + timeout
-        while time.time() < end:
-            try:
-                pkt = self.q.get(timeout=max(0.01, end - time.time()))
-            except queue.Empty:
-                break
-            p = parse_reply(pkt)
-            if p and p[0] == cmd:
-                log("rx", pkt)
-                return p[1]
-            if pkt and pkt[0] != 0xF8:
-                log("rx-other", pkt)
-        raise SpikeError(f"no reply to {NAMES.get(cmd, cmd)} within {timeout:.1f}s")
-
-    def close(self):
-        # cancel_callback -> settle -> close_port: close_port can deadlock otherwise
-        # (the same order as midi_backends.RtMidiBackend._dispose)
-        try:
-            self.mi.cancel_callback()
-            time.sleep(0.1)
-            self.mi.close_port()
-            self.mo.close_port()
-        except Exception:
-            pass
+        super().__init__(name, log=log)
 
 
 def log(kind, data):
@@ -254,16 +194,13 @@ def run(a):
             for f in frames:
                 kinds[NAMES[f[4]]] = kinds.get(NAMES[f[4]], 0) + 1
             print(f"{a.file}: {len(frames)} frames {kinds}")
-            odd = []
-            for n, f in enumerate(frames, 1):
-                reply = fm.request(f[4], f[5:-1])       # raises on no reply: stop at the first miss
-                if f[4] == CMDS["TRACK_STEP"] and bytes(reply[:len(f) - 6]) != f[5:-1]:
-                    odd.append((n, f, reply))           # the FM-1 stored something other than what we sent
+            try:
+                fm.write_frames(frames)                 # raises on no reply: stops at the first miss
+            except Fm1EchoError as e:                   # the FM-1 stored something other than what we sent
+                for n, f, reply in e.mismatches:
+                    print(f"  frame {n} was not echoed as sent:\n    sent  {hexs(f[5:-1])}\n    reply {hexs(reply)}")
+                raise SpikeError(f"{e}; see fm1-spike.jsonl") from None
             print(f"sent {len(frames)} frames, every one answered")
-            for n, f, reply in odd:
-                print(f"  frame {n} was not echoed as sent:\n    sent  {hexs(f[5:-1])}\n    reply {hexs(reply)}")
-            if odd:
-                raise SpikeError(f"{len(odd)} of {len(frames)} frames came back different; see fm1-spike.jsonl")
         elif c == "param-get":
             r = fm.request(CMDS["TRACK_PARAM"], [a.track, a.id])
             print("raw:", hexs(r), "value:", from_v14(r[2], r[3]) if len(r) >= 4 else "?")
@@ -357,7 +294,7 @@ def selftest():
 def _raises(fn):
     try:
         fn()
-    except (SpikeError, Fm1FrameError):
+    except (Fm1Error, Fm1FrameError):
         return True
     return False
 
@@ -367,7 +304,7 @@ def _raises(fn):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--selftest", action="store_true")
-    ap.add_argument("--port", default=os.environ.get("FM1_PORT", "FM-1"))
+    ap.add_argument("--port", default=None, help="port name text (default: Felucca, else FM-1)")
     ap.add_argument("--write", action="store_true", help="allow commands that change the FM-1")
     ap.add_argument("--slot", dest="slot_confirm", type=int, help="project-save: repeat the slot to confirm")
     sub = ap.add_subparsers(dest="cmd")
@@ -406,7 +343,7 @@ def main(argv=None):
         ap.error("give a command or --selftest")
     try:
         run(a)
-    except (SpikeError, Fm1FrameError) as e:
+    except (Fm1Error, Fm1FrameError) as e:
         print(f"error: {e}", file=sys.stderr)
         return 1
     return 0

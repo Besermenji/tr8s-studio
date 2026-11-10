@@ -148,7 +148,7 @@ Findings:
 
 - **This unit has the Puya chip**, so stock Mini-Tone would have worked on it too. The UC25HQ80 allowlist is
   still right for the fleet. The chip id in the handshake works end to end on hardware.
-- The FM-1's CoreMIDI port is named `FM-1` under stock V15 and `Felucca` under Mini-Tone. Use `--port Felucca`.
+- The FM-1's CoreMIDI port is named `FM-1` under stock V15 and `Felucca` under Mini-Tone. The studio and the spike default to `Felucca` (`FM1_PORT` or `--port` overrides, e.g. `--port FM-1` on stock firmware).
 
 | `fm1_spike.py --write --slot 0 project-save 0` | reply `01 00 01`; slot 0 went from empty to used (a flash write, FM-1 not playing) |
 | Power cycle, then `project-query` | **slot 0 still used, slot 1 still empty**: saves survive power-off on our build. (A full power-down, by the user's account.) |
