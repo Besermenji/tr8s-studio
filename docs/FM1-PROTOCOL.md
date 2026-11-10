@@ -1,8 +1,16 @@
 # FM-1 (Mini-Tone) SysEx protocol: what the studio can write
 
 Written 2026-11-09, updated the same day after the first flash. **The read commands have been run on our FM-1**
-(Mini-Tone 1.0.5 with our patch). **No write command has been run yet.** Rows start as **[D]** or **[I]** and
-become **[V]** (or "not supported") when `midi/fm1_spike.py` has been run against the hardware. The log is `fm1-spike.jsonl`; paste the frame that proved each row.
+(Mini-Tone 1.0.5 with our patch), and so have the writes marked **[V]** in the table below (step writes, mute, clock,
+routing, project save and load). Rows start as **[D]** or **[I]** and become **[V]** (or "not supported") when
+`midi/fm1_spike.py` has been run against the hardware. The log is `fm1-spike.jsonl`; paste the frame that proved each row.
+
+The encoder for these frames is [`src/tr8s/synth/minitone.py`](../src/tr8s/synth/minitone.py) (`frame`, `v14`,
+`step_frame`, `to_syx`); the spike imports it, so there is one. `to_syx` writes `TRACK_STEP` frames only. **[V]** on 2026-11-10: a 32-step acid line on track 1 (TB303) and a 32-step bass
+on track 2 (64 frames, rests included, `n` 0 and time 2) were all answered and read back identical, step by step;
+and `setup_frames` worked: selecting a track and `SET` of `G_ENGSEL` (scope 1, id 20) switched track 2 from FMTONE to
+DUALVCO (engine 20) without touching track 1, and `TRACK_PARAM` id 29 (`P_SLEN`) set both lengths to 32 and read back 32.
+Also **[V]**: a 32-step pad on track 3 (SWARM) of three-note chords, 28 of them tie steps (time 1, the held notes repeated), written with `P_SLEN` 32 (33 frames) and read back identical. Not yet tested: a four-note step (the most a step holds) and a ratchet. `send-syx` in the spike sends a file of them, one frame at a time, and checks the whole file first: it accepts only step writes, track selects, `G_ENGSEL` and `P_SLEN`, and refuses a save, a clock (`CLK`) or channel (`ROUT`) setting, and any frame that is not ours.
 
 Marks, as in [`PROTOCOL.md`](PROTOCOL.md) and [`RIG-FM1.md`](RIG-FM1.md):
 
