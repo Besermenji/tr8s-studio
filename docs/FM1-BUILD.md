@@ -157,7 +157,7 @@ Findings:
 | Mute, clock, routing | `TRACK_MIX` mute and unmute, `CLK` INT/USB/TRS and `ROUT` CH1-6/SEL, each set, read back and restored |
 | Save and load | slot 1 saved as a backup of the working music; slot 0 loaded (track 1 back on FM6, steps empty); slot 1 loaded (TB303 and the line restored). Slot 1 now holds the TB303 line |
 | USB audio | **does not work on this Mac.** With USB SERIAL off the FM-1 exposes an audio stream interface and Apple's driver reports it ready, but CoreAudio never lists a device (macOS 15.7.5) |
-| Left on the FM-1 | USB SERIAL **OFF** (the serial console is gone; MENU > SYSTEM > USB SERIAL turns it back on); project slots 0 and 1 saved; track 1 on TB303 with the 16-step line |
+| Left on the FM-1 | USB SERIAL back **ON** (it was switched OFF for the audio test); project slots 0 and 1 saved; track 1 on TB303 with the 16-step line; `CLK` INT, `ROUT` CH1-6 |
 
 Not yet done: **hearing accents and slides on the TB303** (needs sound), a write to a track that is playing, Program
 Change, a MIDI mute (CC or note), `SONG` sections, and a clock test with the TR-8S.
