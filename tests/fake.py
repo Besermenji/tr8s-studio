@@ -165,6 +165,8 @@ class FakeFm1:
                 self.mangle = False
         elif cmd == CMDS["PROJECT"] and args[0] == 1:
             reply = bytes([1, args[1], 1])
+        elif cmd == CMDS["SET"] and len(args) == 4 and args[1] == 20:      # G_ENGSEL: the reply says 0
+            reply = bytes(args[:2]) + bytes([0, 0x40])
         elif cmd == CMDS["TRACK_PARAM"] and self.clamp and len(args) == 4:
             reply = bytes(args[:2]) + bytes([(args[2] + 1) % 128, args[3]])
         else:

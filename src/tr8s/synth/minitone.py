@@ -5,8 +5,8 @@ Pure functions: nothing here opens a port. It knows the firmware (tracks,
 channels, engines, the voice budget), maps a style to FM-1 parts, and encodes
 parts as a Standard MIDI File (`to_mid`) or as the editor-protocol SysEx
 (`to_syx`). Marks as in docs/FM1-PROTOCOL.md: the `TRACK_STEP` write form is
-verified on hardware; `setup_frames` (engine, track length) is documented
-upstream and not yet run on our unit.
+verified on hardware, and so is `setup_frames` (engine, track length), written
+and saved on our unit on 2026-11-10 (docs/FM1-PROTOCOL.md).
 
 The module never builds a realtime byte (F8-FC): `frame` refuses any argument
 that is not 7-bit data, so the studio cannot become a second clock.
@@ -170,7 +170,7 @@ def step_frame(track: int, index: int, step) -> bytes:
     """
     `TRACK_STEP` set, the 10-byte form verified on hardware:
     track, index, n, note x4, time, flags, vel.
-    A rest is n=0, time REST; a tie carries the held notes with time TIE (both [D], not yet run).
+    A rest is n=0, time REST; a tie carries the held notes with time TIE (both verified on hardware).
     """
     if len(step.notes) > 4:
         raise Fm1FrameError(f"a step holds at most 4 notes, got {len(step.notes)}")
@@ -198,9 +198,10 @@ def to_syx(parts) -> list:
 
 def setup_frames(parts) -> list:
     """
-    Engine and track length, per part. **[D], not yet run on our FM-1.** The
+    Engine and track length, per part. **Verified on our FM-1.** The
     engine goes in by selecting the track and setting G_ENGSEL (the selected
-    track's engine); the length by `TRACK_PARAM` P_SLEN.
+    track's engine); the length by `TRACK_PARAM` P_SLEN. The reply to the engine set
+    carries 0, not the engine: read the track back (`TRACK_DUMP`) to confirm it.
     """
     out = []
     for t, p in sorted(_as_tracks(parts).items()):

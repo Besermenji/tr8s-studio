@@ -72,7 +72,8 @@ See [`docs/RIG-FM1.md`](../RIG-FM1.md), section 1.
 - `pytest tests/` passes, old tests untouched.
 - A `.mid` from `to_mid`, played into the FM-1, sounds like the part described.
 - After issue 02, a `.syx` from `to_syx` sent to the FM-1 produces the same
-  part, saved.
+  part, saved. (Done on 2026-11-10 through `synth.send` and `Fm1Port.save`:
+  slot 3, power-cycled, all 32 steps, engines and lengths identical.)
 
 ## Depends on
 

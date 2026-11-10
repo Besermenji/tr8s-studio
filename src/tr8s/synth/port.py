@@ -149,8 +149,10 @@ class Fm1Port:
             if f[4] == CMDS["TRACK_STEP"]:
                 if reply[:len(f) - 6] != f[5:-1]:
                     odd.append((n, f, reply))       # the step echo is verified on hardware: a miss is an error
-            elif f[4] in (CMDS["SET"], CMDS["TRACK_PARAM"]) and reply[:len(f) - 6] != f[5:-1]:
-                # engine and length: the reply layout is documented, not yet seen on our unit, so report
+            elif f[4] == CMDS["TRACK_PARAM"] and reply[:len(f) - 6] != f[5:-1]:
+                # the track length is echoed (verified on hardware); a different value means it was
+                # clamped, so report it. The engine set (`SET` G_ENGSEL) is not checked here: its reply
+                # carries 0, not the engine, so the engine is confirmed by reading the track back.
                 differs.append(f"{NAMES[f[4]]} frame {n}: sent {f[5:-1].hex(' ')}, reply {reply.hex(' ')}")
         if odd:
             raise Fm1EchoError(f"{len(odd)} of {len(frames)} frames came back different "
