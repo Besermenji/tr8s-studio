@@ -53,6 +53,17 @@ def _degrees(scale: list[int], tonic: int) -> dict:
     return out
 
 
+def _first(*pcs, default: int) -> int:
+    """
+    The first pitch class that is not None. Not `a or b`: C is pitch class 0,
+    which is falsy, so an `or` chain reads the scale's C as a missing degree.
+    """
+    for pc in pcs:
+        if pc is not None:
+            return pc
+    return default
+
+
 def _nearest(pc: int, around_midi: int) -> int:
     """
     The MIDI note of pitch class `pc` closest to `around_midi`, breaking a tie
@@ -74,6 +85,12 @@ def bassline(key: str = "C minor", energy: float = 0.6, seed: int | None = None,
     The offbeat pulse. Mostly tonic — movement is the exception, not the rule.
     """
     rng, tonic, scale, seed = _setup(seed, key)
+    notes, _ = _core_bass(rng, tonic, scale, energy, root, octave_offset)
+    return _finish(notes, key, seed, root, "bass", energy)
+
+
+def _core_bass(rng, tonic, scale, energy, root, octave_offset=0):
+    """The notes of `bassline` before any target's range rule. Shared with synth/."""
     deg = _degrees(scale, tonic)
     base = note_to_midi(root) + 12 * octave_offset
     home = _nearest(tonic, base)
@@ -110,7 +127,7 @@ def bassline(key: str = "C minor", energy: float = 0.6, seed: int | None = None,
             m += 12
         notes[i] = midi_to_note(m)
 
-    return _finish(notes, key, seed, root, "bass", energy)
+    return notes, {}
 
 
 def acid(key: str = "C minor", energy: float = 0.7, seed: int | None = None,
@@ -121,6 +138,14 @@ def acid(key: str = "C minor", energy: float = 0.7, seed: int | None = None,
     louder — that is where the squelch comes from.
     """
     rng, tonic, scale, seed = _setup(seed, key)
+    notes, extras = _core_acid(rng, tonic, scale, energy, root)
+    out = _finish(notes, key, seed, root, "acid", energy)
+    out["accents"] = extras["accents"]
+    return out
+
+
+def _core_acid(rng, tonic, scale, energy, root):
+    """The notes and accents of `acid` before any range rule. Shared with synth/."""
     base = note_to_midi(root)
     home = _nearest(tonic, base)
     floor = base - 12               # same register rule as the bassline
@@ -162,35 +187,43 @@ def acid(key: str = "C minor", energy: float = 0.7, seed: int | None = None,
         notes[0] = midi_to_note(home)
         accents = [0]
 
-    out = _finish(notes, key, seed, root, "acid", energy)
-    out["accents"] = accents
-    return out
+    return notes, {"accents": accents}
 
 
 def stab(key: str = "C minor", energy: float = 0.4, seed: int | None = None,
          root: str = "C3") -> dict:
     """Dub techno's offbeat chord: slow, and only two or three notes a bar."""
     rng, tonic, scale, seed = _setup(seed, key)
+    notes, _ = _core_stab(rng, tonic, scale, energy, root)
+    return _finish(notes, key, seed, root, "stab", energy)
+
+
+def _core_stab(rng, tonic, scale, energy, root):
     deg = _degrees(scale, tonic)
     base = note_to_midi(root)
     home = _nearest(tonic, base)
 
     slots = [2, 10] if energy < 0.5 else list(OFFBEATS)
-    other = deg.get("third") or deg.get("fifth") or tonic
+    other = _first(deg.get("third"), deg.get("fifth"), default=tonic)
     notes = [REST] * STEPS
     for n, i in enumerate(slots):
         pc = tonic if (n % 2 == 0 or rng.random() < 0.5) else other
         notes[i] = midi_to_note(_nearest(pc, home))
-    return _finish(notes, key, seed, root, "stab", energy)
+    return notes, {}
 
 
 def arp(key: str = "C minor", energy: float = 0.6, seed: int | None = None,
         root: str = "C3", direction: str = "up") -> dict:
     """A running triad — hypnotic techno's other melodic device."""
     rng, tonic, scale, seed = _setup(seed, key)
+    notes, _ = _core_arp(rng, tonic, scale, energy, root, direction)
+    return _finish(notes, key, seed, root, "arp", energy)
+
+
+def _core_arp(rng, tonic, scale, energy, root, direction="up"):
     deg = _degrees(scale, tonic)
-    third = deg.get("third") or deg.get("second") or tonic
-    fifth = deg.get("fifth") or deg.get("fourth") or tonic
+    third = _first(deg.get("third"), deg.get("second"), default=tonic)
+    fifth = _first(deg.get("fifth"), deg.get("fourth"), default=tonic)
     base = note_to_midi(root)
     home = _nearest(tonic, base)
 
@@ -207,7 +240,7 @@ def arp(key: str = "C minor", energy: float = 0.6, seed: int | None = None,
     notes = [REST] * STEPS
     for n, i in enumerate(range(0, STEPS, every)):
         notes[i] = midi_to_note(chord[n % len(chord)])
-    return _finish(notes, key, seed, root, "arp", energy)
+    return notes, {}
 
 
 # ------------------------------------------------------------------ shared
