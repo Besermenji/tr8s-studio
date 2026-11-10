@@ -219,6 +219,57 @@ def save_frame(slot: int) -> bytes:
     return frame(CMDS["PROJECT"], [1, slot])
 
 
+# ------------------------------------------------------------------ song chain
+# Firmware: editor.c SONG (33). A section is a row [slot0..slot5, repeat]: each track names the
+# saved project slot (0..3) it plays in that section, or SILENT. Op 4 queries, 5 sets the whole
+# chain (refused while the transport runs), 6 plays, 7 stops. Marks: docs/FM1-PROTOCOL.md.
+
+SILENT = 4
+SONG_ROWS = 16
+SONG_OPS = {"query": 4, "set": 5, "play": 6, "stop": 7}
+SONG_RC = {0: "ok", 1: "invalid chain", 2: "busy (the FM-1 is playing)"}
+
+
+def song_frame(rows) -> bytes:
+    """
+    The op 5 request that sets the whole chain: count, then per row six lane slots and a repeat.
+    A lane is 0..3 (project slot A..D) or `SILENT`; repeat is 1..16; at most 16 rows.
+    Play and stop are never built here: the song is armed on the FM-1, and the studio sends no transport.
+    """
+    rows = [list(r) for r in rows]
+    if not 1 <= len(rows) <= SONG_ROWS:
+        raise Fm1FrameError(f"a song has 1..{SONG_ROWS} sections, got {len(rows)}")
+    args = [SONG_OPS["set"], len(rows)]
+    for n, r in enumerate(rows, 1):
+        if len(r) != TRACKS + 1:
+            raise Fm1FrameError(f"section {n}: {TRACKS} lanes and a repeat, got {len(r)} values")
+        *lanes, repeat = r
+        if any(not isinstance(s, int) or not 0 <= s <= SILENT for s in lanes):
+            raise Fm1FrameError(f"section {n}: a lane is a project slot 0..3 or {SILENT} (silent), got {lanes}")
+        if not isinstance(repeat, int) or not 1 <= repeat <= 16:
+            raise Fm1FrameError(f"section {n}: repeat is 1..16, got {repeat}")
+        args += lanes + [repeat]
+    return frame(CMDS["SONG"], args)
+
+
+def parse_song(reply: bytes) -> dict:
+    """
+    A SONG reply (args after the command): op, rc, count, running, row, remaining, then `count` rows
+    in the request's layout (the six-lane layout when op >= 4). `row` and `remaining` are the current
+    section and its repeats left: the only readout of where the song is.
+    """
+    if len(reply) < 6:
+        raise Fm1FrameError(f"a SONG reply is at least 6 bytes, got {len(reply)}: {reply.hex(' ')}")
+    op, rc, count, running, row, remaining = reply[:6]
+    width = TRACKS + 1 if op >= 4 else 2
+    body = reply[6:]
+    if len(body) != count * width:
+        raise Fm1FrameError(f"SONG reply says {count} rows of {width} but carries {len(body)} bytes")
+    return {"op": op, "rc": rc, "rc_text": SONG_RC.get(rc, f"slot {chr(65 + rc - 3)} is empty" if 3 <= rc <= 6 else "?"),
+            "count": count, "running": bool(running), "row": row, "remaining": remaining,
+            "rows": [list(body[i * width:(i + 1) * width]) for i in range(count)]}
+
+
 def split_syx(data: bytes) -> list:
     """
     The frames of a .syx file. Every frame must be ours: our header, a command byte,
