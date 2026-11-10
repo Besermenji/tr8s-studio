@@ -25,6 +25,8 @@ USB-MIDI SysEx editor protocol, and record what really works (issue #3).
     python3 fm1_spike.py note CH NOTE [--vel N] [--dur S]   play one note on channel 1-6 (makes sound, stores nothing)
     python3 fm1_spike.py listen [SECONDS]           print incoming non-clock traffic
     python3 fm1_spike.py raw CMD [BYTE ...] --write
+    python3 fm1_spike.py send-syx FILE --write      send a .syx from tr8s.synth.minitone.to_syx, one frame at a time,
+                                                    waiting for each reply (step, track select, engine and length only; never a save, clock or channel)
 
 Port: first MIDI port whose name contains "FM-1" (override: --port TEXT or
 FM1_PORT).  Needs `pip install python-rtmidi` (the repo's `.[mac]` extra).
@@ -54,17 +56,12 @@ import queue
 import sys
 import time
 
-HEADER = bytes([0xF0, 0x7D, 0x46, 0x4C])
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "src"))
+from tr8s.synth.minitone import (CMDS, HEADER, NAMES, Fm1FrameError, check_edit_frame,   # noqa: E402,F401
+                                 frame, from_v14, split_syx, v14)
+
 LOG = os.environ.get("FM1_SPIKE_LOG", "fm1-spike.jsonl")
 
-CMDS = {
-    "INFO": 1, "GET": 2, "SET": 3, "DUMP": 4, "DESC": 5, "STEP_GET": 6, "STEP_SET": 7,
-    "PRESET": 8, "PROJECT": 9, "WATCH": 22, "CHANGED": 23, "RELOAD": 24, "PING": 25,
-    "STEP_CHANGED": 26, "TRACK": 27, "TRACK_MIX": 28, "TRACK_DUMP": 29, "TRACK_STEP": 30,
-    "TRACK_PARAM": 31, "TRACK_CHANGED": 32, "SONG": 33, "MOTION": 64, "LEARN_GET": 78,
-    "LEARN_SET": 79,
-}
-NAMES = {v: k for k, v in CMDS.items()}
 READ_ONLY = {"INFO", "GET", "DUMP", "DESC", "STEP_GET", "PING", "TRACK_DUMP", "LEARN_GET"}
 
 
@@ -73,26 +70,7 @@ class SpikeError(RuntimeError):
 
 
 # ----------------------------------------------------------------- encoding ---
-
-def v14(value):
-    """-8192..8191 -> [lo, hi] (value + 8192, LSB first, 7 bits each)"""
-    if not -8192 <= value <= 8191:
-        raise SpikeError(f"value {value} outside -8192..8191")
-    u = value + 8192
-    return [u & 0x7F, u >> 7]
-
-
-def from_v14(lo, hi):
-    return (lo | hi << 7) - 8192
-
-
-def frame(cmd, args=()):
-    """a request frame; refuses anything that is not a 7-bit data byte (so no F8-FC, ever)"""
-    args = list(args)
-    bad = [a for a in args if not isinstance(a, int) or not 0 <= a < 0x80]
-    if not 0 <= cmd < 0x80 or bad:
-        raise SpikeError(f"not 7-bit data: cmd={cmd} args={bad}")
-    return HEADER + bytes([cmd]) + bytes(args) + b"\xF7"
+# v14, from_v14 and frame live in tr8s.synth.minitone: one encoder for the spike and the studio.
 
 
 def parse_reply(pkt):
@@ -267,6 +245,25 @@ def run(a):
             # TRACK_STEP set: track, index, n, note0..3, time, flags, vel
             args = [a.track, a.index, 1, a.note, 0, 0, 0, 0, flags, a.vel]
             show_step(fm.request(CMDS["TRACK_STEP"], args))
+        elif c == "send-syx":
+            need_write(a, "send-syx")
+            frames = split_syx(open(a.file, "rb").read())
+            for f in frames:                            # all of it is checked before any of it is sent
+                check_edit_frame(f)
+            kinds = {}
+            for f in frames:
+                kinds[NAMES[f[4]]] = kinds.get(NAMES[f[4]], 0) + 1
+            print(f"{a.file}: {len(frames)} frames {kinds}")
+            odd = []
+            for n, f in enumerate(frames, 1):
+                reply = fm.request(f[4], f[5:-1])       # raises on no reply: stop at the first miss
+                if f[4] == CMDS["TRACK_STEP"] and bytes(reply[:len(f) - 6]) != f[5:-1]:
+                    odd.append((n, f, reply))           # the FM-1 stored something other than what we sent
+            print(f"sent {len(frames)} frames, every one answered")
+            for n, f, reply in odd:
+                print(f"  frame {n} was not echoed as sent:\n    sent  {hexs(f[5:-1])}\n    reply {hexs(reply)}")
+            if odd:
+                raise SpikeError(f"{len(odd)} of {len(frames)} frames came back different; see fm1-spike.jsonl")
         elif c == "param-get":
             r = fm.request(CMDS["TRACK_PARAM"], [a.track, a.id])
             print("raw:", hexs(r), "value:", from_v14(r[2], r[3]) if len(r) >= 4 else "?")
@@ -360,7 +357,7 @@ def selftest():
 def _raises(fn):
     try:
         fn()
-    except SpikeError:
+    except (SpikeError, Fm1FrameError):
         return True
     return False
 
@@ -400,6 +397,7 @@ def main(argv=None):
     p = sub.add_parser("note"); p.add_argument("ch", type=int); p.add_argument("note", type=int)
     p.add_argument("--vel", type=int, default=100); p.add_argument("--dur", type=float, default=1.0)
     p = sub.add_parser("listen"); p.add_argument("seconds", type=float, nargs="?", default=30)
+    p = sub.add_parser("send-syx"); p.add_argument("file")
     p = sub.add_parser("raw"); p.add_argument("rcmd", type=int); p.add_argument("bytes", type=int, nargs="*")
     a = ap.parse_args(argv)
     if a.selftest:
@@ -408,7 +406,7 @@ def main(argv=None):
         ap.error("give a command or --selftest")
     try:
         run(a)
-    except SpikeError as e:
+    except (SpikeError, Fm1FrameError) as e:
         print(f"error: {e}", file=sys.stderr)
         return 1
     return 0
