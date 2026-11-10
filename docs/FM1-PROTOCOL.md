@@ -12,6 +12,18 @@ and `setup_frames` worked: selecting a track and `SET` of `G_ENGSEL` (scope 1, i
 DUALVCO (engine 20) without touching track 1, and `TRACK_PARAM` id 29 (`P_SLEN`) set both lengths to 32 and read back 32.
 Also **[V]**: a 32-step pad on track 3 (SWARM) of three-note chords, 28 of them tie steps (time 1, the held notes repeated), written with `P_SLEN` 32 (33 frames) and read back identical. Not yet tested: a four-note step (the most a step holds) and a ratchet. `send-syx` in the spike sends a file of them, one frame at a time, and checks the whole file first: it accepts only step writes, track selects, `G_ENGSEL` and `P_SLEN`, and refuses a save, a clock (`CLK`) or channel (`ROUT`) setting, and any frame that is not ours.
 
+**[V]** on 2026-11-10, end to end through the studio's own sender (`tr8s call synth.send`, then `Fm1Port.save`): the
+dub voicing (SWARM pad on track 0, FMTONE stab on track 2, A minor, seed 7) went in as 38 frames (2 `TRACK`, 2 `SET`, 2
+`TRACK_PARAM`, 32 `TRACK_STEP`), every one answered and every step echoed as sent. Read back by `step-get`, `TRACK_DUMP`
+and `P_SLEN`: engines 14 and 15, lengths 16, the pad's three-note chord with ties and the stab's two hits. Two details:
+the reply to `SET` of `G_ENGSEL` carries value 0 (`01 14 00 40`), not the engine, so the engine is confirmed from byte 1 of
+`TRACK_DUMP`; and `TRACK_PARAM` replies echo the length. `PROJECT` save to slot 3 (empty before) replied `01 03 01`; after a
+power-cycle slot 3 was still used and **tracks 0 and 2 already held the saved parts at power-up** (the FM-1 appears to reload the
+last saved project on boot), and `PROJECT` load of slot 3 (reply `00 03 01`) left all 32 steps, both engines and both lengths
+identical to what was generated. Because the FM-1 had already booted into those contents, the load changed nothing, so
+this shows the save survives a power-cycle, not that a load restores a different state (that was verified earlier with
+slots 0 and 1). Slots 0 and 1 were used and untouched; slot 2 is empty.
+
 Marks, as in [`PROTOCOL.md`](PROTOCOL.md) and [`RIG-FM1.md`](RIG-FM1.md):
 
 - **[V]** verified on our FM-1. So far by reading only; a write row needs a write and a read back.
