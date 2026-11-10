@@ -20,23 +20,23 @@ Two rules from [`docs/RIG-FM1.md`](../RIG-FM1.md):
 
 **Sender**
 
-- [ ] `synth/port.py`: open the FM-1's USB MIDI port by name with
+- [x] `synth/port.py`: open the FM-1's USB MIDI port by name with
       `python-rtmidi` (an optional extra; the core keeps zero dependencies).
       Send SysEx and wait for each reply, with a timeout and a useful error.
-- [ ] **Refuse to send realtime bytes (`F8`–`FC`)**, with a test.
+- [x] **Refuse to send realtime bytes (`F8`–`FC`)**, with a test.
 
 **Tools**: a new `synth` namespace. Add `"synth"` to the list in
 `tools/__init__.py`, and follow `@tool` in `tools/_core.py`.
 
-- [ ] `synth.parts` (pure): parts for a style, key, energy and seed, with an
+- [x] `synth.parts` (pure): parts for a style, key, energy and seed, with an
       optional voicing override.
-- [ ] `synth.export`: write `.json`, `.mid` and `.syx` into the library.
-- [ ] `synth.send` (`mutates=True`): push parts or a project to the FM-1, then
+- [x] `synth.export`: write `.json`, `.mid` and `.syx` into `library/synth/`.
+- [x] `synth.send` (`mutates=True`): push parts or a project to the FM-1, then
       save.
 
 **Integration with tracks**
 
-- [ ] `track.create` and `track.remix` take an optional `synth` argument, for
+- [x] `track.create` and `track.remix` take an optional `synth` argument, for
       example `{"target": "minitone", "voicing": "dub", "project": 3}`. It
       builds the FM-1 parts from the same key, tempo, seed and arrangement as
       the drums. When it is given, the TR-8S's own melodic line defaults to
@@ -44,8 +44,8 @@ Two rules from [`docs/RIG-FM1.md`](../RIG-FM1.md):
 - [ ] Parts enter with the arrangement: the energy curve from
       `pattern.arrange` decides when each part plays. Encode it as Mini-Tone
       song sections A–D with per-section mutes.
-- [ ] Library JSON gains an optional `"synth"` block. Library load and save
-      round-trip it.
+- [x] Library JSON gains an optional `"synth"` block. `library.save` writes it and
+      `library.load` returns it (the inputs, not the notes).
 
 **Set builder**
 
@@ -58,17 +58,17 @@ Two rules from [`docs/RIG-FM1.md`](../RIG-FM1.md):
 
 **Assistant**
 
-- [ ] Add a short FM-1 section to the system prompt `SYSTEM` in `chat.py`
+- [x] Add a short FM-1 section to the system prompt `SYSTEM` in `chat.py`
       (shared by `agent.py`): the voicings, the voice budget, that not every
       song needs a 303, and that the FM-1 follows the TR-8S's clock.
 
 **Tests**
 
-- [ ] Tool schemas and dispatch on a fake FM-1 port (in the style of
+- [x] Tool schemas and dispatch on a fake FM-1 port (in the style of
       `tests/fake.py`).
-- [ ] `track.create` with `synth`: the parts share the drums' key and seed.
+- [x] `track.create` with `synth`: the parts share the drums' key and seed.
 - [ ] `set.build` output, and a cue-sheet snapshot test.
-- [ ] Library round-trip with a `synth` block.
+- [x] Library round-trip with a `synth` block.
 
 ## Acceptance
 

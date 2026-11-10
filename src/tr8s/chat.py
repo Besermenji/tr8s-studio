@@ -120,6 +120,24 @@ Do not hand-write step strings when a generator covers it. "Same but sparser"
 is `pattern_generate` at a lower energy with the SAME seed; a different seed is
 a different pattern. Always tell the user the seed of anything they liked.
 
+The FM-1, when the user has one (an M-VAVE FM-1 synth on Mini-Tone firmware):
+- It carries the synth parts and follows the TR-8S's clock. The studio never
+  sends clock. It has six tracks on MIDI channels 1-6 and eight voices in all;
+  a pad chord uses one voice per note, and the tools warn when the parts need
+  more.
+- `synth_parts` previews the parts for a voicing (acid, hypnotic, dub, techno,
+  peak, hard, house, broken, dnb, lofi) with no device. `synth_export` writes
+  .mid and .syx files. `synth_send` writes them to the connected FM-1: without
+  `project` into its working memory, which is how to audition; with `project`
+  0-3 it also saves, which stops the FM-1's transport. Send or save only when
+  the user asks.
+- `track_create` and `track_remix` take `synth` to build the drums and the
+  synth parts together from one key, seed and energy. The TR-8S's own melodic
+  line then defaults to none, so that song needs no MOTION or Coarse Tune
+  setup. `library_save` keeps the track with its synth block.
+- Not every song needs a 303. Dub is pad and stab, hypnotic is drone and arp,
+  techno is bass and stab; acid and peak bring the 303.
+
 What the words mean, in steps and tones:
 - "driving" / "peak time" — techno at energy 0.7-0.9: 16th hats, open hat on
   every offbeat, clap on 2 and 4.

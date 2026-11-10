@@ -47,6 +47,12 @@ VOICING = {
     "dub":      [(0, "pad", "SWARM"), (2, "stab", "FMTONE")],
     "techno":   [(1, "bass", "DUALVCO"), (2, "stab", "ANALOG4")],
     "peak":     [(0, "acid", "TB303"), (3, "lead", "DUALVCO")],
+    # the other drum styles (style.STYLES), a starting point to override
+    "hard":     [(0, "acid", "TB303"), (3, "lead", "DUALVCO")],
+    "house":    [(1, "bass", "DUALVCO"), (2, "stab", "ANALOG4")],
+    "broken":   [(1, "bass", "DUALVCO"), (2, "stab", "FMTONE")],
+    "dnb":      [(0, "pad", "SWARM"), (1, "bass", "DUALVCO")],
+    "lofi":     [(0, "pad", "SWARM"), (3, "lead", "WAVETONE")],
 }
 
 

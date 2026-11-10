@@ -44,3 +44,11 @@ that instrument's CTRL knob to be audible.
 
 **ROLLERS** — two-step at 174. F minor, 174 BPM.
 
+## FM-1 parts
+
+A track made with `track.create`'s `synth` argument can be kept with
+`library.save`, which adds a `"synth"` block next to `_meta`: the inputs of the
+FM-1 parts (`target`, `voicing`, `key`, `energy`, `seed`, `length`, `override`,
+`project`), not the notes. `library.load` returns it, and `synth.send` with
+those inputs rebuilds the same parts. Files written by `synth.export` go in
+`library/synth/` (`.json`, `.mid`, `.syx`); `library.list` does not list them.
