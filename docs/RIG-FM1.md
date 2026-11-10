@@ -15,7 +15,7 @@ Unplugging it changes nothing about timing.
 
 Status, 2026-11-09: the macOS backend (issue 00) is built and merged. The FM-1 side is a plan with
 its first pieces in place: a Mini-Tone fork that builds and passes its host tests, a spike script, and a draft
-protocol ([`FM1-BUILD.md`](FM1-BUILD.md), [`FM1-PROTOCOL.md`](FM1-PROTOCOL.md)). Nothing has run on the FM-1 yet.
+protocol ([`FM1-BUILD.md`](FM1-BUILD.md), [`FM1-PROTOCOL.md`](FM1-PROTOCOL.md)). On 2026-11-09 our Mini-Tone build was flashed (V15 → `FM-1_900`) and the protocol's read commands were run; no write command has been run yet.
 
 The work is split into issues in [`docs/issues/`](issues/), numbered in the order they unblock each other. On
 GitHub they are 00 → #1, 01 → #2, 02 → #3, 03 → #4, 04 → #5, 05 → #27, 06 → #28.
@@ -28,7 +28,7 @@ spirit of [`PROTOCOL.md`](PROTOCOL.md):
 - **[?]** to verify: likely, but needs a hand on the hardware before anything
   depends on it.
 
-Nothing is **[V]** yet. Issue 01 exists to change that.
+Only a little is **[V]** so far: the FM-1's flash chip and the protocol's read commands ([`FM1-PROTOCOL.md`](FM1-PROTOCOL.md)). Issue 01 exists to change the rest.
 
 ## The machines
 
@@ -231,7 +231,9 @@ can be added later.
   in its update loader **[I]**. We do not know our unit's chip, so **our fork
   accepts both from its first build** (patch (a), done, host-tested, see
   [`FM1-BUILD.md`](FM1-BUILD.md)) and `fm1_install.py --info` now reports the
-  chip after the first flash. It is harmless on a Puya unit.
+  chip after the first flash. It is harmless on a Puya unit. **[V]** Our unit
+  has the **Puya P25Q80** (`0x856014`), read after the first flash on
+  2026-11-09.
 - **[D]** Recovery, from Mini-Tone's README: if the FM-1 stays black after an
   interrupted update, a computer sees a USB device **WL80UBOOT** (ID
   `4C4A:8057`); retry the installer with another data cable, else FM-1

@@ -15,11 +15,14 @@ USB-MIDI SysEx editor protocol, and record what really works (issue #3).
     python3 fm1_spike.py mix TRACK [LEVEL MUTE --write]
     python3 fm1_spike.py global-get ID              CLK = 2, ROUT = 14
     python3 fm1_spike.py global-set ID VALUE --write
+    python3 fm1_spike.py desc SCOPE ID              name, range and enum values (scope 0 track param, 1 global)
     python3 fm1_spike.py song                       query the song sections
     python3 fm1_spike.py project-query SLOT
     python3 fm1_spike.py project-save SLOT --write --slot SLOT   writes the FM-1's flash
+    python3 fm1_spike.py project-load SLOT --write  replaces the working music with the saved slot
     python3 fm1_spike.py learn-get
     python3 fm1_spike.py ping
+    python3 fm1_spike.py note CH NOTE [--vel N] [--dur S]   play one note on channel 1-6 (makes sound, stores nothing)
     python3 fm1_spike.py listen [SECONDS]           print incoming non-clock traffic
     python3 fm1_spike.py raw CMD [BYTE ...] --write
 
@@ -37,6 +40,7 @@ SAFETY
   * Read-only by default.  Anything that changes the FM-1 needs --write, and
     project-save also needs --slot to repeat the slot (flash write, ~2 s,
     stops the transport).
+  * `note` plays a sound and changes nothing stored; it only sends note on/off on channels 1-6.
   * It never sends MIDI realtime bytes (F8-FC): the studio must never become a
     second clock.  Every data byte is checked to be < 0x80.
   * Every frame sent and received is appended to fm1-spike.jsonl, which is the
@@ -199,6 +203,24 @@ def show_info(a):
         print("(could not decode further; use the raw bytes)")
 
 
+def show_desc(a):
+    print("raw:", hexs(a))
+    try:                                        # scope, id, fmt, min v14, max v14, def v14, label, unit, enum names
+        scope, pid, fmt = a[0], a[1], a[2]
+        lo, hi, df = from_v14(a[3], a[4]), from_v14(a[5], a[6]), from_v14(a[7], a[8])
+        label, i = cstring(a, 9)
+        unit, i = cstring(a, i)
+        print(f"scope={scope} id={pid} fmt={fmt} range={lo}..{hi} default={df} label={label!r} unit={unit!r}")
+        names = []
+        while i < len(a):
+            n, i = cstring(a, i)
+            names.append(n)
+        if names:
+            print("values:", {k: v for k, v in enumerate(names)})
+    except (ValueError, IndexError):
+        print("(could not decode; use the raw bytes)")
+
+
 def show_step(a):
     print("raw:", hexs(a))
     if len(a) >= 10:
@@ -265,6 +287,8 @@ def run(a):
             need_write(a, "global-set")
             r = fm.request(CMDS["SET"], [1, a.id] + v14(a.value))
             print("raw:", hexs(r), "value after clamping:", from_v14(r[2], r[3]) if len(r) >= 4 else "?")
+        elif c == "desc":
+            show_desc(fm.request(CMDS["DESC"], [a.scope, a.id]))
         elif c == "song":
             print("raw:", hexs(fm.request(CMDS["SONG"], [4])))
         elif c == "project-query":
@@ -274,11 +298,21 @@ def run(a):
             if a.slot_confirm != a.slot:
                 raise SpikeError("project-save writes flash: repeat the slot with --slot")
             print("raw:", hexs(fm.request(CMDS["PROJECT"], [1, a.slot], timeout=6.0)))
+        elif c == "project-load":
+            need_write(a, "project-load")
+            print("raw:", hexs(fm.request(CMDS["PROJECT"], [0, a.slot], timeout=4.0)), " (op, slot, used)")
         elif c == "learn-get":
             print("raw:", hexs(fm.request(CMDS["LEARN_GET"])))
         elif c == "raw":
             need_write(a, "raw")
             print("raw:", hexs(fm.request(a.rcmd, a.bytes)))
+        elif c == "note":
+            if not 1 <= a.ch <= 6 or not 0 <= a.note < 128 or not 1 <= a.vel < 128:
+                raise SpikeError("note: channel 1-6 (never 10, the TR-8S's), note 0-127, velocity 1-127")
+            fm.send(bytes([0x90 | (a.ch - 1), a.note, a.vel]))
+            time.sleep(a.dur)
+            fm.send(bytes([0x80 | (a.ch - 1), a.note, 0]))
+            print(f"played note {a.note} on channel {a.ch} for {a.dur}s")
         elif c == "listen":
             end = time.time() + a.seconds
             print(f"listening {a.seconds:.0f}s (clock and active sensing are not shown) ...")
@@ -357,10 +391,14 @@ def main(argv=None):
     p.add_argument("track", type=int); p.add_argument("id", type=int); p.add_argument("value", type=int)
     p = sub.add_parser("mix")
     p.add_argument("track", type=int); p.add_argument("level", type=int, nargs="?"); p.add_argument("mute", type=int, nargs="?")
+    p = sub.add_parser("desc"); p.add_argument("scope", type=int); p.add_argument("id", type=int)
     p = sub.add_parser("global-get"); p.add_argument("id", type=int)
     p = sub.add_parser("global-set"); p.add_argument("id", type=int); p.add_argument("value", type=int)
     p = sub.add_parser("project-query"); p.add_argument("slot", type=int)
     p = sub.add_parser("project-save"); p.add_argument("slot", type=int)
+    p = sub.add_parser("project-load"); p.add_argument("slot", type=int)
+    p = sub.add_parser("note"); p.add_argument("ch", type=int); p.add_argument("note", type=int)
+    p.add_argument("--vel", type=int, default=100); p.add_argument("--dur", type=float, default=1.0)
     p = sub.add_parser("listen"); p.add_argument("seconds", type=float, nargs="?", default=30)
     p = sub.add_parser("raw"); p.add_argument("rcmd", type=int); p.add_argument("bytes", type=int, nargs="*")
     a = ap.parse_args(argv)
