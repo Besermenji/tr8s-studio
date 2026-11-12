@@ -53,8 +53,8 @@ Two rules from [`docs/RIG-FM1.md`](../RIG-FM1.md):
       voicing) becomes TR-8S pattern slots, FM-1 project slots and a markdown
       cue sheet.
 - [ ] The cue sheet lists, per track: the TR-8S slot with its FM-1 project,
-      key, BPM and seed, which FM-1 parts play in each section, which EMP16 pad
-      brings which part in, and the EMP16 knob map.
+      key, BPM and seed, which FM-1 parts play in each section, and, for a
+      track without sections, which FM-1 track to unmute by hand and when.
 
 **Assistant**
 

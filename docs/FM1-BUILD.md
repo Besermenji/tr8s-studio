@@ -79,7 +79,7 @@ the upstream author builds on another machine. None of them touches the flash ch
 Felucca #320. Why it moved here from issue #4: it is harmless on a Puya unit, so we do not have to know the chip
 before the first flash, and the first flash then tells us.
 
-(b), (c) and (d) wait for the spike ([`FM1-PROTOCOL.md`](FM1-PROTOCOL.md)).
+(b) and (c) wait for the spike ([`FM1-PROTOCOL.md`](FM1-PROTOCOL.md)).
 
 Host tests added: `persistence_test.c` (`jedec_test`: Puya, UC25HQ80, another part, no answer, floating bus; the
 UC25HQ80 case fails if the allowlist is reverted), `ota_test.c` (bytes 24–26), `install_test.py` and
