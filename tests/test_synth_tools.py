@@ -351,7 +351,8 @@ def test_the_synth_block_survives_a_save_and_a_load(wired, fm1, library):
     doc = json.loads((library / "dubby.json").read_text())
     assert doc["_meta"]["seed"] == 7 and doc["_meta"]["style"] == "dub"
     assert doc["synth"] == {"target": "minitone", "voicing": "dub", "key": "A minor", "energy": 0.7,
-                            "seed": 7, "length": 32, "override": {}}     # no `project`: a replay must not save
+                            "seed": 7, "length": 32, "override": {}, "arrange": False,
+                            "bars": 16}                                 # no `project`: a replay must not save
     assert "tracks" not in doc["synth"]             # the inputs are kept, not the notes
 
     listed = tools.call("library.list", {})["tracks"]
@@ -505,3 +506,67 @@ def test_library_save_drops_the_project_slot(wired, library):
              "length": 16, "override": {}, "project": 3}
     tools.call("library.save", {"slot": 0, "name": "p", "style": "dub", "key": "D minor", "synth": block})
     assert "project" not in json.loads((library / "p.json").read_text())["synth"]
+
+
+# ---------------------------------------------------------------- song sections
+
+def test_arrange_with_a_project_sends_the_steps_then_the_song_then_saves(wired, fm1):
+    r = tools.call("track.create", {"slot": 0, "style": "dub", "seed": 1, "energy": 0.6,
+                                    "synth": {"project": 2, "arrange": True, "bars": 8}})
+    assert "synth_error" not in r
+    order = cmds(fm1)
+    song_at, save_at = order.index(mt.CMDS["SONG"]), order.index(mt.CMDS["PROJECT"])
+    assert max(i for i, c in enumerate(order) if c == mt.CMDS["TRACK_STEP"]) < song_at < save_at
+    assert order[-1] == mt.CMDS["PROJECT"]
+    parts = mt.build_parts("dub", seed=1, energy=0.6)
+    want = mt.song_rows(mt.song_sections(parts, 0.6, 8), 2)
+    assert fm1.chain == want and fm1.slots[2] == want       # the save captured the chain
+    assert r["synth"]["sections"] == mt.song_sections(parts, 0.6, 8)
+
+
+def test_arrange_with_no_project_builds_the_sections_and_sends_nothing(wired, fm1):
+    r = tools.call("track.create", {"slot": 0, "style": "dub", "seed": 1, "synth": {"arrange": True}})
+    assert fm1.sent == [] and r["synth"]["sections"]
+
+
+def test_without_arrange_no_song_is_sent(wired, fm1):
+    r = tools.call("track.create", {"slot": 0, "style": "dub", "seed": 1, "synth": {"project": 2}})
+    assert mt.CMDS["SONG"] not in cmds(fm1) and "sections" not in r["synth"]
+
+
+def test_a_busy_fm1_gives_a_readable_error_and_saves_nothing(wired, monkeypatch):
+    fake = fake_fm1_rtmidi(monkeypatch, FakeFm1(playing=True))
+    monkeypatch.setattr(port_mod, "STEP_TIMEOUT", 0.05)
+    port = Fm1Port()
+    tools.set_fm1(port)
+    try:
+        r = tools.call("track.create", {"slot": 0, "style": "dub", "seed": 1,
+                                        "synth": {"project": 2, "arrange": True}})
+    finally:
+        tools.set_fm1(None)
+        port.close()
+    assert "the FM-1 is playing" in r["synth_error"]
+    assert mt.CMDS["PROJECT"] not in cmds(fake)
+
+
+def test_a_song_needs_a_project_at_the_tool_boundary(fm1):
+    from tr8s.tools.synth import push
+    with pytest.raises(ToolError, match="needs a project"):
+        push(mt.build_parts("dub", seed=1), None, mt.song_sections(mt.build_parts("dub", seed=1)))
+    assert fm1.sent == []
+
+
+def test_the_library_keeps_arrange_and_bars(wired, library):
+    block = {"target": "minitone", "voicing": "dub", "key": "D minor", "energy": 0.7, "seed": 1,
+             "length": 16, "override": {}, "arrange": True, "bars": 8}
+    tools.call("library.save", {"slot": 0, "name": "arr", "style": "dub", "key": "D minor", "synth": block})
+    saved = json.loads((library / "arr.json").read_text())["synth"]
+    assert saved["arrange"] is True and saved["bars"] == 8
+
+
+def test_the_library_refuses_an_arrangement_that_cannot_be_built(wired, library):
+    block = {"target": "minitone", "voicing": "dub", "key": "D minor", "seed": 1, "length": 16,
+             "arrange": True, "bars": 17}
+    with pytest.raises(ToolError):
+        tools.call("library.save", {"slot": 0, "name": "bad", "style": "dub", "key": "D minor", "synth": block})
+    assert not list(library.glob("*.json"))

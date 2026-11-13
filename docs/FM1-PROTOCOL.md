@@ -72,7 +72,7 @@ Frames are what `fm1_spike.py` sends (track numbers are 0-based; Mini-Tone has s
 | Clock source | `GET`/`SET` scope 1, id 2 `CLK`: 0 INT, 1 USB, 2 TRS | `… 03 01 02 02 40 F7` | get and values **[V]**, default INT; **set [V]**: INT → USB → TRS → INT each read back (changing it stops the transport, per the docs; nothing was playing to check) |
 | MIDI IN channel block | `GET`/`SET` scope 1, id 14 `ROUT`: 0 CH1-6, 1 SEL, 2 CH5-10, 3 CH9-14, 4 CH13-16 | `… 03 01 0E 00 40 F7` | get and values **[V]**, **default CH1-6**; **set [V]**: CH1-6 → SEL → CH1-6 read back |
 | Names and ranges of any parameter or enum | `DESC` (5) | `… 05 01 0E F7` | **[V]** scope 0 and 1; `fm1_spike.py desc SCOPE ID` |
-| Song sections | `SONG` (33) ops 4..7 | query `… 21 04 F7` | query **[V]** (`04 00 00 00 00 00`: op, rc, count, running, section, remaining; none set); set **[D]**, not run |
+| Song sections | `SONG` (33) ops 4..7 | query `… 21 04 F7` | **[V]** 2026-11-12/13 (`fm1_spike.py song`, `song-set`): query `04 rc count running row remaining rows…`; set (op 5, the whole chain, six lanes and a repeat per row) rc 0 and read back identical; saved to project slot 2 with `PROJECT` save, a load of another slot emptied it and loading slot 2 brought it back, and it survived a power cycle; a song played end to end on `CLK` TRS (see "How a song starts and advances") |
 | Save or load a project slot (0..3) | `PROJECT` (9) | save `… 09 01 00 F7`; query `… 09 02 00 F7` | query **[V]** (slots 0 and 1 empty on a fresh unit); **save [V]**: reply `01 00 01` (op, slot, used), and slot 0 was still used after a power cycle; **load [V]**: reply `00 SLOT 01`, and it replaces the working music (loading slot 0 put track 1 back on FM6 with empty steps, loading slot 1 restored the TB303 and the 16-step line); loading did not change `CLK` or `ROUT`, but both held the same values when saved, so that proves nothing about per-project settings |
 | Map a CC to a parameter (16 entries) | `LEARN_GET` (78) / `LEARN_SET` (79) | `… 4F 00 4A 03 62 F7` | get **[V]**, map empty, tag `43 01 10` advertised (16 entries); set **[D]**, not run |
 
@@ -96,6 +96,24 @@ Frames are what `fm1_spike.py` sends (track numbers are 0-based; Mini-Tone has s
    SysEx today. That is fork patch (c), or they are set by hand on the device.
 5. **Writes to a playing song.** During song playback, `TRACK_STEP` writes and `TRACK_PARAM` writes to LEN / DIV /
    SWING / GATE / QNTZ are ignored and return the current value. **[D]**
+6. **How a song starts and advances.** **[V]** on the unit, 2026-11-13, `CLK` TRS, TR-8S wired straight to the FM-1:
+   - A song starts when PLAY is pressed on the FM-1's SONG page (GLO, tapped) **while the FM-1 is stopped**, or when
+     `SONG` op 6 arrives. Pressing PLAY while it plays stops it instead. A Start from the TR-8S does **not** start
+     a song; it starts the plain loop, and the FM-1 follows the TR-8S's Start and Stop in the loop. A TR-8S Stop
+     also ends a running song.
+   - With the TR-8S running, the song begins on the next clock pulse after PLAY (**[D]** `midi_clock.c`), and it was
+     heard on the beat, so the grid lines up and the
+     song's bar 1 plays against whichever bar position PLAY was pressed at. To start sections on the TR-8S's bar 1,
+     press PLAY (or send op 6) on that bar. No patch was needed to hear them on the beat; one that starts an armed
+     song from the TR-8S's Start would only make that automatic. With the TR-8S stopped, PLAY starts the song and
+     the transport stops again 500 ms later, as no clock arrives (**[D]** from the firmware, `events_block`; not
+     timed on the unit).
+   - A section lasts `repeat` loops of the first non-silent track: 1.88 to 1.90 s each in three runs, 3.79 s for two
+     sections, same every time. The song does not loop: after the last section the transport stops and the query
+     reads `running 0`, the last row, `remaining 1`.
+   - Each lane plays the **saved** slot it names, not the working music. A chain that named slot A played slot A's
+     empty tracks in silence; pointing the same lanes at slot 2 (saved from the sounding project) played them.
+   - The query reports no position inside a section, so a poller cannot tell where in the TR-8S's bar the song is.
 
 ## Open questions: what the spike must answer
 
@@ -110,7 +128,7 @@ Frames are what `fm1_spike.py` sends (track numbers are 0-based; Mini-Tone has s
 | 8 | **MIDI IN blocks.** The build offers CH1-6, SEL, CH5-10, CH9-14, CH13-16, **default CH1-6**. CH5-10 and CH9-14 **include channel 10**, the TR-8S's, so use CH1-6. The older "CH1-4 / CH5-8" text is stale. | **[V]** | `desc 1 14` |
 | 9 | Is `G_CLOCK` / `G_ROUTE` stored **per project** or device-wide, and does loading a project change them? (`G_ROUTE` is described as part of the project in the README, and as settings in the editor docs.) | **[?]** | set, save, load another slot, read back |
 | 10 | `PROJECT` save/load: survives a power cycle? How long is the reply? does a save with the transport running stop it and reply? | save, load and power cycle **[V]** (transport stopped); save-while-playing not run | `project-save`, power-cycle |
-| 11 | `SONG` set of sections A–D: accepted while the transport runs? rc values? | **[D]** | `song` then a set |
+| 11 | `SONG` set of sections A–D: accepted while the transport runs? rc values? | rc 0 ok and 1 invalid chain **[V]** (accepted stopped); busy, rc 2, while the transport runs: **[D]** from the firmware (`editor.c`), not run on the hardware (the test song lasts 4 s); 3..6 ("slot A..D is empty") come back from PLAY only | `song` then a set |
 | 12 | Clock pinned to TRS: is a clock on USB then ignored? | setting TRS **[V]**; that a USB clock is then ignored: not tested (needs an external clock source) | set `CLK` 2, send a USB clock from a test source (not the studio) |
 | 13 | CC map: do 74, 71, 75, 5, 91, 93, 94, 7 act on **every engine** (TB303, SWARM, FMTONE, WAVETONE, DUALVCO, ANALOG4)? | **[D]** | `track-dump` before/after |
 | 14 | Voice budget: eight voices across six tracks, how are they shared, and what is dropped first? | **[?]** | listen; README |

@@ -25,6 +25,7 @@ from .kit import kit_auto_build
 from .pattern import pattern_arrange, pattern_audit, pattern_set_header, pattern_set_line
 from .synth import build as synth_build
 from .synth import push as synth_push
+from .synth import sections as synth_sections
 from .synth import summary as synth_summary
 
 SYNTH_ARG = {
@@ -43,6 +44,14 @@ SYNTH_ARG = {
                                    "Omit to only build them."},
         "length": {"type": "integer", "enum": [16, 32, 64]},
         "override": {"type": "object", "description": "as in synth.parts"},
+        "arrange": {"type": "boolean",
+                    "description": "also build the FM-1's song: sections that bring the parts in and "
+                                   "out along the drums' intro / main / break / drop arc, on the "
+                                   "`project` slot. Off by default: the parts then just loop. Needs "
+                                   "`project` to be sent; the song is then played from the FM-1 "
+                                   "(its SONG page, PLAY on the TR-8S's bar 1)."},
+        "bars": {"type": "integer", "enum": [4, 8, 16],
+                 "description": "TR-8S bars each section lasts (with arrange; default 16)"},
     },
     "additionalProperties": False,
 }
@@ -54,7 +63,8 @@ def _synth_spec(synth, style, key, energy, seed) -> dict:
         raise ToolError(f"unknown synth target {synth['target']!r}; only 'minitone'")
     return {"target": "minitone", "voicing": synth.get("voicing") or style, "key": key,
             "energy": energy, "seed": seed, "length": synth.get("length", 16),
-            "override": synth.get("override") or {}, "project": synth.get("project")}
+            "override": synth.get("override") or {}, "project": synth.get("project"),
+            "arrange": bool(synth.get("arrange")), "bars": synth.get("bars", 16)}
 
 
 @tool("track.create",
@@ -110,6 +120,7 @@ def track_create(slot, style, name=None, key=None, energy=0.7, kit_slot=None,
         spec = _synth_spec(synth, style, key, energy, seed)
         parts = synth_build(spec["voicing"], key, energy, seed, spec["length"],
                             spec["override"])
+        song = synth_sections(parts, energy, spec["bars"]) if spec["arrange"] else None
 
     # 1. the kit FIRST and completely. Committing a kit re-points the last
     #    pattern transferred at it, so no pattern may be written until every
@@ -157,14 +168,15 @@ def track_create(slot, style, name=None, key=None, energy=0.7, kit_slot=None,
 
     # 5. the FM-1 parts, from the same key, seed and energy as the drums
     if parts is not None:
-        out["synth"] = {**spec, "tempo": out["tempo"], **synth_summary(parts)}
+        out["synth"] = {**spec, "tempo": out["tempo"], **synth_summary(parts, song)}
         if spec["project"] is None:
             out["steps"].append(f"built FM-1 parts ({spec['voicing']}); not sent")
         else:
             try:
-                out["synth"].update(synth_push(parts, spec["project"]))
+                out["synth"].update(synth_push(parts, spec["project"], song))
                 out["steps"].append(f"wrote the FM-1 parts ({spec['voicing']}) "
-                                    f"and saved FM-1 project slot {spec['project']}")
+                                    + (f"and its {len(song)}-section song " if song else "")
+                                    + f"and saved FM-1 project slot {spec['project']}")
             except (Fm1Error, ValueError) as e:
                 # the TR-8S side is done; say what the FM-1 did not take
                 out["synth_error"] = str(e)

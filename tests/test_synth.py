@@ -542,3 +542,83 @@ def test_the_spike_and_the_studio_share_one_command_table():
     spike = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(spike)
     assert spike.CMDS is mt.CMDS and spike.frame is mt.frame and spike.split_syx is mt.split_syx
+
+
+# ------------------------------------------------------------ song sections
+
+def _parts(style="dub", length=16, **kw):
+    return mt.build_parts(style, seed=1, length=length, **kw)
+
+
+def test_song_frame_is_byte_exact():
+    rows = [[0, 0, 4, 4, 4, 4, 2], [0, 0, 0, 4, 4, 4, 1]]
+    assert mt.song_frame(rows) == bytes.fromhex("F07D464C21" "05" "02" "00000404040402" "00000004040401" "F7")
+
+
+@pytest.mark.parametrize("rows", [[], [[0] * 6 + [1]] * 17, [[0, 0, 0, 0, 0, 5, 1]], [[0, 0, 0, 0, 0, 0, 0]],
+                                  [[0, 0, 0, 0, 0, 1]]])
+def test_song_frame_refuses_what_the_firmware_would_call_invalid(rows):
+    with pytest.raises(mt.Fm1FrameError):
+        mt.song_frame(rows)
+
+
+def test_parse_song_reads_a_reply():
+    reply = bytes([4, 0, 2, 1, 1, 3] + [2, 2, 4, 4, 4, 4, 1] + [2, 2, 2, 4, 4, 4, 1])
+    s = mt.parse_song(reply)
+    assert (s["rc"], s["running"], s["row"], s["remaining"]) == (0, True, 1, 3)
+    assert s["rows"] == [[2, 2, 4, 4, 4, 4, 1], [2, 2, 2, 4, 4, 4, 1]]
+
+
+def test_a_pad_holds_through_the_break_and_acid_does_not():
+    dub = mt.song_sections(_parts("dub"))                 # pad on track 0, stab on track 2
+    brk = next(s for s in dub if "E" in s["variations"])
+    assert 0 in brk["plays"] and 2 not in brk["plays"]
+    acid = mt.song_sections(_parts("acid"))               # acid on 0, bass on 1
+    brk = next(s for s in acid if "E" in s["variations"])
+    assert brk["plays"] == []
+
+
+def test_parts_come_in_by_energy():
+    secs = mt.song_sections(_parts("peak"), energy=0.6)   # acid on 0, lead on 3
+    by = {s["variations"][0]: s["plays"] for s in secs}
+    assert 3 not in by["B"] and 3 in by["G"]
+
+
+@pytest.mark.parametrize("style", sorted(mt.VOICING))
+@pytest.mark.parametrize("bars", [4, 8, 16])
+def test_song_rows_are_valid_for_the_firmware(style, bars):
+    rows = mt.song_rows(mt.song_sections(_parts(style), bars=bars), project=2)
+    mt.song_frame(rows)                                    # raises if a lane or a repeat is out of range
+    assert 1 <= len(rows) <= mt.SONG_ROWS
+    assert sum(r[-1] for r in rows) == 8 * bars            # a 16-step part: a pass is a bar, whoever plays
+
+
+def test_an_absent_track_is_silent_and_a_playing_one_names_the_project():
+    secs = mt.song_sections(_parts("dub"))
+    rows = mt.song_rows(secs, project=3)
+    for s, r in zip(secs, rows):
+        assert [r[t] for t in range(6)] == [3 if t in s["plays"] else mt.SILENT for t in range(6)]
+
+
+def test_sections_add_up_to_the_arc_bars():
+    secs = mt.song_sections(_parts("techno"), bars=8)
+    assert sum(s["bars"] for s in secs) == 8 * 8           # eight variations of eight bars
+
+
+def test_longer_parts_take_fewer_passes():
+    secs = mt.song_sections(_parts("dub", length=32), bars=8)
+    assert sum(s["repeat"] for s in secs) == 8 * 4         # eight sections of four 32-step passes, merged or not
+    assert all(s["repeat"] % 4 == 0 for s in secs)
+
+
+def test_mixed_lengths_are_refused():
+    parts = _parts("dub")
+    parts[2] = mt.generate("stab", length=32, engine="FMTONE")
+    with pytest.raises(ValueError, match="same length"):
+        mt.song_sections(parts)
+
+
+@pytest.mark.parametrize("bars,length", [(1, 48), (16, 4), (0, 16)])
+def test_a_section_that_does_not_fit_the_firmware_is_refused(bars, length):
+    with pytest.raises(ValueError):
+        mt.song_sections(_parts("dub", length=length), bars=bars)

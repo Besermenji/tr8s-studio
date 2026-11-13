@@ -412,6 +412,21 @@ def generate(style: str = "techno", energy: float = 0.6, role: str = "main",
             "tempo": st.tempo(rng), "tracks": tracks}
 
 
+# The shape of a techno track across the eight variations: (variation, role, level).
+# The break sits lower than the intro so the return lands. `arrangement` and the FM-1's
+# song sections (synth.minitone.song_sections) both read this curve.
+ARC = [
+    ("A", "intro", 0.30), ("B", "main", 0.55), ("C", "main", 0.70),
+    ("D", "fill", 0.75), ("E", "break", 0.25), ("F", "drop", 0.40),
+    ("G", "main", 0.90), ("H", "fill", 0.95),
+]
+
+
+def arc_energy(level: float, energy: float) -> float:
+    """An ARC level scaled by the requested energy, keeping the curve's shape."""
+    return max(0.05, min(1.0, level * (0.5 + energy)))
+
+
 def arrangement(style: str = "techno", seed: int | None = None,
                 energy: float = 0.6) -> dict:
     """
@@ -422,16 +437,9 @@ def arrangement(style: str = "techno", seed: int | None = None,
     """
     if seed is None:
         seed = random.randrange(1 << 30)
-    plan = [
-        ("A", "intro", 0.30), ("B", "main", 0.55), ("C", "main", 0.70),
-        ("D", "fill", 0.75), ("E", "break", 0.25), ("F", "drop", 0.40),
-        ("G", "main", 0.90), ("H", "fill", 0.95),
-    ]
     out = {}
-    for i, (v, role, level) in enumerate(plan):
-        # scale the curve by the requested energy, keeping its shape
-        e = max(0.05, min(1.0, level * (0.5 + energy)))
-        out[v] = generate(style, energy=e, role=role, seed=seed + i)
+    for i, (v, role, level) in enumerate(ARC):
+        out[v] = generate(style, energy=arc_energy(level, energy), role=role, seed=seed + i)
     return {"style": style, "seed": seed, "variations": out,
             "tempo": out["B"]["tempo"]}
 

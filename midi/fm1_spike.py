@@ -16,7 +16,8 @@ USB-MIDI SysEx editor protocol, and record what really works (issue #3).
     python3 fm1_spike.py global-get ID              CLK = 2, ROUT = 14
     python3 fm1_spike.py global-set ID VALUE --write
     python3 fm1_spike.py desc SCOPE ID              name, range and enum values (scope 0 track param, 1 global)
-    python3 fm1_spike.py song                       query the song sections
+    python3 fm1_spike.py song                       query the song sections (decoded)
+    python3 fm1_spike.py song-set REPEAT LANES ... --write   set the whole chain, RAM only (refused while the FM-1 plays); no play or stop is ever sent
     python3 fm1_spike.py project-query SLOT
     python3 fm1_spike.py project-save SLOT --write --slot SLOT   writes the FM-1's flash
     python3 fm1_spike.py project-load SLOT --write  replaces the working music with the saved slot
@@ -57,8 +58,9 @@ import sys
 import time
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "src"))
-from tr8s.synth.minitone import (CMDS, HEADER, NAMES, Fm1FrameError, check_edit_frame,   # noqa: E402,F401
-                                 frame, from_v14, split_syx, v14)
+from tr8s.synth.minitone import (CMDS, HEADER, NAMES, SILENT, SONG_OPS, Fm1FrameError,   # noqa: E402,F401
+                                 check_edit_frame, frame, from_v14, parse_song, song_frame,
+                                 split_syx, v14)
 from tr8s.synth.port import Fm1EchoError, Fm1Error, Fm1Port, parse_reply   # noqa: E402,F401
 
 LOG = os.environ.get("FM1_SPIKE_LOG", "fm1-spike.jsonl")
@@ -137,6 +139,19 @@ def show_desc(a):
             print("values:", {k: v for k, v in enumerate(names)})
     except (ValueError, IndexError):
         print("(could not decode; use the raw bytes)")
+
+
+def show_song(raw):
+    try:
+        s = parse_song(raw)
+    except Fm1FrameError as e:
+        print(f"(could not decode: {e})")
+        return
+    print(f"op={s['op']} rc={s['rc']} ({s['rc_text']}) sections={s['count']} running={s['running']} "
+          f"current={s['row']} repeats left={s['remaining']}")
+    for n, r in enumerate(s["rows"]):
+        *lanes, rep = r
+        print(f"  {n}: lanes " + " ".join("-" if x == SILENT else "ABCD"[x] for x in lanes) + f"  x{rep}")
 
 
 def show_step(a):
@@ -224,7 +239,22 @@ def run(a):
         elif c == "desc":
             show_desc(fm.request(CMDS["DESC"], [a.scope, a.id]))
         elif c == "song":
-            print("raw:", hexs(fm.request(CMDS["SONG"], [4])))
+            raw = fm.request(CMDS["SONG"], [SONG_OPS["query"]])
+            print("raw:", hexs(raw))
+            show_song(raw)
+        elif c == "song-set":
+            need_write(a, "song-set")           # RAM only: nothing is saved; the FM-1 refuses it while playing
+            if len(a.pairs) % 2 or not a.pairs:
+                raise SpikeError("song-set: pairs of REPEAT and LANES, e.g. 2 0,0,4,4,4,4  1 0,0,0,4,4,4")
+            rows = []
+            for rep, lanes in zip(a.pairs[0::2], a.pairs[1::2]):
+                lane = [int(x) for x in lanes.split(",")]
+                rows.append(lane + [int(rep)])
+            f = song_frame(rows)                # checks lanes 0..4, repeat 1..16, at most 16 rows
+            print("frame:", hexs(f))
+            raw = fm.request(CMDS["SONG"], f[5:-1])
+            print("raw:", hexs(raw))
+            show_song(raw)
         elif c == "project-query":
             print("raw:", hexs(fm.request(CMDS["PROJECT"], [2, a.slot])), " (op, slot, used)")
         elif c == "project-save":
@@ -286,6 +316,15 @@ def selftest():
           parse_reply(bytes.fromhex("F07D464C4F0010014A0362F7")) == (0x4F, bytes.fromhex("0010014A0362")))
     check("parse_reply ignores another header", parse_reply(bytes.fromhex("F0417F0001F7")) is None)
     check("cstring", cstring(b"Mini-Tone\0\x06") == ("Mini-Tone", 10))
+    two = [[0, 0, 4, 4, 4, 4, 2], [0, 0, 0, 4, 4, 4, 1]]
+    check("song_frame: op 5, count, rows of six lanes and a repeat",
+          song_frame(two) == bytes.fromhex("F07D464C21" "05" "02" "00000404040402" "00000004040401" "F7"))
+    check("song_frame refuses a lane of 5, a repeat of 0 or 17, and 17 sections",
+          all(_raises(lambda r=r: song_frame(r)) for r in
+              ([[5, 0, 0, 0, 0, 0, 1]], [[0] * 6 + [0]], [[0] * 6 + [17]], [[0] * 6 + [1]] * 17)))
+    reply = bytes.fromhex("05" "00" "02" "00" "00" "00" "00000404040402" "00000004040401")
+    check("parse_song: rows, rc and the readout", parse_song(reply)["rows"] == two and parse_song(reply)["rc"] == 0)
+    check("parse_song: the doc's empty reply", parse_song(bytes.fromhex("040000000000"))["count"] == 0)
     check("every command id is 7-bit and unique", len(set(CMDS.values())) == len(CMDS) and max(CMDS.values()) < 0x80)
     print("selftest FAILED" if bad else "selftest passed")
     return bad
@@ -312,6 +351,7 @@ def main(argv=None):
     sub.add_parser("info")
     sub.add_parser("ping")
     sub.add_parser("song")
+    p = sub.add_parser("song-set"); p.add_argument("pairs", nargs="+", help="REPEAT LANES ..., LANES = six slots 0-3 or 4 (silent), comma-separated")
     sub.add_parser("learn-get")
     p = sub.add_parser("track"); p.add_argument("n", type=int, nargs="?")
     p = sub.add_parser("track-dump"); p.add_argument("n", type=int)
