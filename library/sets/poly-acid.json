@@ -1,0 +1,970 @@
+{
+ "name": "poly-acid",
+ "about": "A live set on 8-01..8-16, kits 113-128. Patterns are reworked from the TR-8S's own patterns (no Golab content); every kit is new, built from the machine's built-in tones. Built with `tr8s rework library/sets/poly-acid.json`.",
+ "survey": "~/.local/share/tr8s/survey/2026-11-13",
+ "base_kit": 113,
+ "kit_defaults": {
+  "decay": 128,
+  "reverb": 0,
+  "delay": 0
+ },
+ "soften": 0.25,
+ "slots": [
+  {
+   "slot": "8-01",
+   "source": "5-01",
+   "bpm": 128,
+   "energy": 0.25,
+   "label": "WARM-UP",
+   "role": "Warm-up: light entry",
+   "notes": "Dub opening: the rim's 3-cycle and the kalimba throw into the delay. The bass voice (MT) is there from bar 1: keep its filter almost shut.",
+   "clear_ctrl": [
+    "SD",
+    "LT",
+    "MT",
+    "HT",
+    "RS"
+   ],
+   "acid": "MT",
+   "kit": {
+    "BD": {
+     "tone": "909 Bass1",
+     "decay": 110
+    },
+    "SD": {
+     "tone": "Cross Stick",
+     "decay": 100,
+     "delay": 60
+    },
+    "LT": {
+     "tone": "808 Low Tom",
+     "decay": 120
+    },
+    "MT": {
+     "tone": "Deep SH Bass",
+     "decay": 110,
+     "reverb": 40
+    },
+    "HT": {
+     "tone": "Kalimba Mid",
+     "decay": 140,
+     "delay": 110,
+     "reverb": 60
+    },
+    "RS": {
+     "tone": "Real Rim",
+     "decay": 90,
+     "delay": 90
+    },
+    "HC": {
+     "tone": "808 Hand Clap",
+     "decay": 120,
+     "reverb": 50
+    },
+    "CH": {
+     "tone": "909 Closed HH",
+     "decay": 70
+    },
+    "OH": {
+     "tone": "909 Open HH",
+     "decay": 110
+    },
+    "CC": {
+     "tone": "909 Crash Cymbal",
+     "decay": 140
+    },
+    "RC": {
+     "tone": "909 Ride Cymbal",
+     "decay": 130
+    }
+   }
+  },
+  {
+   "slot": "8-02",
+   "source": "7-12",
+   "bpm": 130,
+   "energy": 0.35,
+   "label": "HYPNO",
+   "role": "Warm-up: hypnotic",
+   "kit": {
+    "BD": {
+     "tone": "909 Low Bass",
+     "decay": 120
+    },
+    "SD": {
+     "tone": "909 Snare2",
+     "decay": 100
+    },
+    "LT": {
+     "tone": "Analog Tom",
+     "decay": 120,
+     "reverb": 40
+    },
+    "MT": {
+     "tone": "Modular Tom",
+     "decay": 110
+    },
+    "HT": {
+     "tone": "626 High Tom1",
+     "decay": 100,
+     "delay": 80
+    },
+    "RS": {
+     "tone": "909 Rim Shot",
+     "decay": 100,
+     "delay": 100
+    },
+    "HC": {
+     "tone": "909 Hand Clap",
+     "decay": 120,
+     "reverb": 40
+    },
+    "CH": {
+     "tone": "909 Closed HH",
+     "decay": 70
+    },
+    "OH": {
+     "tone": "909 Open HH",
+     "decay": 100
+    },
+    "CC": {
+     "tone": "909 Crash Cymbal",
+     "decay": 140
+    },
+    "RC": {
+     "tone": "909 Ride Cymbal",
+     "decay": 130
+    }
+   }
+  },
+  {
+   "slot": "8-03",
+   "source": "7-01",
+   "bpm": 132,
+   "energy": 0.45,
+   "label": "GROOVE",
+   "role": "Warm-up: groove",
+   "kit": {
+    "BD": {
+     "tone": "909 Bass2",
+     "decay": 120
+    },
+    "SD": {
+     "tone": "909 Snare1",
+     "decay": 110
+    },
+    "LT": {
+     "tone": "Analog Tom",
+     "decay": 110
+    },
+    "MT": {
+     "tone": "Can Tom",
+     "decay": 110
+    },
+    "HT": {
+     "tone": "909 High Tom",
+     "decay": 110
+    },
+    "RS": {
+     "tone": "Real Rim",
+     "decay": 90,
+     "delay": 70
+    },
+    "HC": {
+     "tone": "909 Hand Clap",
+     "decay": 120,
+     "reverb": 30
+    },
+    "CH": {
+     "tone": "909 Closed HH",
+     "decay": 70
+    },
+    "OH": {
+     "tone": "909 Open HH",
+     "decay": 110
+    },
+    "CC": {
+     "tone": "909 Crash Cymbal",
+     "decay": 140
+    },
+    "RC": {
+     "tone": "909 Ride Cymbal",
+     "decay": 130
+    }
+   }
+  },
+  {
+   "slot": "8-04",
+   "source": "7-04",
+   "bpm": 134,
+   "energy": 0.55,
+   "label": "ACID IN",
+   "role": "Build: first acid",
+   "notes": "The acid line is on HT (yellow) in this one. The CC track runs 16ths: a ride cup, not a crash.",
+   "clear_ctrl": [
+    "HC"
+   ],
+   "acid": "HT",
+   "kit": {
+    "BD": {
+     "tone": "909 Attack Bass",
+     "decay": 115
+    },
+    "SD": {
+     "tone": "909 Snare1",
+     "decay": 110
+    },
+    "LT": {
+     "tone": "909 Low Tom",
+     "decay": 110
+    },
+    "MT": {
+     "tone": "Percussive Bass",
+     "decay": 100
+    },
+    "HT": {
+     "tone": "Deep SH Bass",
+     "decay": 110,
+     "reverb": 30
+    },
+    "RS": {
+     "tone": "707 Rim Shot/CB",
+     "decay": 100,
+     "delay": 60
+    },
+    "HC": {
+     "tone": "909 Hand Clap",
+     "decay": 120
+    },
+    "CH": {
+     "tone": "909 Closed HH",
+     "decay": 65
+    },
+    "OH": {
+     "tone": "909 Open HH",
+     "decay": 100
+    },
+    "CC": {
+     "tone": "626 Ride Cup",
+     "decay": 90
+    },
+    "RC": {
+     "tone": "909 Ride Cymbal",
+     "decay": 130
+    }
+   }
+  },
+  {
+   "slot": "8-05",
+   "source": "5-10",
+   "bpm": 136,
+   "energy": 0.65,
+   "label": "POLY ACID",
+   "role": "Build: acid on 3-cycles",
+   "notes": "Five voices on 3-step cycles against the four. MT carries the acid line; LT and HT answer it.",
+   "clear_ctrl": [
+    "SD",
+    "MT",
+    "RS",
+    "LT",
+    "HT",
+    "RC"
+   ],
+   "acid": "MT",
+   "kit": {
+    "BD": {
+     "tone": "909 Attack Bass",
+     "decay": 115
+    },
+    "SD": {
+     "tone": "Analog Snare1",
+     "decay": 100
+    },
+    "LT": {
+     "tone": "Analog Tom",
+     "decay": 110
+    },
+    "MT": {
+     "tone": "Prog.Trance Bass",
+     "decay": 110,
+     "reverb": 30
+    },
+    "HT": {
+     "tone": "Modular Tom",
+     "decay": 100,
+     "delay": 60
+    },
+    "RS": {
+     "tone": "MG888 Rim",
+     "decay": 90
+    },
+    "HC": {
+     "tone": "Analog Clap1",
+     "decay": 120
+    },
+    "CH": {
+     "tone": "Comp Closed HH",
+     "decay": 65
+    },
+    "OH": {
+     "tone": "Comp Open HH",
+     "decay": 100
+    },
+    "CC": {
+     "tone": "909 Crash Cymbal",
+     "decay": 140
+    },
+    "RC": {
+     "tone": "909 Ride Cymbal",
+     "decay": 130
+    }
+   }
+  },
+  {
+   "slot": "8-06",
+   "source": "7-06",
+   "bpm": 138,
+   "energy": 0.8,
+   "label": "PEAK1 APP",
+   "role": "Peak 1: approach",
+   "kit": {
+    "BD": {
+     "tone": "Tube Kick",
+     "decay": 115
+    },
+    "SD": {
+     "tone": "Industrial Snare",
+     "decay": 105
+    },
+    "LT": {
+     "tone": "Modular Tom",
+     "decay": 105
+    },
+    "MT": {
+     "tone": "Analog Tom",
+     "decay": 105
+    },
+    "HT": {
+     "tone": "Sat Mod High Tom",
+     "decay": 100
+    },
+    "RS": {
+     "tone": "Real Rim",
+     "decay": 90,
+     "delay": 50
+    },
+    "HC": {
+     "tone": "EDM Clap",
+     "decay": 115
+    },
+    "CH": {
+     "tone": "Comp Closed HH",
+     "decay": 60
+    },
+    "OH": {
+     "tone": "Comp Open HH",
+     "decay": 95
+    },
+    "CC": {
+     "tone": "Stereo Cymbal",
+     "decay": 140
+    },
+    "RC": {
+     "tone": "909 Ride Cymbal",
+     "decay": 125
+    }
+   }
+  },
+  {
+   "slot": "8-07",
+   "source": "4-11",
+   "bpm": 140,
+   "energy": 0.95,
+   "label": "PEAK 1",
+   "role": "Peak 1",
+   "notes": "The ride carries a pitched line (tune motion): ride it on its fader.",
+   "kit": {
+    "BD": {
+     "tone": "Sat Kick",
+     "decay": 110
+    },
+    "SD": {
+     "tone": "909 Dist. Snare",
+     "decay": 100
+    },
+    "LT": {
+     "tone": "Sat Mod Low Tom",
+     "decay": 105
+    },
+    "MT": {
+     "tone": "Modular Tom",
+     "decay": 100
+    },
+    "HT": {
+     "tone": "Sat Mod High Tom",
+     "decay": 100
+    },
+    "RS": {
+     "tone": "909 Rim Shot",
+     "decay": 95
+    },
+    "HC": {
+     "tone": "909 Dist.Clap",
+     "decay": 110
+    },
+    "CH": {
+     "tone": "Comp Closed HH",
+     "decay": 60
+    },
+    "OH": {
+     "tone": "Comp Open HH",
+     "decay": 95
+    },
+    "CC": {
+     "tone": "Industrial Hit1",
+     "decay": 120
+    },
+    "RC": {
+     "tone": "909 Ride Cymbal",
+     "decay": 125
+    }
+   }
+  },
+  {
+   "slot": "8-08",
+   "source": "5-05",
+   "bpm": 140,
+   "energy": 0.3,
+   "label": "INTERLUDE",
+   "role": "Light interlude",
+   "notes": "Toms on 6- and 3-step cycles become a melodic polyrhythm: kalimba, mallet and udu. Bring the kick back on a 1 before 8-09.",
+   "kit": {
+    "BD": {
+     "tone": "808 Bass1 Long",
+     "decay": 140
+    },
+    "SD": {
+     "tone": "808 Snare1",
+     "decay": 110,
+     "reverb": 60
+    },
+    "LT": {
+     "tone": "Kalimba Mid",
+     "decay": 150,
+     "reverb": 90,
+     "delay": 60
+    },
+    "MT": {
+     "tone": "Tropical Mallet",
+     "decay": 150,
+     "reverb": 90
+    },
+    "HT": {
+     "tone": "Udu Pot Short",
+     "decay": 130,
+     "reverb": 60
+    },
+    "RS": {
+     "tone": "Cross Stick",
+     "decay": 100
+    },
+    "HC": {
+     "tone": "808 Finger Snap",
+     "decay": 110,
+     "reverb": 70
+    },
+    "CH": {
+     "tone": "808 Closed HH",
+     "decay": 70
+    },
+    "OH": {
+     "tone": "808 Open HH",
+     "decay": 110
+    },
+    "CC": {
+     "tone": "Udu Pot Mute",
+     "decay": 110,
+     "reverb": 50
+    },
+    "RC": {
+     "tone": "626 Ride Cup",
+     "decay": 100,
+     "reverb": 40
+    }
+   }
+  },
+  {
+   "slot": "8-09",
+   "source": "6-05",
+   "bpm": 141,
+   "energy": 0.75,
+   "label": "HARD 1",
+   "role": "Hard run: rolling",
+   "notes": "Rolling toms under a straight four. Saturated kit; the open hat is the push.",
+   "clear_ctrl": [
+    "SD"
+   ],
+   "kit": {
+    "BD": {
+     "tone": "Modular Kick",
+     "decay": 105
+    },
+    "SD": {
+     "tone": "Sat Snare",
+     "decay": 100
+    },
+    "LT": {
+     "tone": "Sat Mod Low Tom",
+     "decay": 100
+    },
+    "MT": {
+     "tone": "Modular Tom",
+     "decay": 95
+    },
+    "HT": {
+     "tone": "Sat Mod High Tom",
+     "decay": 95
+    },
+    "RS": {
+     "tone": "MG888 Rim",
+     "decay": 80
+    },
+    "HC": {
+     "tone": "909 Dist.Clap",
+     "decay": 105
+    },
+    "CH": {
+     "tone": "Sat Closed HH",
+     "decay": 50
+    },
+    "OH": {
+     "tone": "Sat Open HH",
+     "decay": 85
+    },
+    "CC": {
+     "tone": "Industrial Hit1",
+     "decay": 110
+    },
+    "RC": {
+     "tone": "909 Ride Cymbal",
+     "decay": 115
+    }
+   }
+  },
+  {
+   "slot": "8-10",
+   "source": "6-10",
+   "bpm": 143,
+   "energy": 0.85,
+   "label": "HARD 2",
+   "role": "Hard run: acid on HT",
+   "notes": "HT carries an acid line, MT answers on a 3-step cycle. Lo-fi hats, metal on the crash.",
+   "clear_ctrl": [
+    "HT",
+    "MT",
+    "OH",
+    "RC"
+   ],
+   "acid": "HT",
+   "keep_lines": [
+    "HT"
+   ],
+   "kit": {
+    "BD": {
+     "tone": "Tube Kick",
+     "decay": 105
+    },
+    "SD": {
+     "tone": "Noise Snare",
+     "decay": 95
+    },
+    "LT": {
+     "tone": "Analog Tom",
+     "decay": 100
+    },
+    "MT": {
+     "tone": "Modular Tom",
+     "decay": 95
+    },
+    "HT": {
+     "tone": "Deep SH Bass",
+     "decay": 100,
+     "reverb": 20
+    },
+    "RS": {
+     "tone": "Real Rim",
+     "decay": 80,
+     "delay": 50
+    },
+    "HC": {
+     "tone": "MG888 Clap",
+     "decay": 105
+    },
+    "CH": {
+     "tone": "Lo-Bit Closed HH",
+     "decay": 50
+    },
+    "OH": {
+     "tone": "Lo-Bit Open HH",
+     "decay": 85
+    },
+    "CC": {
+     "tone": "Metal Bang",
+     "decay": 110
+    },
+    "RC": {
+     "tone": "626 Ride Cymbal",
+     "decay": 110
+    }
+   }
+  },
+  {
+   "slot": "8-11",
+   "source": "6-01",
+   "bpm": 145,
+   "energy": 0.9,
+   "label": "HARD 3",
+   "role": "Hard run: peak",
+   "notes": "The densest groove of the set: a rolling 16th rim over a hard four. Industrial snare, saturated hats.",
+   "kit": {
+    "BD": {
+     "tone": "Sat Kick",
+     "decay": 100
+    },
+    "SD": {
+     "tone": "Industrial Snare",
+     "decay": 95
+    },
+    "LT": {
+     "tone": "Sat Mod Low Tom",
+     "decay": 95
+    },
+    "MT": {
+     "tone": "Modular Tom",
+     "decay": 90
+    },
+    "HT": {
+     "tone": "Sat Mod High Tom",
+     "decay": 90
+    },
+    "RS": {
+     "tone": "MG888 Rim",
+     "decay": 60
+    },
+    "HC": {
+     "tone": "909 Dist.Clap",
+     "decay": 100
+    },
+    "CH": {
+     "tone": "Sat Closed HH",
+     "decay": 48
+    },
+    "OH": {
+     "tone": "Sat Open HH",
+     "decay": 80
+    },
+    "CC": {
+     "tone": "Industrial Hit2",
+     "decay": 110
+    },
+    "RC": {
+     "tone": "909 Ride Cymbal",
+     "decay": 110
+    }
+   }
+  },
+  {
+   "slot": "8-12",
+   "source": "6-06",
+   "bpm": 144,
+   "energy": 0.3,
+   "label": "BRIDGE",
+   "role": "Light breather before peak 2",
+   "notes": "Ambient acid: the MT line in a long reverb over a pad. A short rest after the hard run; arrive with the kick muted.",
+   "acid": "MT",
+   "keep_lines": [
+    "MT",
+    "LT"
+   ],
+   "kit": {
+    "BD": {
+     "tone": "808 Bass1 Long",
+     "decay": 140
+    },
+    "SD": {
+     "tone": "808 Snare2",
+     "decay": 110,
+     "reverb": 70
+    },
+    "LT": {
+     "tone": "SoftPad minor7th",
+     "decay": 200,
+     "reverb": 110
+    },
+    "MT": {
+     "tone": "Deep SH Bass",
+     "decay": 120,
+     "reverb": 90,
+     "delay": 50
+    },
+    "HT": {
+     "tone": "Kalimba High",
+     "decay": 140,
+     "reverb": 90,
+     "delay": 80
+    },
+    "RS": {
+     "tone": "Cross Stick",
+     "decay": 100
+    },
+    "HC": {
+     "tone": "808 Finger Snap",
+     "decay": 110,
+     "reverb": 60
+    },
+    "CH": {
+     "tone": "808 Closed HH",
+     "decay": 65
+    },
+    "OH": {
+     "tone": "808 Open HH",
+     "decay": 110
+    },
+    "CC": {
+     "tone": "Stereo Cymbal",
+     "decay": 160,
+     "reverb": 60
+    },
+    "RC": {
+     "tone": "606 Cymbal",
+     "decay": 100
+    }
+   }
+  },
+  {
+   "slot": "8-13",
+   "source": "4-12",
+   "bpm": 144,
+   "energy": 0.85,
+   "label": "PEAK2 APP",
+   "role": "Peak 2: approach",
+   "acid": "MT",
+   "kit": {
+    "BD": {
+     "tone": "Tube Kick",
+     "decay": 112
+    },
+    "SD": {
+     "tone": "909 Dist. Snare",
+     "decay": 100
+    },
+    "LT": {
+     "tone": "Sat Mod Low Tom",
+     "decay": 105
+    },
+    "MT": {
+     "tone": "Prog.Trance Bass",
+     "decay": 105,
+     "reverb": 30
+    },
+    "HT": {
+     "tone": "Modular Tom",
+     "decay": 100
+    },
+    "RS": {
+     "tone": "909 Rim Shot",
+     "decay": 95
+    },
+    "HC": {
+     "tone": "Poly Clap",
+     "decay": 110
+    },
+    "CH": {
+     "tone": "Comp Closed HH",
+     "decay": 60
+    },
+    "OH": {
+     "tone": "Comp Open HH",
+     "decay": 95
+    },
+    "CC": {
+     "tone": "909 Crash Cymbal",
+     "decay": 140
+    },
+    "RC": {
+     "tone": "909 Ride Cymbal",
+     "decay": 125
+    }
+   }
+  },
+  {
+   "slot": "8-14",
+   "source": "4-13",
+   "bpm": 146,
+   "energy": 1.0,
+   "label": "SUMMIT",
+   "role": "Peak 2: summit",
+   "notes": "The hardest kit of the set: saturated kick, industrial snare, metal on the rim, ride on every 8th.",
+   "kit": {
+    "BD": {
+     "tone": "Sat Kick",
+     "decay": 108
+    },
+    "SD": {
+     "tone": "Industrial Snare",
+     "decay": 100
+    },
+    "LT": {
+     "tone": "Sat Mod Low Tom",
+     "decay": 100
+    },
+    "MT": {
+     "tone": "Analog Tom",
+     "decay": 100
+    },
+    "HT": {
+     "tone": "Sat Mod High Tom",
+     "decay": 95
+    },
+    "RS": {
+     "tone": "MG888 MetalClap",
+     "decay": 90
+    },
+    "HC": {
+     "tone": "EDM Clap",
+     "decay": 110
+    },
+    "CH": {
+     "tone": "Comp Closed HH",
+     "decay": 58
+    },
+    "OH": {
+     "tone": "Comp Open HH",
+     "decay": 90
+    },
+    "CC": {
+     "tone": "Industrial Hit2",
+     "decay": 120
+    },
+    "RC": {
+     "tone": "909 Ride Cymbal",
+     "decay": 120
+    }
+   }
+  },
+  {
+   "slot": "8-15",
+   "source": "7-07",
+   "bpm": 142,
+   "energy": 0.65,
+   "label": "RELEASE",
+   "role": "Closer: release",
+   "kit": {
+    "BD": {
+     "tone": "909 Attack Bass",
+     "decay": 120
+    },
+    "SD": {
+     "tone": "909 Snare1",
+     "decay": 110
+    },
+    "LT": {
+     "tone": "Analog Tom",
+     "decay": 115,
+     "reverb": 30
+    },
+    "MT": {
+     "tone": "Mute Bass",
+     "decay": 100
+    },
+    "HT": {
+     "tone": "Modular Tom",
+     "decay": 110,
+     "delay": 50
+    },
+    "RS": {
+     "tone": "909 Rim Shot",
+     "decay": 100
+    },
+    "HC": {
+     "tone": "909 Hand Clap",
+     "decay": 120
+    },
+    "CH": {
+     "tone": "909 Closed HH",
+     "decay": 70
+    },
+    "OH": {
+     "tone": "909 Open HH",
+     "decay": 110
+    },
+    "CC": {
+     "tone": "909 Crash Cymbal",
+     "decay": 150
+    },
+    "RC": {
+     "tone": "909 Ride Cymbal",
+     "decay": 130
+    }
+   }
+  },
+  {
+   "slot": "8-16",
+   "source": "7-14",
+   "bpm": 138,
+   "energy": 0.3,
+   "label": "OUTRO",
+   "role": "Closer: light outro",
+   "notes": "808 to close, the kalimba in the delay. Take one voice out every 8 bars, end on a hat and a tail.",
+   "kit": {
+    "BD": {
+     "tone": "808 Bass1",
+     "decay": 130
+    },
+    "SD": {
+     "tone": "808 Snare1",
+     "decay": 110
+    },
+    "LT": {
+     "tone": "808 Low Tom",
+     "decay": 130
+    },
+    "MT": {
+     "tone": "808 Mid Tom",
+     "decay": 130
+    },
+    "HT": {
+     "tone": "Kalimba Mid",
+     "decay": 140,
+     "reverb": 80,
+     "delay": 90
+    },
+    "RS": {
+     "tone": "808 Rim Shot",
+     "decay": 100
+    },
+    "HC": {
+     "tone": "808 Hand Clap",
+     "decay": 120,
+     "reverb": 50
+    },
+    "CH": {
+     "tone": "808 Closed HH",
+     "decay": 70
+    },
+    "OH": {
+     "tone": "808 Open HH",
+     "decay": 120
+    },
+    "CC": {
+     "tone": "808 Cymbal",
+     "decay": 150
+    },
+    "RC": {
+     "tone": "606 Cymbal",
+     "decay": 110
+    }
+   }
+  }
+ ]
+}

@@ -41,14 +41,19 @@ def device_trigger(instrument: str, velocity: int = 110):
 
 
 @tool("device.backup",
-      "Read every pattern and kit off the device into the local backup "
-      "directory. Read-only with respect to the TR-8S; takes several minutes.",
+      "Read patterns and kits off the device into the local backup directory, "
+      "slowly (a pause after every read, batches of 8), checking every reply "
+      "and stopping at the first missing or misaligned one. Files already "
+      "there and sane are skipped, so a stopped run resumes. Read-only with "
+      "respect to the TR-8S; run it with the machine stopped and no other "
+      "program on its MIDI port. About 6 minutes for all 128 patterns.",
       {"kinds": opt({"type": "array", "items": {"type": "string",
                                                 "enum": ["pattern", "kit"]}}),
-       "lo": opt({"type": "integer"}), "hi": opt({"type": "integer"})})
-def device_backup(kinds=("pattern", "kit"), lo: int = 0, hi: int = 127):
-    counts = _device_helper().backup(tuple(kinds), lo, hi)
-    return {"saved": counts, "directory": str(config.data_dir())}
+       "lo": opt({"type": "integer"}), "hi": opt({"type": "integer"}),
+       "twice": opt({"type": "boolean",
+                     "description": "read each slot twice and require the same bytes"})})
+def device_backup(kinds=("pattern", "kit"), lo: int = 0, hi: int = 127, twice: bool = False):
+    return _device_helper().backup(tuple(kinds), lo, hi, twice=twice)
 
 
 

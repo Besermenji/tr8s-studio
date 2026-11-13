@@ -22,6 +22,8 @@ import time
 from pathlib import Path
 
 from . import config
+from .kit import REC_BASE as KIT_REC_BASE
+from .kit import REC_STRIDE as KIT_REC_STRIDE
 from .kit import Kit
 from .pattern import Pattern
 from .tones import CATEGORIES, Catalog, Tone
@@ -30,6 +32,44 @@ from .transport import BLOB_SIZES, MAX_SLOT, Transport, TransportError
 
 class DeviceError(RuntimeError):
     pass
+
+
+def check_blob(kind: str, blob: bytes | None) -> str | None:
+    """
+    Why a blob read off the machine cannot be what it claims to be, or None.
+
+    A reply that starts mid-stream (another program on the port took the first
+    chunks, or a late reply from an earlier request was glued on) still has the
+    right length, so length alone proves nothing. The header does: every
+    pattern the machine writes has a printable name, a tempo in range, a
+    1-based kit number and a known scale; every kit a printable name and tone
+    ids the machine has. The corrupt backup of 2026-11-13 fails this on every
+    file (docs/LESSONS.md).
+    """
+    if blob is None:
+        return "no reply"
+    want = BLOB_SIZES[kind]
+    if len(blob) != want:
+        return f"{len(blob)} bytes, expected {want}"
+    if kind in ("pattern", "kit"):
+        name = blob[:16]
+        if not all(32 <= c < 127 for c in name):
+            return f"name bytes are not text ({bytes(name[:8]).hex()}...): the reply is misaligned"
+    if kind == "pattern":
+        tempo = blob[16] | blob[17] << 8
+        if not 400 <= tempo <= 3000:
+            return f"tempo {tempo / 10:g} is outside 40..300"
+        if not 1 <= blob[18] <= 128:
+            return f"kit byte {blob[18]} is outside 1..128"
+        if blob[19] > 3:
+            return f"scale byte {blob[19]} is outside 0..3"
+    elif kind == "kit":
+        for i in range(11):
+            o = KIT_REC_BASE + i * KIT_REC_STRIDE
+            tone = blob[o] | blob[o + 1] << 8
+            if tone > 1023:
+                return f"instrument {i + 1} names tone {tone}, past 1023"
+    return None
 
 
 def panel_to_slot(bank: int, index: int) -> int:
@@ -169,6 +209,12 @@ class Device:
         if verify:
             time.sleep(0.35)
             back = self.transport.read_blob("pattern", slot)
+            if back is None:
+                # Right after a burst of saves the machine sometimes drops one reply
+                # (2026-11-13: once after 16 kit saves). Give it time, ask once more.
+                time.sleep(2.0)
+                back = self.transport.read_blob("pattern", slot)
+                result["verify_retried"] = True
             result["verified"] = back == blob
             if not result["verified"] and back:
                 result["differing_bytes"] = sum(
@@ -223,6 +269,10 @@ class Device:
         if verify:
             time.sleep(0.35)
             back = self.transport.read_blob("kit", slot)
+            if back is None:
+                time.sleep(2.0)                       # see write_pattern
+                back = self.transport.read_blob("kit", slot)
+                result["verify_retried"] = True
             if back:
                 a, b = bytearray(back), bytearray(blob)
                 for i in range(11):
@@ -293,23 +343,97 @@ class Device:
             raise ValueError(f"unknown instrument {inst!r}")
         self.transport.note(notes[inst], velocity)
 
+    # --------------------------------------------------------------- reads
+
+    def read_checked(self, kind: str, slot: int, twice: bool = False,
+                     pause: float = 0.35, sleep=time.sleep) -> bytes:
+        """
+        One blob, refused unless it is plausibly what the machine holds.
+
+        `check_blob` catches a misaligned or truncated reply. `twice` reads the
+        slot again and requires the same bytes, for blobs something will be
+        built from. Raises DeviceError naming the slot and the reason; nothing
+        is cached from a refused read.
+        """
+        slot = self._check(slot)
+        label = slot_to_panel(slot) if kind == "pattern" else str(slot + 1)
+        self._refuse_if_playing(f"{kind} {label}")
+        blob = self.transport.read_blob(kind, slot)
+        if blob is None:
+            # A single dropped reply, with the machine answering normally right after, was
+            # seen four times on 2026-11-13. Ask once more after a pause; a second silence
+            # stops the caller as before. A wrong reply is never retried.
+            sleep(2.0)
+            blob = self.transport.read_blob(kind, slot)
+        why = check_blob(kind, blob)
+        if why is None and twice:
+            sleep(pause)
+            again = self.transport.read_blob(kind, slot)
+            why = check_blob(kind, again)
+            if why is None and again != blob:
+                diff = sum(1 for a, b in zip(again, blob) if a != b)
+                why = f"two reads differ in {diff} bytes"
+        if why is not None:
+            raise DeviceError(f"{kind} {label}: {why}")
+        self.remember(kind, slot, blob)
+        return blob
+
     # -------------------------------------------------------------- backup
 
+    # Pacing. On 2026-11-13 the machine stopped answering after about 150
+    # back-to-back reads and needed a power cycle, so these are deliberately slow.
+    READ_PAUSE = 1.0          # seconds after every read
+    BATCH = 8                 # reads per batch
+    BATCH_PAUSE = 10.0        # seconds between batches
+
     def backup(self, kinds=("pattern", "kit"), lo: int = 0, hi: int = 127,
-               progress=None) -> dict:
-        counts = {}
+               progress=None, dirs: dict | None = None, twice: bool = False,
+               pause: float | None = None, batch: int | None = None,
+               batch_pause: float | None = None, sleep=time.sleep) -> dict:
+        """
+        Pull slots lo..hi to disk, slowly, stopping at the first bad reply.
+
+        Every blob passes `check_blob` before it is written, so a misaligned
+        reply is never kept. A slot whose file is already there and sane is
+        skipped without a read, so a stopped run resumes where it stopped.
+        Files are written whole (temp file, then rename). Returns counts per
+        kind and `stopped`: None, or the slot that failed and why.
+        """
+        pause = self.READ_PAUSE if pause is None else pause
+        batch = batch or self.BATCH
+        batch_pause = self.BATCH_PAUSE if batch_pause is None else batch_pause
+        where = {k: Path((dirs or {}).get(k) or (config.patterns_dir() if k == "pattern"
+                                                 else config.kits_dir())) for k in kinds}
+        saved, skipped, reads, stopped = {}, {}, 0, None
         for kind in kinds:
-            d = config.patterns_dir() if kind == "pattern" else config.kits_dir()
-            n = 0
+            d = where[kind]
+            d.mkdir(parents=True, exist_ok=True)
+            saved[kind] = skipped[kind] = 0
             for slot in range(lo, hi + 1):
-                blob = self.transport.read_blob(kind, slot)
-                if blob and len(blob) == BLOB_SIZES[kind]:
-                    (d / f"{kind}_{slot:03d}.bin").write_bytes(blob)
-                    n += 1
-                    if progress:
-                        progress(kind, slot, n)
-            counts[kind] = n
-        return counts
+                path = d / f"{kind}_{slot:03d}.bin"
+                if path.exists() and check_blob(kind, path.read_bytes()) is None:
+                    skipped[kind] += 1
+                    continue
+                if reads:
+                    sleep(batch_pause if reads % batch == 0 else pause)
+                reads += 1
+                try:
+                    blob = self.read_checked(kind, slot, twice=twice, sleep=sleep)
+                except DeviceError as e:
+                    stopped = {"kind": kind, "slot": slot,
+                               "panel": slot_to_panel(slot) if kind == "pattern" else slot + 1,
+                               "reason": str(e)}
+                    break
+                tmp = path.with_suffix(".tmp")
+                tmp.write_bytes(blob)
+                tmp.replace(path)
+                saved[kind] += 1
+                if progress:
+                    progress(kind, slot, saved[kind])
+            if stopped:
+                break
+        return {"saved": saved, "skipped": skipped, "reads": reads, "stopped": stopped,
+                "directory": {k: str(v) for k, v in where.items()}}
 
     def restore(self, kind: str, slot: int) -> dict:
         d = config.patterns_dir() if kind == "pattern" else config.kits_dir()
@@ -317,6 +441,9 @@ class Device:
         if not p.exists():
             raise DeviceError(f"no backup at {p}")
         blob = p.read_bytes()
+        why = check_blob(kind, blob)
+        if why is not None:
+            raise DeviceError(f"refusing to restore {p}: {why}. Nothing was written.")
         if kind == "pattern":
             return self.write_pattern(slot, Pattern.from_bytes(blob))
         return self.write_kit(slot, Kit.from_bytes(blob))

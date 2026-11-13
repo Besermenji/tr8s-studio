@@ -171,3 +171,152 @@ def render(plan: dict, built_on) -> str:
     for t in tracks:
         out += _track(t)
     return "\n".join(out).rstrip() + "\n"
+
+
+# ------------------------------------------------------------------ the reworked set (TR-8S only)
+
+COLOUR_LEGEND = [("red", "kick"), ("orange", "snare, clap"), ("yellow", "acid voice"),
+                 ("light green", "odd-cycle voice 1"), ("green", "odd-cycle voice 2"),
+                 ("light blue", "tom or perc, no special job"), ("blue", "closed hat"),
+                 ("dark blue", "open hat"), ("purple", "crash, ride"), ("pink", "rim, small perc"),
+                 ("light pink", "effects")]
+ROLE_NAMES = {"kick": "red", "snare": "orange", "acid": "yellow", "odd1": "light green",
+              "odd2": "green", "light": "light blue", "hat": "blue", "open": "dark blue",
+              "cymbal": "purple", "rim": "pink", "fx": "light pink"}
+
+# Bars per route step. 16 patterns of about 140 bars each come to roughly 70 minutes.
+ROUTE_BARS = {"intro": 16, "main": 16, "break (no kick)": 16, "break (mute the kick)": 16,
+              "drop": 32, "peak": 16, "breather (no kick)": 8}
+
+REWORK_RIG = [
+    "TR-8S only, no laptop. The set is bank 8: hold PTN SELECT, press pad 8, release, then pads 1-16 are the set.",
+    "Each pattern 8-NN plays its own kit (8-01 → kit 113 … 8-16 → kit 128) and its own tempo. That needs "
+    "UTILITY → GENERAL: KitSel = PTN and TempoSrc = PTN (setup below).",
+    "A new pattern starts when the playing one returns to its first step: press the next pad during the last bar.",
+    "Variations change by hand: press the next one during the bar before. Hold one and press others to chain them.",
+]
+
+SETUP = [
+    "UTILITY → GENERAL: **KitSel = PTN**, **TempoSrc = PTN** (so each pattern brings its kit and BPM). "
+    "Shuffle = PTN too. Then WRITE → System.",
+    "**MOTION [ON]** lit: several sources carry recorded knob motion, which is silent with MOTION off.",
+    "AUTO FILL IN: knob on **16**, leave [ON] off until a pattern says so. FILL IN type: the pattern's own fills.",
+    "Faders: start everything at about 3/4. Level is the fader's alone; nothing written to the machine sets it.",
+    "CTRL map (hold CTRL SELECT, press the instrument, choose with VALUE; it is the machine's, so once covers "
+    "every pattern): **MT and HT = filter cutoff** (the acid voices), **SD and RS = delay send** (throws), "
+    "**CH and OH = decay or the INST FX**, **CC and RC = reverb send**. Then WRITE → System. [check] the "
+    "exact parameter names in the panel's list.",
+    "Know your rescue moves: **MUTE + CLEAR** clears every mute; **SHIFT + TEMPO** moves tempo in 0.1 BPM.",
+]
+
+
+def _mins(bars: int, bpm: float) -> float:
+    return bars * 4 * 60 / bpm / 60
+
+
+def _energy_bar(e) -> str:
+    return "█" * int(round((e or 0) * 20))
+
+
+def _route_rows(e: dict) -> tuple[list, int]:
+    rows, bar = [], 1
+    for r in e["route"]:
+        n = ROUTE_BARS.get(r["role"], 16)
+        rows.append([bar, r["variation"], r["role"], n, r["hits"]])
+        bar += n
+    return rows, bar - 1
+
+
+def _voices(e: dict) -> list:
+    out = []
+    by_role = {}
+    for inst, role in e["roles"].items():
+        by_role.setdefault(role, []).append(inst)
+    if "acid" in by_role and not set(by_role["acid"]) & set(e.get("tune_lines") or []):
+        inst = ", ".join(by_role["acid"])
+        out.append(f"**Bass voice (yellow fader): {inst}.** No recorded line: it plays the pattern's hits at "
+                   f"one pitch. With {inst}'s CTRL on the filter cutoff (setup), opening it slowly over a "
+                   "phrase is the movement. Ride DECAY with it.")
+    elif "acid" in by_role:
+        inst = ", ".join(by_role["acid"])
+        out.append(f"**Acid voice (yellow fader): {inst}.** It plays a recorded line in Fine Tune motion, so its "
+                   f"CTRL knob is free: with {inst}'s CTRL on the filter cutoff (setup) it is the squelch. "
+                   "Ride DECAY with it. Mute it for 8 bars and bring it back on a 1.")
+    odd = [i for r in ("odd1", "odd2") for i in by_role.get(r, [])]
+    if odd:
+        cyc = ", ".join(e["poly_tracks"]) or "odd spacing"
+        out.append(f"**Odd-cycle voices (green faders): {', '.join(odd)}** ({cyc}). They pull against the four: "
+                   "mute them in the intro, bring one in at a time, and pull them out for the break so the 1 lands harder.")
+    return out
+
+
+def _transition(e: dict, nxt: dict | None) -> list:
+    if nxt is None:
+        return ["Last pattern. Let the route end on its lightest variation, mute the **red** kick fader's "
+            "track (MUTE, then BD), let the hats and reverb ring for 8 bars, press STOP on a 1."]
+    jump = nxt["bpm"] - e["bpm"]
+    head = (f"Next: **{nxt['panel']} {nxt['name']}** at {nxt['bpm']:g} BPM "
+            f"({'+' if jump >= 0 else ''}{jump:g}).")
+    if abs(jump) > 6:
+        return [head, "**Tempo jump, hidden in a bridge:** go to this pattern's kickless or lightest variation; "
+                "MUTE the kick (and the snare) for the last 8 bars so only hats, toms and tails play; press the "
+                f"next pad in the last bar. The new tempo arrives with nothing to compare it to. Unmute on the "
+                f"first 1 of {nxt['panel']}, or wait for its intro to bring the kick back."]
+    return [head, "In the last 16 bars: send a fill (MANUAL TRIG) every 8 bars, then hold PTN SELECT and press "
+            "the next pad during the final bar. Keep the kick running across the switch."]
+
+
+def render_rework(spec: dict, entries: list, built_on) -> str:
+    """The printable cue sheet for a set built by `tr8s rework`."""
+    total_bars = 0
+    total_min = 0.0
+    order = []
+    for e in entries:
+        _, bars = _route_rows(e)
+        m = _mins(bars, e["bpm"])
+        total_min += m
+        total_bars += bars
+        order.append([e["index"], e["panel"], e["name"], e["role"], f"{e['bpm']:g}", e["kit_panel"],
+                      f"{e['source_panel']} {e['source_name']}", f"{m:.1f}"])
+    out = [f"# Set: {spec['name']}", "",
+           f"Built {built_on.isoformat()} by `tr8s rework` · {len(entries)} patterns · about "
+           f"{total_min:.0f} minutes · bank 8, kits {entries[0]['kit_panel']}-{entries[-1]['kit_panel']}", "",
+           "## Rig", ""] + [f"- {x}" for x in REWORK_RIG]
+    out += ["", "## One-time setup on the panel", ""] + [f"{i}. {x}" for i, x in enumerate(SETUP, 1)]
+    out += ["", "## Fader colours (the same in every kit of the set)", ""]
+    out += _table(["Colour", "Role"], COLOUR_LEGEND)
+    out += ["", "## Running order", ""]
+    out += _table(["#", "Pad", "Name", "Role", "BPM", "Kit", "Made from", "Min"], order)
+    out += ["", "## Energy", "", "```"]
+    out += [f"{e['panel']} {e['bpm']:>5g}  {_energy_bar(e.get('energy'))}" for e in entries]
+    out += ["```", ""]
+    for i, e in enumerate(entries):
+        nxt = entries[i + 1] if i + 1 < len(entries) else None
+        rows, bars = _route_rows(e)
+        out += [f"## {e['index']}. {e['name']} · pad {e['panel']} · kit {e['kit_panel']}", "",
+                f"{e['role']} · {e['bpm']:g} BPM · energy {e.get('energy', '—')} · made from "
+                f"{e['source_panel']} {e['source_name']} ({e['source_tempo']:g} BPM, kit "
+                f"{e['source_kit_panel']}) · about {_mins(bars, e['bpm']):.1f} min", ""]
+        if e.get("notes"):
+            out += [e["notes"], ""]
+        if e.get("kit_design"):
+            from .kit import TRACKS as _TR
+            krows = [[inst, ROLE_NAMES[e["roles"][inst]], e["kit_design"][inst]["tone"]]
+                     for inst in _TR if inst in e["kit_design"]]
+            out += [f"### Kit {e['kit_panel']}", ""] + _table(["Fader", "Colour", "Tone"], krows) + [""]
+        out += ["### Route through A-H", ""]
+        out += _table(["Bar", "Var", "Role", "Bars", "Hits"], rows)
+        out += [""]
+        voices = _voices(e)
+        if voices:
+            out += ["### Voices", ""] + [f"- {v}" for v in voices] + [""]
+        out += ["### Moves", "",
+                "- **Intro:** mute everything but the kick and one hat; unmute a voice every 8 bars.",
+                "- **Main:** AUTO FILL IN on (16 bars). Ride the ACCENT knob up over 16 bars before the break.",
+                "- **Break:** the kick is out (or MUTE it). Open the REVERB level, throw the DELAY on the snare "
+                "(raise DELAY LEVEL for one bar, then back). MASTER FX on with a filter for the last 8 bars: "
+                "sweep the MASTER FX CTRL knob up into the drop.",
+                "- **Drop:** MASTER FX off on the 1, everything unmuted, MANUAL TRIG on the bar before.",
+                "- **Peak:** chain two peak variations (hold one, press the other) for 2-bar phrases.",
+                "", "### Out", ""] + [f"- {x}" for x in _transition(e, nxt)] + [""]
+    return "\n".join(out).rstrip() + "\n"

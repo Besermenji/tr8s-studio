@@ -296,7 +296,8 @@ def kit_get(slot):
        "pan": opt({"type": "integer", "minimum": -128, "maximum": 127}),
        "reverb": opt({"type": "integer", "minimum": 0, "maximum": 255}),
        "delay": opt({"type": "integer", "minimum": 0, "maximum": 255}),
-       "lfo": opt({"type": "integer", "minimum": 0, "maximum": 255}),
+       "lfo": opt({"type": "integer", "minimum": -128, "maximum": 127,
+                   "description": "LFO depth, -128..127; 0 is no LFO"}),
        "inherit_from": opt({"type": "object",
                             "description": "{'kit': <slot>, 'instrument': 'LT'} "
                                            "- copy a working sample record first"})},

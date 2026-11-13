@@ -4,7 +4,7 @@ Layer 2 — the Kit model. Parses and builds the 1312-byte blob.
     0..15         name
     388 + i*52    instrument record, i = 0..10 in panel order
       +0..1 tone   +2 tune   +3 decay   +4 level (READ-ONLY)
-      +6 pan       +7 reverb +8 delay   +11 lfo
+      +6 pan       +7 reverb +8 delay   +11 lfo depth (offset-binary, 0x80 = off)
       +28..+41     envelope/gain fields a SAMPLE tone needs (gain at +37)
 
 Two hard-won rules, both in docs/PROTOCOL.md:
@@ -46,28 +46,29 @@ FIELDS = {
     "pan": (6, 1, True),
     "reverb": (7, 1, False),
     "delay": (8, 1, False),
-    "lfo": (11, 1, False),
+    "lfo": (11, 1, True),       # signed: 0 is no LFO (stored 0x80); 0x00 is depth -128
 }
 READONLY = {"level"}
 
 # Per-instrument fader colour: eleven consecutive bytes in the kit header, one
 # per instrument in TRACKS order, values 0..11.
 #
-# **[I]** Identified statistically, not by watching the machine. Across 128
+# **[V]** The offset is confirmed: kit 113 written with 0..10 on BD..RC lit eleven
+# different faders in that order (2026-11-13, firmware 3.00). It was first
+# identified statistically. Across 128
 # factory kits these eleven bytes are the only run of exactly eleven with a
 # small shared palette, they vary per kit, and an *empty* kit carries the
 # default [0,1,3,3,3,1,1,2,2,2,2] -- which groups by category (kick, snare,
 # toms, rimshot/clap, hats and cymbals), the shape a factory colour scheme
-# has. What each index looks like has NOT been confirmed against the panel;
-# see COLOUR_NAMES.
+# has. What each index looks like: see COLOUR_NAMES.
 COLOR_BASE = 42
 COLOR_COUNT = 12
 
-# **[U]** The palette itself is a guess, fitted to the default scheme above and
-# to product photography. Treat the names as labels for indices, not as facts
-# about the LEDs.
-COLOUR_NAMES = ["red", "orange", "yellow", "green", "teal", "cyan",
-                "blue", "indigo", "violet", "magenta", "pink", "white"]
+# **[V]** Indices 0..10, as read off the faders by eye (kit 113, 2026-11-13).
+# **[U]** Index 11 (the value a blank kit carries on every fader) is not yet named
+# from the panel; "white" is a placeholder.
+COLOUR_NAMES = ["red", "orange", "yellow", "light green", "green", "light blue",
+                "blue", "dark blue", "purple", "pink", "light pink", "white"]
 
 
 class KitError(ValueError):

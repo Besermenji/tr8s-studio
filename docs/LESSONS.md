@@ -806,10 +806,11 @@ three ways with clock and notes between the parts. Do not rely on the whole
 messages; they are what one macOS version did.
 
 Fan-out. Two clients opened on `TR-8S` each received every message. On Linux a
-second reader splits the rawmidi stream and garbles both; here it does not. So
-the "run one program at a time" advice is a rawmidi fact, `firmware_retry`
-words its garbled-reply error by backend, and the self-test's `fuser` guard
-runs only for rawmidi.
+second reader splits the rawmidi stream and garbles both. Here each reader gets
+both programs' replies, which corrupts bulk reads in a different way (see "The
+Mac backup of 2026-11-13" below). So "run one program at a time" holds on both
+backends. `firmware_retry` words its garbled-reply error by backend, and the
+self-test's `fuser` guard runs only for rawmidi.
 
 The hang. `MidiIn.close_port()` holds the GIL while CoreMIDI's
 `MIDIPortDispose` waits for a Python callback that is already running, and
@@ -822,3 +823,50 @@ time. The same hang can happen when a `MidiIn` with a callback is garbage
 collected at interpreter exit, so the backend registers an `atexit` close and
 `close()` is safe to call twice. Anything that tears down a callback-mode
 port should be tried against a machine that is playing, not an idle one.
+
+## The Mac backup of 2026-11-13 was misaligned in every file, and nothing noticed
+
+A full `device.backup` on macOS wrote 128 pattern files of the right length,
+and every one is wrong. Each starts with a header of zeros followed by step
+bytes (`50 00 00 00` is a velocity-80 step), so each reply was taken up
+mid-stream. 103 of the 128 files are distinct, so this is not one repeated
+blob. It is real data from the wrong places.
+
+The cause is the fan-out described above, which works against us here.
+CoreMIDI gives every client a copy of every message. The studio server was
+running on the same port and reads the current pattern every ~2.5 s while
+the machine is stopped. Its replies reached the backup's reader as well, and
+`read_blob` accepts any DT1 at a data-chunk address without knowing whose
+request it answers. So the two streams were interleaved. On Linux a second
+reader *splits* the stream. On macOS it *duplicates* it. Both corrupt reads,
+in different ways, so "one program on the port" is a rule on both systems
+after all. The same day, long back-to-back runs (about 150 reads, no pause)
+stopped the machine answering until a power cycle.
+
+What changed:
+
+- `check_blob` refuses a blob whose header is impossible: a name that is not
+  text, a tempo outside 40-300, a kit byte outside 1-128, a scale above 3, or
+  a kit tone past 1023. Length was the only check before, and a misaligned
+  reply has the right length. Every file of the corrupt backup fails the new
+  check, and a test confirms it wherever that backup is present.
+- `Device.read_checked` uses it, and can read twice and require identical
+  bytes for anything a build starts from.
+- `Device.backup` reads one slot at a time, pauses 1 s after each read and
+  10 s after every 8, never writes a blob that fails the check, stops at the
+  first missing or bad reply and says which slot, and skips files already
+  there and sane, so a stopped run resumes.
+- `device.restore` refuses a file that fails the check.
+- The CLI refuses to touch the machine while `.run/studio.pid` names a live
+  studio server.
+
+Later the same day, with only one program on the port and every read paced, a
+reply was still dropped now and then: four single misses in about 250 reads,
+twice right after a burst of saves. Each time the machine answered the very
+next request. So `read_checked` asks once more after 2 s when a reply is
+*missing*; a second silence stops as before, and a *wrong* reply is never
+retried.
+
+**A blob of the right length is not a blob of the right content.** Check
+what can be checked (here, the header) before keeping anything, and stop at
+the first doubt instead of saving 128 bad files.

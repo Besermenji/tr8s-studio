@@ -69,9 +69,12 @@ def test_describe_reports_the_colour_and_its_name():
 # ------------------------------------------------- evidence from real kits
 
 def real_kits():
+    """The kits in this machine's backup that are real reads, not misaligned replies."""
+    from tr8s.device import check_blob
     if not BACKUPS.is_dir():
         return []
-    return [Kit.from_bytes(p.read_bytes()) for p in sorted(BACKUPS.glob("*.bin"))]
+    blobs = [p.read_bytes() for p in sorted(BACKUPS.glob("*.bin"))]
+    return [Kit.from_bytes(b) for b in blobs if check_blob("kit", b) is None]
 
 
 def test_real_kits_keep_the_colours_inside_the_palette():

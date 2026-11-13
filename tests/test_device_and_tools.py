@@ -89,8 +89,8 @@ def test_backup_and_restore(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "data_dir", lambda: tmp_path)
     d, t = make_device(patterns={0: load_fixture_pattern(), 1: load_fixture_pattern()},
                        kits={0: load_fixture_kit()})
-    counts = d.backup(kinds=("pattern",), lo=0, hi=1)
-    assert counts["pattern"] == 2
+    r = d.backup(kinds=("pattern",), lo=0, hi=1, sleep=lambda s: None)
+    assert r["saved"]["pattern"] == 2 and r["stopped"] is None
     # mutate the device, then restore from the backup
     p = d.read_pattern(0)
     p.set_steps("A", "CC", "X" * 16)
@@ -98,6 +98,142 @@ def test_backup_and_restore(tmp_path, monkeypatch):
     assert d.read_pattern(0).get_steps("A", "CC") == "X" * 16
     d.restore("pattern", 0)
     assert d.read_pattern(0).get_steps("A", "CC") != "X" * 16
+
+
+def _misaligned(blob: bytes) -> bytes:
+    """What the corrupt backup of 2026-11-13 holds: the reply started mid-stream."""
+    return blob[2000:] + bytes(2000)
+
+
+def _backup_env(tmp_path, monkeypatch):
+    from tr8s import config
+    monkeypatch.setattr(config, "data_dir", lambda: tmp_path)
+
+
+def test_check_blob_accepts_real_blobs_and_refuses_misaligned_ones():
+    from tr8s.device import check_blob
+    pat, kit = load_fixture_pattern(), load_fixture_kit()
+    assert check_blob("pattern", pat) is None
+    assert check_blob("kit", kit) is None
+    assert check_blob("kit", load_empty_kit()) is None
+    assert "misaligned" in check_blob("pattern", _misaligned(pat))
+    assert check_blob("pattern", None) == "no reply"
+    assert "bytes" in check_blob("pattern", pat[:-1])
+    bad_tempo = bytearray(pat)
+    bad_tempo[16:18] = (10).to_bytes(2, "little")
+    assert "tempo" in check_blob("pattern", bytes(bad_tempo))
+
+
+def test_check_blob_refuses_every_file_of_the_corrupt_backup():
+    import pathlib
+    from tr8s.device import check_blob
+    d = pathlib.Path.home() / ".local/share/tr8s/backups/patterns"
+    files = sorted(d.glob("pattern_*.bin")) if d.exists() else []
+    if not files or not any(f.read_bytes()[:16] == bytes(16) for f in files):
+        pytest.skip("the corrupt 2026-11-13 backup is not on this machine")
+    assert all(check_blob("pattern", f.read_bytes()) for f in files)
+
+
+def test_read_checked_refuses_a_misaligned_reply_and_caches_nothing():
+    from tr8s.device import DeviceError
+    d, t = make_device(patterns={5: _misaligned(load_fixture_pattern())})
+    with pytest.raises(DeviceError, match="pattern 1-06.*misaligned"):
+        d.read_checked("pattern", 5)
+    assert ("pattern", 5) not in d._blobs
+
+
+def test_read_checked_twice_refuses_two_different_replies():
+    from tr8s.device import DeviceError
+    d, t = make_device(patterns={0: load_fixture_pattern()})
+    other = bytearray(load_fixture_pattern())
+    other[1000] ^= 0x7F
+    replies = iter([load_fixture_pattern(), bytes(other)])
+    t.read_blob = lambda kind, index, timeout=0.0: next(replies)
+    with pytest.raises(DeviceError, match="two reads differ in 1 bytes"):
+        d.read_checked("pattern", 0, twice=True, sleep=lambda s: None)
+
+
+def test_read_checked_asks_once_more_after_a_dropped_reply():
+    d, t = make_device(patterns={0: load_fixture_pattern()})
+    replies = iter([None, load_fixture_pattern()])
+    t.read_blob = lambda kind, index, timeout=0.0: next(replies)
+    waits = []
+    assert d.read_checked("pattern", 0, sleep=waits.append) == load_fixture_pattern()
+    assert waits == [2.0]
+
+
+def test_backup_stops_at_the_first_missing_reply(tmp_path, monkeypatch):
+    _backup_env(tmp_path, monkeypatch)
+    pat = load_fixture_pattern()
+    d, t = make_device(patterns={0: pat, 1: pat, 3: pat})       # slot 2 never answers
+    r = d.backup(kinds=("pattern",), lo=0, hi=3, sleep=lambda s: None)
+    assert r["saved"]["pattern"] == 2
+    assert r["stopped"]["slot"] == 2 and r["stopped"]["panel"] == "1-03"
+    assert "no reply" in r["stopped"]["reason"]
+    assert not (tmp_path / "backups/patterns/pattern_003.bin").exists()   # never asked
+    assert not list((tmp_path / "backups/patterns").glob("*.tmp"))
+
+
+def test_backup_never_keeps_a_misaligned_blob(tmp_path, monkeypatch):
+    _backup_env(tmp_path, monkeypatch)
+    d, t = make_device(patterns={0: _misaligned(load_fixture_pattern())})
+    r = d.backup(kinds=("pattern",), lo=0, hi=0, sleep=lambda s: None)
+    assert r["saved"]["pattern"] == 0 and "misaligned" in r["stopped"]["reason"]
+    assert not (tmp_path / "backups/patterns/pattern_000.bin").exists()
+
+
+def test_backup_resumes_skipping_good_files_and_rereading_bad_ones(tmp_path, monkeypatch):
+    _backup_env(tmp_path, monkeypatch)
+    from tr8s import config
+    pat = load_fixture_pattern()
+    config.patterns_dir().joinpath("pattern_000.bin").write_bytes(pat)
+    config.patterns_dir().joinpath("pattern_001.bin").write_bytes(_misaligned(pat))
+    d, t = make_device(patterns={0: pat, 1: pat})
+    asked = []
+    real = t.read_blob
+    t.read_blob = lambda kind, index, timeout=0.0: asked.append(index) or real(kind, index)
+    r = d.backup(kinds=("pattern",), lo=0, hi=1, sleep=lambda s: None)
+    assert asked == [1]
+    assert r["skipped"]["pattern"] == 1 and r["saved"]["pattern"] == 1
+    assert config.patterns_dir().joinpath("pattern_001.bin").read_bytes() == pat
+
+
+def test_backup_paces_its_reads(tmp_path, monkeypatch):
+    _backup_env(tmp_path, monkeypatch)
+    pat = load_fixture_pattern()
+    d, t = make_device(patterns={i: pat for i in range(10)})
+    waits = []
+    d.backup(kinds=("pattern",), lo=0, hi=9, sleep=waits.append)
+    # nine gaps between ten reads: a batch pause after the eighth, read pauses otherwise
+    assert waits == [d.READ_PAUSE] * 7 + [d.BATCH_PAUSE] + [d.READ_PAUSE]
+
+
+def test_restore_refuses_a_corrupt_file(tmp_path, monkeypatch):
+    _backup_env(tmp_path, monkeypatch)
+    from tr8s import config
+    from tr8s.device import DeviceError
+    pat = load_fixture_pattern()
+    config.patterns_dir().joinpath("pattern_000.bin").write_bytes(_misaligned(pat))
+    d, t = make_device(patterns={0: pat})
+    with pytest.raises(DeviceError, match="refusing to restore"):
+        d.restore("pattern", 0)
+    assert t.sent == []
+
+
+def test_cli_refuses_while_the_studio_runs(tmp_path, monkeypatch, capsys):
+    import os
+    from tr8s import cli
+    monkeypatch.undo()                             # the suite stubs the guard; test the real one
+    pidfile = tmp_path / "studio.pid"
+    pidfile.write_text(str(os.getpid()))           # a live process
+    assert cli.studio_running(pidfile) == os.getpid()
+    pidfile.write_text("999999999")
+    assert cli.studio_running(pidfile) is None
+    assert cli.studio_running(tmp_path / "absent.pid") is None
+    monkeypatch.setattr(cli, "studio_running", lambda pidfile=None: 4242)
+    assert cli.main(["backup"]) == 1
+    assert "pid 4242" in capsys.readouterr().err
+    assert cli.main(["tools"]) == 0                # offline commands are not blocked
 
 
 def test_slot_bounds():
@@ -213,7 +349,7 @@ def test_kit_field_ranges_surface_as_tool_errors(wired):
     with pytest.raises(tools.ToolError) as e:
         tools.call("kit.set_instrument", {"slot": 0, "instrument": "BD",
                                           "lfo": 300})
-    assert "0..255" in str(e.value)
+    assert "-128..127" in str(e.value)
 
 
 def test_kit_set_instrument_applies(wired):

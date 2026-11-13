@@ -4,7 +4,7 @@ Written for a session with the machine in front of you. Each one says what is
 unknown, what to do, and what the answer would unlock. Most need nothing but
 the machine switched on and reachable — the ones that need a hand are marked.
 
-## 1. Which palette index is which colour  *(needs you to look)*
+## 1. Which palette index is which colour  *(settled 2026-11-13 for 0-10: see docs/PROTOCOL.md)*
 
 The eleven bytes at kit header `+42…+52` are the per-instrument fader colour;
 that much is established. What is *not* established is what each index looks

@@ -277,7 +277,7 @@ Within an instrument record:
 | `+6` | pan | **[V]** offset-binary, `0x80` = centre, `0x00` = L127 |
 | `+7` | reverb send | **[V]** 0…255, default `0x80` |
 | `+8` | delay send | **[V]** 0…255, default `0xE0` |
-| `+11` | LFO depth | **[V]** 0…255 |
+| `+11` | LFO depth | **[V]** offset-binary, `0x80` = 0 (no LFO), range −128…+127, as the panel shows it (Owner's Manual p.16). The blank DEFAULT kit holds `0x80` on every instrument, as do 312 of 330 factory instruments. **`0x00` is depth −128, not "off"**: 16 kits written with 0 here on 2026-11-13 pulsed on every instrument on a square, tempo-synced cycle |
 | `+28..+41` | envelope / gain for sample tones | **[M]** not exclusively sample fields: across 839 records on this device, ACB instruments have them set ~43% of the time and sample instruments ~95%, while a blank `----` slot has them all at zero. Individual offsets unidentified; `+37` reads `255` on working sample instruments and looks like gain |
 
 **[V] Level cannot be set from software.** A probe of all 52 bytes found 51
@@ -538,11 +538,11 @@ by watching the display while the message is sent.
 ## Kit header `+42…+52` — per-instrument fader colour
 
 The TR-8S lights each channel fader a colour, and the colour is saved with the
-kit. **[I]** These eleven bytes are it — one per instrument, in `TRACKS` order,
-values `0..11`.
+kit. **[V]** These eleven bytes are it — one per instrument, in `TRACKS` order,
+values `0..11`. Confirmed on the panel 2026-11-13 (firmware 3.00): kit 113,
+written with `0..10` on BD..RC, lit eleven different faders in that order.
 
-Identified statistically rather than by watching the panel, so the reasoning
-matters:
+First identified statistically, by this reasoning:
 
 - Across 128 factory kits it is the only run of exactly eleven consecutive
   bytes sharing a small palette.
@@ -554,11 +554,14 @@ matters:
 - A demo kit (`Last Step DEMO`) carries a visibly custom scheme,
   `[7,7,0,1,1,6,7,8,8,6,5]`.
 
-**[U] The palette is not confirmed.** Which index lights which colour has never
-been checked against the machine — the names in `kit.COLOUR_NAMES` are labels
-fitted to the default scheme and to product photography, nothing stronger.
-Kit 125 has been written with indices `0..10` across the eleven instruments, so
-looking at that kit on the panel settles the whole mapping in one glance.
+**[V] The palette, indices 0-10, read off the faders by eye:**
+
+| 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| red | orange | yellow | light green | green | light blue | blue | dark blue | purple | pink | light pink |
+
+**[U]** Index 11, which a blank `DEFAULT` kit carries on every fader, is not
+yet named from the panel. `kit.COLOUR_NAMES` holds "white" as a placeholder.
 
 A second eleven-byte run at `+285…+295` also varies per instrument, with a
 wider range (`0..35`). **[U]** Unidentified.

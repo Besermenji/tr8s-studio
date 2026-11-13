@@ -50,3 +50,14 @@ def _clean_settings():
     yield
     if f.exists():
         f.unlink()
+
+
+@pytest.fixture(autouse=True)
+def _no_studio_running(monkeypatch):
+    """
+    The CLI refuses to touch the TR-8S while a studio server holds its port.
+    Whether one happens to run on this laptop must not decide a test; the
+    guard's own test sets it explicitly.
+    """
+    from tr8s import cli
+    monkeypatch.setattr(cli, "studio_running", lambda pidfile=None: None)

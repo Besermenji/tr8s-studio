@@ -442,10 +442,10 @@ $("v-grid").addEventListener("click", () => setView("grid"));
 $("v-panel").addEventListener("click", () => setView("panel"));
 
 // The TR-8S palette, indexed by the kit's colour byte. The mapping from index
-// to colour is inferred, not confirmed against the panel — see kit.COLOUR_NAMES.
+// to colour was read off the faders for 0..10 (11 unconfirmed) — see kit.COLOUR_NAMES.
 const INST_COLORS = [
-  "#ff2d2d", "#ff8c1a", "#ffe01a", "#5ede2b", "#1fd6a8", "#22d3ee",
-  "#3b82f6", "#6366f1", "#a855f7", "#ec4899", "#fb7185", "#e8f0ff",
+  "#ff2d2d", "#ff8c1a", "#ffe01a", "#a3e635", "#22c55e", "#7dd3fc",
+  "#3b82f6", "#3346c4", "#a855f7", "#ec4899", "#f9a8d4", "#e8f0ff",
 ];
 
 function instColor(f) {
@@ -470,8 +470,8 @@ function knobEl(label, val, lo, hi, note, tint) {
   return k;
 }
 
-const COLOR_NAMES = ["red", "orange", "yellow", "green", "teal", "cyan",
-                     "blue", "indigo", "violet", "magenta", "pink", "white"];
+const COLOR_NAMES = ["red", "orange", "yellow", "light green", "green", "light blue",
+                     "blue", "dark blue", "purple", "pink", "light pink", "white"];
 
 let colorFor = null;          // instrument whose palette is open
 
