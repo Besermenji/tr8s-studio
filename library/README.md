@@ -49,6 +49,14 @@ that instrument's CTRL knob to be audible.
 A track made with `track.create`'s `synth` argument can be kept with
 `library.save`, which adds a `"synth"` block next to `_meta`: the inputs of the
 FM-1 parts (`target`, `voicing`, `key`, `energy`, `seed`, `length`, `override`,
-`project`), not the notes. `library.load` returns it, and `synth.send` with
-those inputs rebuilds the same parts. Files written by `synth.export` go in
+`arrange`, `bars`), not the notes, and not the FM-1 project slot, so a replay
+never overwrites one. `library.load` returns it, and `synth.send` with those
+inputs rebuilds the same parts. Files written by `synth.export` go in
 `library/synth/` (`.json`, `.mid`, `.syx`); `library.list` does not list them.
+
+## Sets
+
+`set.build` (or `tr8s set FILE.json`) writes a set to `library/sets/`:
+`NAME.json` holds its tracks with every default filled in and every seed fixed,
+so `tr8s set library/sets/NAME.json` builds the same set again, and `NAME.md`
+is the cue sheet to play it from. `library.list` does not list them.

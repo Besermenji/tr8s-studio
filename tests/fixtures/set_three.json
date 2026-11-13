@@ -1,0 +1,9 @@
+{
+  "name": "three",
+  "start_slot": "1-01",
+  "tracks": [
+    {"style": "acid", "seed": 11, "arrange": true, "bars": 16},
+    {"style": "dub", "seed": 22},
+    {"style": "hypnotic", "seed": 33, "arrange": true, "bars": 8}
+  ]
+}

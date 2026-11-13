@@ -20,7 +20,7 @@ import queue
 import time
 
 from .minitone import (CMDS, HEADER, NAMES, SONG_OPS, check_edit_frame, frame,
-                       parse_song, save_frame, song_frame)
+                       parse_song, save_frame, song_clear_frame, song_frame)
 
 DEFAULT_PORT = "Felucca"        # the CoreMIDI name under our Mini-Tone build
 STOCK_PORT = "FM-1"             # and under M-VAVE's stock firmware
@@ -187,6 +187,21 @@ class Fm1Port:
         if back["rows"] != want:
             raise Fm1Error(f"the FM-1 stored the song differently: sent {want}, read back {back['rows']}")
         return {"sections": len(want), "rows": want}
+
+    def clear_song(self) -> dict:
+        """
+        Empty the chain in RAM (op 5, count 0), then read it back. A save that follows keeps no
+        song: the chain in RAM is whatever the last load or set left, not this project's.
+        """
+        f = song_clear_frame()
+        got = parse_song(self.request(f[4], f[5:-1]))
+        if got["rc"] == 2:
+            raise Fm1Error("the FM-1 is playing: stop the TR-8S, then try again")
+        if got["rc"] != 0:
+            raise Fm1Error(f"the FM-1 refused to clear the song: {got['rc_text']}")
+        if self.song()["count"] != 0:
+            raise Fm1Error("the FM-1 still holds a song after the clear")
+        return {"sections": 0, "rows": []}
 
     def close(self) -> None:
         # cancel_callback -> settle -> close_port: close_port can deadlock otherwise

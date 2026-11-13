@@ -41,18 +41,21 @@ Two rules from [`docs/RIG-FM1.md`](../RIG-FM1.md):
       builds the FM-1 parts from the same key, tempo, seed and arrangement as
       the drums. When it is given, the TR-8S's own melodic line defaults to
       `none`.
-- [ ] Parts enter with the arrangement: the energy curve from
-      `pattern.arrange` decides when each part plays. Encode it as Mini-Tone
-      song sections A–D with per-section mutes.
+- [x] Parts enter with the arrangement: the energy curve from
+      `pattern.arrange` decides when each part plays. Encode it as a Mini-Tone
+      song: each section names, per FM-1 track, the saved project slot it plays
+      or "−" (silent). Opt-in, with `arrange` in the `synth` argument.
 - [x] Library JSON gains an optional `"synth"` block. `library.save` writes it and
       `library.load` returns it (the inputs, not the notes).
 
 **Set builder**
 
-- [ ] `set.build`: an ordered list of tracks (style, key, energy, seed,
+- [x] `set.build`: an ordered list of tracks (style, key, energy, seed,
       voicing) becomes TR-8S pattern slots, FM-1 project slots and a markdown
-      cue sheet.
-- [ ] The cue sheet lists, per track: the TR-8S slot with its FM-1 project,
+      cue sheet. `set.plan` shows the same set without touching a device, and
+      `tr8s set FILE.json [--preview]` runs either from the CLI. At most four
+      synth tracks: one song per FM-1 project slot.
+- [x] The cue sheet lists, per track: the TR-8S slot with its FM-1 project,
       key, BPM and seed, which FM-1 parts play in each section, and, for a
       track without sections, which FM-1 track to unmute by hand and when.
 
@@ -67,7 +70,7 @@ Two rules from [`docs/RIG-FM1.md`](../RIG-FM1.md):
 - [x] Tool schemas and dispatch on a fake FM-1 port (in the style of
       `tests/fake.py`).
 - [x] `track.create` with `synth`: the parts share the drums' key and seed.
-- [ ] `set.build` output, and a cue-sheet snapshot test.
+- [x] `set.build` output, and a cue-sheet snapshot test.
 - [x] Library round-trip with a `synth` block.
 
 ## Acceptance

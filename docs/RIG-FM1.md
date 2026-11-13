@@ -143,8 +143,12 @@ On paper it is the cue sheet line "pad 2 in at the break".
   The TR-8S's own melodic line then defaults to `none`.
 - Library JSON gains an optional `"synth"` block.
 - `set.build`: an ordered list of tracks becomes TR-8S slots, FM-1 project
-  slots and a markdown cue sheet. The sheet lists each TR-8S slot with its FM-1
-  project, key, BPM and seed, and which parts play in which section.
+  slots and a markdown cue sheet (`library/sets/NAME.md`). `set.plan` shows the
+  same set and sheet without touching a device. The sheet lists each TR-8S slot
+  with its FM-1 project, key, BPM and seed, which parts play in which section,
+  how each track starts (a song from PLAY on the FM-1's SONG page, a plain loop
+  from the TR-8S's Start), and for a loop which FM-1 track to unmute by hand
+  and when. At most four synth tracks: one song per FM-1 project slot.
 
 **Jam mode in the studio** (issue 06). The FM-1 port opens alongside the
 TR-8S. The assistant is the main way in, and a panel in the UI mirrors what it

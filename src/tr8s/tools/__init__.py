@@ -24,7 +24,7 @@ from ._core import (DEFAULT_KEYS, DEFAULT_LINE, REGISTRY, ToolError,  # noqa: F4
 import importlib as _importlib
 
 for _ns in ("device", "pattern", "kit", "track", "library", "tones", "lines",
-            "styles", "calibration", "audio", "history", "synth"):
+            "styles", "calibration", "audio", "history", "synth", "setlist"):
     _importlib.import_module(f"{__name__}.{_ns}")
 del _ns, _importlib
 

@@ -135,6 +135,13 @@ The FM-1, when the user has one (an M-VAVE FM-1 synth on Mini-Tone firmware):
   synth parts together from one key, seed and energy. The TR-8S's own melodic
   line then defaults to none, so that song needs no MOTION or Coarse Tune
   setup. `library_save` keeps the track with its synth block.
+- `set_plan` lays out a whole set (TR-8S slots, FM-1 projects, a cue sheet)
+  without touching either box; `set_build` writes it, and takes `set_plan`'s
+  `tracks` to build exactly what was shown. A set has at most four synth
+  tracks, one FM-1 project each. With `arrange` a track's parts come in and
+  out as a song, started from PLAY on the FM-1's SONG page; without it they
+  loop and the sheet says which FM-1 track to unmute when. Build only when the
+  user asks.
 - Not every song needs a 303. Dub is pad and stab, hypnotic is drone and arp,
   techno is bass and stab; acid and peak bring the 303.
 

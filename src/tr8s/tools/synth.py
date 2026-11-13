@@ -72,7 +72,8 @@ def push(parts: dict, project: int | None = None, song: list | None = None) -> d
     Write the parts to the FM-1: engine and length, then every step (RAM only). With `song`
     (sections from `sections`) the chain follows, in RAM. With `project` (0..3) it then saves,
     which STOPS the FM-1's transport and writes flash; the save comes last so that it captures
-    the chain. A song needs a project: the FM-1 plays saved slots.
+    the chain. A song needs a project: the FM-1 plays saved slots. A save without a song empties
+    the chain first, so the project never keeps a song left in RAM by an earlier load or track.
     """
     if project is not None and not 0 <= project <= 3:
         raise ToolError(f"project {project} is outside 0..3")     # before anything is sent
@@ -85,6 +86,8 @@ def push(parts: dict, project: int | None = None, song: list | None = None) -> d
         out = {"sent": sent, "saved": None}
         if rows is not None:
             out["song"] = port.set_song(rows)
+        elif project is not None:
+            out["song"] = port.clear_song()
         if project is not None:
             out["saved"] = port.save(project)
         return out

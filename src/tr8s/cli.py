@@ -10,6 +10,8 @@ so the two can never drift apart.
     tr8s tones --category BASS       search the catalogue
     tr8s backup                      pull every pattern and kit to disk
     tr8s capture-template <slot>     save an empty slot as the authoring base
+    tr8s set FILE.json [--preview]   build a set (TR-8S slots, FM-1 projects) and print
+                                     its cue sheet; --preview touches no device
 """
 
 from __future__ import annotations
@@ -24,6 +26,34 @@ from .tools import ToolError, call, close, schemas
 
 def _print(obj):
     print(json.dumps(obj, indent=2, default=str))
+
+
+UNDO_ENDS = ("the undo history lives in this process and ends with it: to keep the TR-8S's "
+             "current slots, run `tr8s backup` before building")
+
+
+def _set_status(r: dict, preview: bool) -> None:
+    """What a set run did, on stderr, so stdout stays the cue sheet."""
+    err = sys.stderr
+    if preview:
+        print("preview only: nothing was written. set.build would write:", file=err)
+        for w in r["writes"]:
+            print(f"  - {w}", file=err)
+        print(UNDO_ENDS, file=err)
+        return
+    print(f"built {len(r['built'])} of {len(r['plan'])} tracks", file=err)
+    f = r.get("failed")
+    if f:
+        print(f"FAILED at track {f['index']} ({f['panel']}, {f['stage']}): {f['error']}", file=err)
+        print(f"  {f['state']}", file=err)
+        if r["untouched"]:
+            print(f"  not touched: tracks {', '.join(map(str, r['untouched']))}", file=err)
+        print(f"  re-run: tr8s set {r['files']['inputs']}", file=err)
+    for p in r["written"]:
+        print(f"wrote {p}", file=err)
+    if r["undo"]["call"]:
+        print(f"overwrote {r['undo']['history_steps']} TR-8S slots; {UNDO_ENDS}", file=err)
+    print(r["undo"]["fm1"], file=err)
 
 
 def main(argv=None):
@@ -76,6 +106,12 @@ def main(argv=None):
     ct = sub.add_parser("capture-template",
                         help="save an empty pattern slot as the authoring base")
     ct.add_argument("slot")
+
+    se = sub.add_parser("set", help="build a set from a JSON file and print its cue sheet")
+    se.add_argument("file", help="{name, start_slot?, tracks}; a library/sets/NAME.json works too")
+    se.add_argument("--preview", action="store_true",
+                    help="plan only (set.plan): no device is touched, no file written")
+    se.add_argument("--json", action="store_true", help="print the full result instead of the sheet")
 
     args = ap.parse_args(argv)
     if not args.cmd:
@@ -142,6 +178,24 @@ def main(argv=None):
                     print(probe_report(_json.loads(path.read_text())))
                 else:
                     _print(probe_kit_byte(d, args.offset, tone=args.tone))
+        elif args.cmd == "set":
+            from pathlib import Path
+            try:
+                doc = json.loads(Path(args.file).read_text())
+            except (OSError, ValueError) as e:
+                print(f"error: cannot read {args.file}: {e}", file=sys.stderr)
+                return 1
+            if not isinstance(doc, dict):
+                print(f"error: {args.file} is not a JSON object", file=sys.stderr)
+                return 1
+            r = call("set.plan" if args.preview else "set.build",
+                     {k: doc[k] for k in ("name", "tracks", "start_slot") if k in doc})
+            if args.json:
+                _print(r)
+            else:
+                print(r["cue_sheet"], end="")
+                _set_status(r, args.preview)
+            return 1 if r.get("failed") else 0
         elif args.cmd == "capture-template":
             from .device import Device
             from .tools import _slot

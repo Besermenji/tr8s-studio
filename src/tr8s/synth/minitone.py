@@ -253,6 +253,14 @@ def song_frame(rows) -> bytes:
     return frame(CMDS["SONG"], args)
 
 
+def song_clear_frame() -> bytes:
+    """
+    The op 5 request that empties the chain: count 0, which editor.c accepts (an empty chain is
+    valid). A save after it keeps no song, so a plain loop never carries the last track's song.
+    """
+    return frame(CMDS["SONG"], [SONG_OPS["set"], 0])
+
+
 def parse_song(reply: bytes) -> dict:
     """
     A SONG reply (args after the command): op, rc, count, running, row, remaining, then `count` rows
@@ -276,6 +284,21 @@ def parse_song(reply: bytes) -> dict:
 ENTER = {"drone": 0.0, "pad": 0.0, "bass": 0.5, "stab": 0.55, "arp": 0.6, "acid": 0.65, "lead": 0.85}
 BREAK_HOLDS = ("drone", "pad")
 STEPS_PER_BAR = 16
+
+
+def arc_plays(parts, energy: float = 0.6) -> list:
+    """
+    Which parts play in each ARC variation: [(variation, role, energy, [track...])]. The one rule
+    behind both the FM-1's song sections and the cue sheet's hand cues for a track without them.
+    """
+    tracks = _as_tracks(parts)
+    out = []
+    for variation, role, level in ARC:
+        e = arc_energy(level, energy)
+        plays = [t for t, p in sorted(tracks.items())
+                 if e >= ENTER.get(p.shape, 0.0) and (role != "break" or p.shape in BREAK_HOLDS)]
+        out.append((variation, role, e, plays))
+    return out
 
 
 def song_sections(parts, energy: float = 0.6, bars: int = 16) -> list:
@@ -303,10 +326,7 @@ def song_sections(parts, energy: float = 0.6, bars: int = 16) -> list:
     if loops > 16:
         raise ValueError(f"{bars} bars is {loops} passes of a {length}-step part; a section holds at most 16")
     out = []
-    for variation, role, level in ARC:
-        e = arc_energy(level, energy)
-        plays = [t for t, p in sorted(tracks.items())
-                 if e >= ENTER.get(p.shape, 0.0) and (role != "break" or p.shape in BREAK_HOLDS)]
+    for variation, role, e, plays in arc_plays(tracks, energy):
         # a section nobody plays holds a bar at a time (the FM-1 counts one bar when every lane is silent)
         passes = loops if plays else bars
         last = out[-1] if out else None

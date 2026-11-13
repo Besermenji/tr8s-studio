@@ -562,6 +562,20 @@ def test_song_frame_refuses_what_the_firmware_would_call_invalid(rows):
         mt.song_frame(rows)
 
 
+def test_the_clear_frame_is_a_set_of_no_rows():
+    assert mt.song_clear_frame() == bytes.fromhex("F07D464C21" "05" "00" "F7")
+
+
+@pytest.mark.parametrize("style", ["acid", "dub", "hypnotic", "peak"])
+def test_arc_plays_is_the_rule_the_sections_use(style):
+    parts = _parts(style)
+    arc = mt.arc_plays(parts, 0.7)
+    assert [v for v, *_ in arc] == list("ABCDEFGH")
+    rows = [r for s in mt.song_sections(parts, 0.7, 8) for r in [s["plays"]] * len(s["variations"])]
+    assert rows == [plays for *_, plays in arc]
+    assert all(parts[t].shape in mt.BREAK_HOLDS for v, role, e, plays in arc if role == "break" for t in plays)
+
+
 def test_parse_song_reads_a_reply():
     reply = bytes([4, 0, 2, 1, 1, 3] + [2, 2, 4, 4, 4, 4, 1] + [2, 2, 2, 4, 4, 4, 1])
     s = mt.parse_song(reply)

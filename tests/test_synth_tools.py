@@ -529,9 +529,27 @@ def test_arrange_with_no_project_builds_the_sections_and_sends_nothing(wired, fm
     assert fm1.sent == [] and r["synth"]["sections"]
 
 
-def test_without_arrange_no_song_is_sent(wired, fm1):
+def test_without_arrange_the_chain_is_emptied_before_the_save(wired, fm1):
+    fm1.chain = [[0, 4, 4, 4, 4, 4, 2]]                 # a song left in RAM by an earlier load
     r = tools.call("track.create", {"slot": 0, "style": "dub", "seed": 1, "synth": {"project": 2}})
-    assert mt.CMDS["SONG"] not in cmds(fm1) and "sections" not in r["synth"]
+    songs = [f for f in frames_of(fm1) if f[4] == mt.CMDS["SONG"]]
+    assert songs[0] == mt.song_clear_frame()            # op 5, count 0: no rows are ever sent
+    order = cmds(fm1)
+    assert order.index(mt.CMDS["SONG"]) < order.index(mt.CMDS["PROJECT"]) == len(order) - 1
+    assert fm1.slots[2] == [] and "sections" not in r["synth"]
+
+
+def test_a_plain_track_after_an_arranged_one_keeps_no_song(wired, fm1):
+    tools.call("track.create", {"slot": 0, "style": "dub", "seed": 1,
+                                "synth": {"project": 0, "arrange": True}})
+    tools.call("track.create", {"slot": 5, "style": "acid", "seed": 2, "synth": {"project": 1}})
+    assert fm1.slots[0] and fm1.slots[1] == []
+
+
+def test_an_audition_without_a_project_leaves_the_chain_alone(fm1):
+    fm1.chain = [[0, 4, 4, 4, 4, 4, 2]]
+    tools.call("synth.send", {"style": "dub", "seed": 1})
+    assert mt.CMDS["SONG"] not in cmds(fm1) and fm1.chain == [[0, 4, 4, 4, 4, 4, 2]]
 
 
 def test_a_busy_fm1_gives_a_readable_error_and_saves_nothing(wired, monkeypatch):
