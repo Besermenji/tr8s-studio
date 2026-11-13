@@ -266,6 +266,17 @@ def test_an_unreachable_fm1_refuses_before_anything_is_written(wired, monkeypatc
     assert t.sent == [] and files_in(library) == []
 
 
+def test_an_unreachable_tr8s_refuses_before_anything_is_written(fm1, library, monkeypatch):
+    from tr8s.midi_backends import TransportError
+
+    def off():
+        raise TransportError("no TR-8S MIDI port found")
+    monkeypatch.setattr(setlist, "_device_helper", off)
+    with pytest.raises(ToolError, match="TR-8S is not reachable, nothing was written"):
+        tools.call("set.build", three())
+    assert frames_of(fm1) == [] and files_in(library) == []
+
+
 def test_a_drums_only_set_never_opens_the_fm1(wired, library, monkeypatch):
     d, t = wired
     tools.set_fm1(Untouchable())

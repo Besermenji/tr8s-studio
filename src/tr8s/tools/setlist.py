@@ -19,6 +19,7 @@ from datetime import date
 from .. import cuesheet
 from ..device import DeviceError, slot_to_panel
 from ..history import HISTORY
+from ..midi_backends import TransportError
 from ..synth import minitone as mt
 from ..synth.port import Fm1Error
 from ._core import DEFAULT_KEYS, DEFAULT_LINE, ToolError, _library_dir, _slot, fm1, opt, tool
@@ -267,9 +268,13 @@ def set_build(name, tracks, start_slot=None):
     p = plan(name, tracks, start_slot)
     per = p["plan"]
 
+    try:
+        dev = _device_helper()          # an unplugged or powered-off box refuses here, before anything is written
+    except (DeviceError, TransportError) as e:
+        raise ToolError(f"the TR-8S is not reachable, nothing was written: {e}") from None
     if any(t["synth"] for t in per):
         try:
-            fm1()                       # an unplugged FM-1 refuses here, before anything is written
+            fm1()
         except Fm1Error as e:
             raise ToolError(f"the FM-1 is not reachable, nothing was written: {e}") from None
 
@@ -280,7 +285,6 @@ def set_build(name, tracks, start_slot=None):
         f.write(json.dumps({"name": name, "tracks": p["tracks"]}, indent=2) + "\n")
     written = [files["inputs"]]
 
-    dev = _device_helper()
     captured, not_captured = [], []
 
     def capture(kind, slot, label):
