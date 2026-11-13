@@ -107,7 +107,6 @@ Frames are what `fm1_spike.py` sends (track numbers are 0-based; Mini-Tone has s
 | 4 | Do **accent (flag 1) and slide (flag 2)** come through on the TB303 engine, and does a slide need a following note? Stored: **[V]**. The first playback test (four steps) was recorded without re-checking track 1's engine, so it proves pitch, timing and velocity only. Track 1 was found on the TB303 engine (preset 7) later, switched by hand, so a 16-step accent and slide line was written for a proper test | **[?]** | record the line, listen for slides and accents |
 | 5 | `TRACK_PARAM` engine change: is "set the engine" `SET` of `G_ENGSEL` (selected track only) or can any track change engine without selecting it? | **[I]** the doc says `G_ENGSEL` changes the selected track's engine | `track`, `global-set` |
 | 6 | **Program Change.** `midi_uart.c` only sizes a Program Change (`Cx Dx: 1 byte`); no handler in `midi_control.c` mentions it. Does the FM-1 react at all? | **[I]** no: fork patch (b) is needed | `listen`, send a PC from the TR-8S |
-| 7 | **Mute from MIDI.** Is there a fixed CC? Can `LEARN_SET` map a CC to a track's mute parameter (`P_MUTE`), and do the EMP16 pads (note on/off, or CC 0/127) drive it? | mute over SysEx **[V]** (`TRACK_MIX`); a MIDI CC or note that the EMP16 pads can send: **[?]** | `learn-get`, then learn on the device |
 | 8 | **MIDI IN blocks.** The build offers CH1-6, SEL, CH5-10, CH9-14, CH13-16, **default CH1-6**. CH5-10 and CH9-14 **include channel 10**, the TR-8S's, so use CH1-6. The older "CH1-4 / CH5-8" text is stale. | **[V]** | `desc 1 14` |
 | 9 | Is `G_CLOCK` / `G_ROUTE` stored **per project** or device-wide, and does loading a project change them? (`G_ROUTE` is described as part of the project in the README, and as settings in the editor docs.) | **[?]** | set, save, load another slot, read back |
 | 10 | `PROJECT` save/load: survives a power cycle? How long is the reply? does a save with the transport running stop it and reply? | save, load and power cycle **[V]** (transport stopped); save-while-playing not run | `project-save`, power-cycle |
@@ -123,6 +122,5 @@ Frames are what `fm1_spike.py` sends (track numbers are 0-based; Mini-Tone has s
 | (a) UC25HQ80 | **done** | in the fork's first build; see [`FM1-BUILD.md`](FM1-BUILD.md) |
 | (b) Program Change follow | **[I] yes** | no handler found; question 6 |
 | (c) Whole-project writes | **partly** | steps, track parameters, `PROJECT` save and song sections exist; generator settings (EUCLID, STOCHASTIC) do not |
-| (d) Mute CC | **[?]** | question 7 |
 
 This table is final only when the spike has run.

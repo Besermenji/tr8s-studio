@@ -21,8 +21,6 @@ See [`docs/RIG-FM1.md`](../RIG-FM1.md), section 2, "Fork policy".
 - [ ] **(c) Whole-project writes over SysEx.** Steps, track parameters,
       generator settings and song sections, plus save. Only what the spike
       found missing.
-- [ ] **(d) Mute CC.** A fixed CC for track mute and unmute on each track's
-      channel, if MIDI LEARN cannot do it. EMP16 pads use it to bring parts in.
 
 For each patch:
 
@@ -37,7 +35,6 @@ For each patch:
 - Every needed patch is merged in the fork, tested on hardware, and documented.
 - With (b): change pattern on the TR-8S while playing, and the FM-1 follows at
   the bar.
-- With (d): an EMP16 pad mutes and unmutes an FM-1 track.
 
 ## Depends on
 

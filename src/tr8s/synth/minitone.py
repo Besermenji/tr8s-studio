@@ -31,7 +31,7 @@ ENGINES = {1: "DIGITAL", 10: "DRUM", 12: "FM6", 14: "SWARM", 15: "FMTONE",
 ENGINE_INDEX = {name: i for i, name in ENGINES.items()}
 MONO = {"TB303"}                                 # one voice however many notes a step holds
 
-# CCs the EMP16 sends (docs/RIG-FM1.md, "EMP16 map"); same on every track's channel
+# CCs the FM-1 takes (Mini-Tone's README); the same on every track's channel
 CC = {"cutoff": 74, "resonance": 71, "decay": 75, "glide": 5,
       "delay": 94, "reverb": 91, "chorus": 93, "level": 7}
 

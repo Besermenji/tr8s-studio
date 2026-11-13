@@ -102,8 +102,7 @@ Open: startup desync (above in HANDOFF "What's next").
 
 The studio grows from one machine into a small live rig: the TR-8S as clock,
 drums and mixer, an M-VAVE FM-1 running the Mini-Tone firmware for the synths
-(acid and everything that is not acid), and an Avatar EMP16 for hands-on
-control. Two modes: **Jam** (the Mac connected, the assistant writing parts
+(acid and everything that is not acid). Two modes: **Jam** (the Mac connected, the assistant writing parts
 live) and **Live** (no laptop, playing what Jam mode saved). First step: the
 studio on macOS. The plan is in [`RIG-FM1.md`](RIG-FM1.md), split into issues
 in [`issues/`](issues/).

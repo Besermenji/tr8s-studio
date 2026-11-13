@@ -1,4 +1,4 @@
-# The rig: TR-8S + FM-1 + EMP16
+# The rig: TR-8S + FM-1
 
 Written 2026-11-08. This is the plan for growing the studio from one drum
 machine into a small live techno rig, in two modes:
@@ -7,8 +7,8 @@ machine into a small live techno rig, in two modes:
   dub stab", "make the acid nastier", "drop the pad for the break") and it
   writes drums to the TR-8S and synth parts to the FM-1 while they play. What
   you keep gets saved on the boxes.
-- **Live mode.** No laptop. The TR-8S, the EMP16 and the FM-1 play what Jam
-  mode saved, by hand, from a printed cue sheet.
+- **Live mode.** No laptop. The TR-8S and the FM-1 play what Jam mode saved,
+  by hand, from a printed cue sheet.
 
 The cables are the same in both modes, and the laptop never sends MIDI clock.
 Unplugging it changes nothing about timing.
@@ -36,7 +36,6 @@ Only a little is **[V]** so far: the FM-1's flash chip and the protocol's read c
 |---|---|
 | Roland TR-8S | Master clock, drums, mixer. The FM-1 comes in on its EXT IN, so the TR-8S's sidechain and master FX apply to the synth too. |
 | M-VAVE FM-1 | The synths: acid, and everything that is not acid. Runs a forked open-source firmware (below). |
-| Avatar EMP16 | Hands on the FM-1: knobs for filter and sends, pads to bring parts in. Sits in the MIDI chain with thru. |
 | Mac (Jam mode only) | The studio and the assistant. Talks to the TR-8S and the FM-1 over their own USB cables. |
 
 ## 1. Architecture
@@ -51,12 +50,12 @@ Only a little is **[V]** so far: the FM-1's flash chip and the protocol's read c
    └─ USB ── FM-1   (parts, knobs, save)
 
  Both modes, always:
-   TR-8S MIDI OUT ──► EMP16 MIDI IN │ thru + its own knobs/pads │ EMP16 MIDI OUT ──► FM-1 TRS MIDI IN
+   TR-8S MIDI OUT ──► FM-1 TRS MIDI IN   (through a DIN-to-TRS adapter)
    FM-1 audio out ──► TR-8S EXT IN L/R  (sidechained on BD, through the master FX)
 ```
 
-The DIN/TRS chain carries the clock, Start/Stop and the EMP16's controls in
-both modes. USB to the Mac carries only editing traffic, never clock.
+The MIDI cable carries the clock and Start/Stop in both modes. USB to the Mac
+carries only editing traffic, never clock.
 
 ### What the studio gains
 
@@ -129,8 +128,9 @@ override its voicing.
 already shapes A–H as intro, main, fill, break and peak against an energy
 curve. The same curve decides when each FM-1 part comes in: the pad holds
 through the break, the acid arrives with the main groove. On the FM-1 that
-becomes song sections A–D with parts muted per section. On paper it is the cue
-sheet line "pad 2 in at the break".
+becomes a song of up to 16 sections: each section names, per track, the saved
+project slot it plays or "−" (silent), so a part is in or out of that section.
+On paper it is the cue sheet line "pad 2 in at the break".
 
 **Tools** (issues 05 and 06), a new `synth` namespace added to the list in
 `tools/__init__.py`:
@@ -144,8 +144,7 @@ sheet line "pad 2 in at the break".
 - Library JSON gains an optional `"synth"` block.
 - `set.build`: an ordered list of tracks becomes TR-8S slots, FM-1 project
   slots and a markdown cue sheet. The sheet lists each TR-8S slot with its FM-1
-  project, key, BPM and seed, which parts play in which section, and the EMP16
-  map.
+  project, key, BPM and seed, and which parts play in which section.
 
 **Jam mode in the studio** (issue 06). The FM-1 port opens alongside the
 TR-8S. The assistant is the main way in, and a panel in the UI mirrors what it
@@ -166,9 +165,9 @@ EXT IN included, so `tr8s.audio` can measure the FM-1 against the kick. That
 needs audio capture on macOS, a later item.
 
 **Live mode needs nothing new.** It is whatever Jam mode saved on the two
-boxes, plus the cue sheet. CC movement on stage comes from the EMP16's knobs,
-plus any per-step motion and LFOs saved in the FM-1 project. Playing back CC
-automation from a host is out of scope: there is no host.
+boxes, plus the cue sheet. CC movement on stage comes from the FM-1's own
+knobs, plus any per-step motion and LFOs saved in the FM-1 project. Playing back
+CC automation from a host is out of scope: there is no host.
 
 ## 2. Firmware: Mini-Tone
 
@@ -259,8 +258,6 @@ spike (issue 02) shows it is missing:
   `TRACK_PARAM`, `SONG`, `PROJECT`); **EUCLID and STOCHASTIC have no parameter
   ids**, so those cannot be written today. A project save also stops the
   transport.
-- **(d)** A fixed CC for track mute and unmute, if MIDI LEARN cannot cover it,
-  so EMP16 pads can bring parts in.
 
 Builds and flashes are local. There is no CI and there are no tokens.
 Felucca-family firmware builds with JieLi's Linux toolchain: natively on Linux
@@ -272,35 +269,31 @@ USB-MIDI installer).
 
 ### MIDI wiring
 
-TR-8S MIDI OUT (DIN) → EMP16 MIDI IN.
-EMP16 MIDI OUT (its thru merged with its own knobs and pads) → TRS adapter →
-FM-1 TRS MIDI IN.
+TR-8S MIDI OUT (DIN) → DIN-to-TRS adapter → FM-1 TRS MIDI IN. Nothing else is
+in the chain, and the TR-8S's MIDI IN is unused.
 
-- **[?]** The FM-1's TRS type, A or B, which decides the adapter.
-- **[?]** That the EMP16's thru passes clock without adding jitter (see the
-  acceptance test below).
-- Fallback if it does: TR-8S OUT straight to the FM-1, and EMP16 OUT into the
-  TR-8S's MIDI IN with Soft Thru on. **[?]** The TR-8S's name for that setting.
+- **[V]** The clock reaches the FM-1 this way: with `CLK` on TRS it follows
+  the TR-8S (2026-11-12). The adapter's type (A or B) was not noted; if the
+  adapter is ever replaced, the type has to match the FM-1's.
+- That the clock holds without drift or wobble is still the acceptance test
+  below.
 
 ### Clock rules
 
 - **One master: the TR-8S**, with its sync out on. Its clock free-runs even
   while stopped (see `monitor.py`), so the FM-1 stays locked between songs and
   starts on the TR-8S's Start.
-- **EMP16:** clock out off. It passes the TR-8S's clock and never makes its own.
 - **FM-1:** clock source **TRS**, pinned, so a stray clock on USB is ignored.
   MIDI and clock out off.
 - **Studio:** never sends clock. `synth/port.py` refuses realtime bytes.
-- On stage, the TR-8S's Tx EditData can be off. Only the studio needs its CCs,
-  and fewer bytes through the thru is better.
+- On stage, the TR-8S's Tx EditData can be off. Only the studio needs its CCs.
 
-A merge does not prevent jitter. One clock source and a passive thru do. The
-acceptance test checks that:
+One clock source and one direct cable is what keeps jitter out. The acceptance
+test checks that:
 
 > Record the TR-8S main out for five minutes at 130 BPM with a 16th-note TB303
 > line on the FM-1. Line the 303 up against the kick at the start and the end;
-> there should be no drift and no audible wobble. Do it through the EMP16 and
-> then direct, and write both results here.
+> there should be no drift and no audible wobble. Write the result here.
 
 ### Channels
 
@@ -323,26 +316,6 @@ has is one of the spike's questions ([`FM1-PROTOCOL.md`](FM1-PROTOCOL.md)).
 | 3 | FM-1 track 3 | stab or chord |
 | 4 | FM-1 track 4 | arp or lead |
 | 5–6 | FM-1 tracks 5–6 | extra layers, if the block reaches them |
-
-### EMP16 map
-
-Four banks, one per FM-1 track channel. Every bank has the same layout, so
-knob 1 is the cutoff whichever voice is selected.
-
-| Control | CC | Mini-Tone parameter |
-|---|---|---|
-| Knob 1 | 74 | brightness / cutoff |
-| Knob 2 | 71 | resonance |
-| Knob 3 | 75 | decay |
-| Knob 4 | 5 | glide (the slide time on a TB303) |
-| Fader 1 | 94 | delay send: the "FX depth" |
-| Fader 2 | 91 | reverb send |
-| Fader 3 | 93 | chorus send |
-| Fader 4 | 7 | track level |
-| Pads 1–4 | MIDI LEARN, or fork patch (d) | mute and unmute tracks 1–4: a synth jumps in |
-
-**[?]** How many knobs and faders the EMP16 really has. Retail listings
-disagree; the table assumes four of each.
 
 ### Audio and gain staging
 
