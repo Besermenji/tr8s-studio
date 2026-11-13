@@ -52,7 +52,7 @@ def library_list():
 
 
 # `project` is not kept: a saved track must not carry a flash slot that a replay would overwrite
-SYNTH_KEYS = ("target", "voicing", "key", "energy", "seed", "length", "override")
+SYNTH_KEYS = ("target", "voicing", "key", "energy", "seed", "length", "override", "arrange", "bars")
 
 
 @tool("library.save",
@@ -84,6 +84,11 @@ def library_save(slot, name, style, key, seed=None, about=None, synth=None, over
         from .synth import build as synth_build
         synth_build(block.get("voicing") or style, block.get("key") or key, block.get("energy"),
                     block.get("seed") or 0, block.get("length", 16), block.get("override"))   # refuses a bad block
+        if block.get("arrange"):
+            from .synth import sections as synth_sections
+            parts = synth_build(block.get("voicing") or style, block.get("key") or key, block.get("energy"),
+                                block.get("seed") or 0, block.get("length", 16), block.get("override"))
+            synth_sections(parts, block.get("energy"), block.get("bars", 16))
     s = _slot(slot)
     doc = pattern_export(s)
     meta = {"style": style, "key": key, "about": about or "", "built_by": "tr8s library.save",

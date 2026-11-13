@@ -19,8 +19,8 @@ import os
 import queue
 import time
 
-from .minitone import (CMDS, HEADER, NAMES, check_edit_frame, frame,
-                       save_frame)
+from .minitone import (CMDS, HEADER, NAMES, SONG_OPS, check_edit_frame, frame,
+                       parse_song, save_frame, song_frame)
 
 DEFAULT_PORT = "Felucca"        # the CoreMIDI name under our Mini-Tone build
 STOCK_PORT = "FM-1"             # and under M-VAVE's stock firmware
@@ -166,6 +166,27 @@ class Fm1Port:
         if reply[:2] != bytes([1, project]):
             raise Fm1Error(f"the FM-1 answered the save of project {project} with {reply.hex(' ')}")
         return {"project": project, "used": bool(reply[2]) if len(reply) > 2 else None}
+
+    def song(self) -> dict:
+        """The FM-1's song chain (op 4), decoded. Read only."""
+        return parse_song(self.request(CMDS["SONG"], [SONG_OPS["query"]]))
+
+    def set_song(self, rows) -> dict:
+        """
+        Set the whole chain in RAM (op 5), then read it back. It is not saved until `save`.
+        A busy FM-1 (it is playing) and an invalid chain raise `Fm1Error`. Play and stop are never sent.
+        """
+        want = [list(r) for r in rows]
+        f = song_frame(want)                      # checks the rows before anything goes out
+        got = parse_song(self.request(f[4], f[5:-1]))
+        if got["rc"] == 2:
+            raise Fm1Error("the FM-1 is playing: stop the TR-8S, then try again")
+        if got["rc"] != 0:
+            raise Fm1Error(f"the FM-1 refused the song: {got['rc_text']}")
+        back = self.song()
+        if back["rows"] != want:
+            raise Fm1Error(f"the FM-1 stored the song differently: sent {want}, read back {back['rows']}")
+        return {"sections": len(want), "rows": want}
 
     def close(self) -> None:
         # cancel_callback -> settle -> close_port: close_port can deadlock otherwise

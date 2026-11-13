@@ -51,25 +51,40 @@ def build(style, key="C minor", energy=None, seed=0, length=16, override=None) -
                           overrides=_overrides(override))
 
 
-def summary(parts: dict) -> dict:
+def summary(parts: dict, sections: list | None = None) -> dict:
     """What a caller needs to tell the musician: each track's shape, engine, channel and notes."""
-    return {"tracks": {str(t): {"shape": p.shape, "engine": p.engine, "channel": mt.CHANNELS[t],
-                                "steps": p.length, "notes": p.names()}
-                       for t, p in parts.items()},
-            "warnings": mt.voice_budget(parts) + [w for p in parts.values() for w in p.warnings]}
+    out = {"tracks": {str(t): {"shape": p.shape, "engine": p.engine, "channel": mt.CHANNELS[t],
+                               "steps": p.length, "notes": p.names()}
+                      for t, p in parts.items()},
+           "warnings": mt.voice_budget(parts) + [w for p in parts.values() for w in p.warnings]}
+    if sections is not None:
+        out["sections"] = sections
+    return out
 
 
-def push(parts: dict, project: int | None = None) -> dict:
+def sections(parts: dict, energy, bars: int = 16) -> list:
+    """The song sections for the parts (pure); ValueError (-> ToolError) if they cannot be a song."""
+    return mt.song_sections(parts, 0.6 if energy is None else energy, bars)
+
+
+def push(parts: dict, project: int | None = None, song: list | None = None) -> dict:
     """
-    Write the parts to the FM-1: engine and length, then every step (RAM only). With
-    `project` (0..3) it then saves, which STOPS the FM-1's transport and writes flash.
+    Write the parts to the FM-1: engine and length, then every step (RAM only). With `song`
+    (sections from `sections`) the chain follows, in RAM. With `project` (0..3) it then saves,
+    which STOPS the FM-1's transport and writes flash; the save comes last so that it captures
+    the chain. A song needs a project: the FM-1 plays saved slots.
     """
     if project is not None and not 0 <= project <= 3:
         raise ToolError(f"project {project} is outside 0..3")     # before anything is sent
+    if song is not None and project is None:
+        raise ToolError("a song needs a project slot: the FM-1 plays saved slots")
+    rows = mt.song_rows(song, project) if song is not None else None
     try:
         port = fm1()
         sent = port.write_frames(mt.setup_frames(parts) + mt.to_syx(parts))
         out = {"sent": sent, "saved": None}
+        if rows is not None:
+            out["song"] = port.set_song(rows)
         if project is not None:
             out["saved"] = port.save(project)
         return out

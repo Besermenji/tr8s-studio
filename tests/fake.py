@@ -142,11 +142,17 @@ class FakeFm1:
       silent    answer nothing (a port with no FM-1 behind it)
       mangle    the first step write is echoed with a different note
       clamp     a track parameter (the length) is answered with a different value
+      playing   the transport runs: a song set is answered rc 2 (busy)
+
+    It keeps a song chain: op 5 stores it (rc 0), op 4 answers it in the firmware's layout
+    (`op rc count running row remaining rows...`), and a project save copies it into `slots`.
     """
 
-    def __init__(self, silent=False, mangle=False, clamp=False):
+    def __init__(self, silent=False, mangle=False, clamp=False, playing=False):
         self.sent: list = []
-        self.silent, self.mangle, self.clamp = silent, mangle, clamp
+        self.silent, self.mangle, self.clamp, self.playing = silent, mangle, clamp, playing
+        self.chain: list = []
+        self.slots: dict = {}
         self._cb = None
 
     def receive(self, msg):
@@ -164,7 +170,18 @@ class FakeFm1:
                 reply[3] = (reply[3] + 1) % 128
                 self.mangle = False
         elif cmd == CMDS["PROJECT"] and args[0] == 1:
+            self.slots[args[1]] = [list(r) for r in self.chain]
             reply = bytes([1, args[1], 1])
+        elif cmd == CMDS["SONG"] and args[0] in (4, 5):
+            rc = 0
+            if args[0] == 5:
+                if self.playing:
+                    rc = 2
+                else:
+                    n = args[1]
+                    self.chain = [list(args[2 + i * 7:9 + i * 7]) for i in range(n)]
+            reply = bytes([args[0], rc, len(self.chain), int(self.playing), 0, self.chain[0][6] if self.chain else 0])
+            reply += bytes(b for r in self.chain for b in r)
         elif cmd == CMDS["SET"] and len(args) == 4 and args[1] == 20:      # G_ENGSEL: the reply says 0
             reply = bytes(args[:2]) + bytes([0, 0x40])
         elif cmd == CMDS["TRACK_PARAM"] and self.clamp and len(args) == 4:
