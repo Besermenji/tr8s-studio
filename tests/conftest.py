@@ -16,13 +16,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 _TMP = Path(tempfile.mkdtemp(prefix="tr8s-tests-"))
 os.environ["TR8S_DATA"] = str(_TMP)
 
-# A fixed 117-tone catalogue, so anything that chooses sounds by measurement
+# A fixed tone catalogue, so anything that chooses sounds by measurement
 # chooses from the same set on every machine. Without it kit.auto_build either
 # reads whatever this particular TR-8S has been swept into, or finds nothing.
+# A measured catalogue at tests/fixtures/tones.json wins if someone adds one;
+# otherwise a small synthetic one (tests/tone_fixture.py) is written, because
+# the measured catalogue comes from a TR-8S and is not in the repo.
 _FIXTURE = Path(__file__).resolve().parent / "fixtures" / "tones.json"
 if _FIXTURE.is_file():
     import shutil
     shutil.copy(_FIXTURE, _TMP / "tones.json")
+else:
+    import tone_fixture
+    tone_fixture.write(_TMP / "tones.json")
 
 
 import pytest
