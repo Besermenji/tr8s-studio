@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from ..style import ARC, arc_energy
 from .line import FORCE_VEL, Part, _stream, generate
 
 # --------------------------------------------------------------- profile
@@ -268,6 +269,65 @@ def parse_song(reply: bytes) -> dict:
     return {"op": op, "rc": rc, "rc_text": SONG_RC.get(rc, f"slot {chr(65 + rc - 3)} is empty" if 3 <= rc <= 6 else "?"),
             "count": count, "running": bool(running), "row": row, "remaining": remaining,
             "rows": [list(body[i * width:(i + 1) * width]) for i in range(count)]}
+
+
+# Which parts a section plays. A part comes in once the section's energy (the ARC level scaled as
+# `style.arrangement` scales it) reaches its threshold; a break keeps only the sustained shapes.
+ENTER = {"drone": 0.0, "pad": 0.0, "bass": 0.5, "stab": 0.55, "arp": 0.6, "acid": 0.65, "lead": 0.85}
+BREAK_HOLDS = ("drone", "pad")
+STEPS_PER_BAR = 16
+
+
+def song_sections(parts, energy: float = 0.6, bars: int = 16) -> list:
+    """
+    The FM-1's song for a track: one section per ARC entry, adjacent sections that play the same
+    parts merged. Each is {variations, roles, energy, plays: [track...], bars, repeat}, where
+    `bars` is the TR-8S bars it lasts and `repeat` the FM-1 loops of its clock track that cover them
+    (a section lasts `repeat` passes of the first track that plays, so every part must be the same
+    length: otherwise the length of a section would depend on who plays).
+    """
+    tracks = _as_tracks(parts)
+    if not tracks:
+        raise ValueError("a song needs at least one part")
+    lengths = {p.length for p in tracks.values()}
+    if len(lengths) != 1:
+        raise ValueError("song sections need every part the same length, got "
+                         + ", ".join(f"track {t}: {p.length}" for t, p in sorted(tracks.items())))
+    length = lengths.pop()
+    if not isinstance(bars, int) or bars < 1:
+        raise ValueError(f"bars must be a whole number of 1 or more, got {bars!r}")
+    bar = bars * STEPS_PER_BAR
+    if bar % length:
+        raise ValueError(f"{bars} bars is {bar} steps, not a whole number of {length}-step passes")
+    loops = bar // length
+    if loops > 16:
+        raise ValueError(f"{bars} bars is {loops} passes of a {length}-step part; a section holds at most 16")
+    out = []
+    for variation, role, level in ARC:
+        e = arc_energy(level, energy)
+        plays = [t for t, p in sorted(tracks.items())
+                 if e >= ENTER.get(p.shape, 0.0) and (role != "break" or p.shape in BREAK_HOLDS)]
+        # a section nobody plays holds a bar at a time (the FM-1 counts one bar when every lane is silent)
+        passes = loops if plays else bars
+        last = out[-1] if out else None
+        if last and last["plays"] == plays and last["repeat"] + passes <= 16:
+            last["variations"].append(variation)
+            last["roles"].append(role)
+            last["energy"] = max(last["energy"], round(e, 3))
+            last["bars"] += bars
+            last["repeat"] += passes
+        else:
+            out.append({"variations": [variation], "roles": [role], "energy": round(e, 3),
+                        "plays": plays, "bars": bars, "repeat": passes})
+    return out
+
+
+def song_rows(sections, project: int) -> list:
+    """The op 5 rows for `song_sections`: a lane names `project` when its track plays, else SILENT."""
+    if not isinstance(project, int) or not 0 <= project <= 3:
+        raise ValueError(f"project is a slot 0..3, got {project!r}")
+    return [[project if t in s["plays"] else SILENT for t in range(TRACKS)] + [s["repeat"]]
+            for s in sections]
 
 
 def split_syx(data: bytes) -> list:
