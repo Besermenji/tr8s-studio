@@ -233,6 +233,22 @@ def _route_rows(e: dict) -> tuple[list, int]:
     return rows, bar - 1
 
 
+STEP_KIND_NAMES = {"flam": "flams", "1/2": "1/2 ratchets", "1/3": "1/3 ratchets",
+                   "1/4": "1/4 ratchets", "prob": "step probability", "sub_prob": "ratchet probability"}
+
+
+def _step_lines(e: dict) -> list:
+    """What the pattern's steps already carry from the source, then what the set adds."""
+    from .rework import describe_step_entry
+    out = []
+    for x in e.get("step_extras") or []:
+        n = x["steps"]
+        out.append(f"Already there: {x['inst']} {STEP_KIND_NAMES[x['kind']]} in "
+                   f"{' '.join(x['where'])} ({n} step{'s' if n != 1 else ''})")
+    out += [f"Added: {describe_step_entry(st)}" for st in e.get("steps") or []]
+    return out
+
+
 def _voices(e: dict) -> list:
     out = []
     by_role = {}
@@ -409,6 +425,9 @@ def render_rework(spec: dict, entries: list, built_on, fm1: dict | None = None) 
         voices = _voices(e)
         if voices:
             out += ["### Voices", ""] + [f"- {v}" for v in voices] + [""]
+        steps = _step_lines(e)
+        if steps:
+            out += ["### Steps", ""] + [f"- {x}" for x in steps] + [""]
         if s is not None:
             out += _fm1_block(s, p, s["first_of_project"])
         out += ["### Moves", "",

@@ -870,3 +870,23 @@ retried.
 **A blob of the right length is not a blob of the right content.** Check
 what can be checked (here, the header) before keeping anything, and stop at
 the first doubt instead of saving 128 bad files.
+
+## Probability and ratchets were in the blob all along, in bytes we called "always zero"
+
+PROTOCOL.md said a step's bytes `+1..+3` are always zero. They were zero in every
+pattern this project generated, so nobody looked at the factory ones: 1,067 factory
+steps carry non-zero `+1`/`+2`, and 12 of the 16 patterns in the poly-acid set do.
+
+Decoding them took five panel edits and five reads (2026-11-14, docs/PROTOCOL.md §2,
+"Step bytes"). Two things made it slower than it needed to be:
+
+- **What the player remembers setting is not always what the machine took.** Two steps
+  reported as 1/4 and 1/3 were both stored as 1/2, and one round of three edits never
+  landed at all. One change per read, and a plain hit as a control ("does the read see
+  anything?"), sorted it out.
+- **A guess fitted to factory values alone was half wrong.** `+1 = 128` on 917 factory
+  steps looked like flam; the panel's flam is `1`, and the 128 is still unknown. The
+  `+2 = 128` that looked like a flag is just SUB PROB 20 %.
+
+**When the docs call bytes "always zero", check that against content the project did not
+write.** And settle each byte with a value someone set on purpose, read straight back.

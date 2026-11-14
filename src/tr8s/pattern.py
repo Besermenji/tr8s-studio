@@ -7,7 +7,8 @@ Layout is documented in docs/PROTOCOL.md. In brief:
     18       kit (1-based)    19      scale        32  shuffle
     144 + blk*2436            variation block, blk 0..9
       +4 + track*64 + step*4  4 bytes per step
-        instrument tracks 0..10 : byte 0 = velocity
+        instrument tracks 0..10 : 0 = velocity, 1 = sub step / flam,
+                                  2 = probabilities (SUB PROB high nibble, PROB low)
         motion lanes 12..22     : 0 = tune, 2 = ctrl, 3 = presence mask
 """
 
@@ -38,6 +39,15 @@ SCALES = {"8T": 0, "16T": 1, "16": 2, "32": 3}
 SCALE_NAMES = {v: k for k, v in SCALES.items()}
 
 VELOCITY = {"X": 112, "x": 100, "o": 55}
+
+# Per-step settings, decoded on the panel 2026-11-14 (docs/PROTOCOL.md §2, "Step bytes").
+VELOCITY_MAX = 127            # the display shows the stored number; 0 ("---") is no hit
+VELOCITY_NORMAL = 80          # what the panel gives a new hit
+SUB_CODES = {"flam": 1, "1/2": 2, "1/3": 3, "1/4": 4}      # step byte +1, low bits
+SUB_NAMES = {v: k for k, v in SUB_CODES.items()}
+STEP_MARK = 0x80              # step byte +1 bit 7: set on factory steps, meaning unknown; kept
+PROB_STEP = 10                # PROB and SUB PROB move in 10 % steps
+
 MOTION_TUNE_LANE_BASE = 12
 MASK_TUNE = 0x80
 MASK_CTRL = 0x09
@@ -178,14 +188,74 @@ class Pattern:
             raise PatternError(f"illegal step characters {sorted(bad)}; use X x o .")
         for s in range(STEPS):
             ch = pattern[s] if s < len(pattern) else "."
-            self.raw[self._inst_offset(blk, inst, s)] = VELOCITY.get(ch, 0)
+            o = self._inst_offset(blk, inst, s)
+            self.raw[o] = VELOCITY.get(ch, 0)
+            if not self.raw[o]:
+                self.raw[o + 1] = self.raw[o + 2] = 0     # a removed hit keeps no sub step or probability
+
+    def get_step(self, variation, inst: str, step: int) -> dict:
+        """
+        One step's settings (`step` is 0-based). `prob` and `sub_prob` are percentages; 100 is
+        the panel's default, which it shows as ----. `sub` is None, "flam", "1/2", "1/3" or "1/4".
+        """
+        blk = self._blk(variation)
+        if not 0 <= step < STEPS:
+            raise PatternError(f"step {step} out of range 0..{STEPS - 1}")
+        o = self._inst_offset(blk, inst, step)
+        vel, sub, prob = self.raw[o], self.raw[o + 1], self.raw[o + 2]
+        code = sub & ~STEP_MARK & 0xFF
+        return {
+            "velocity": vel,
+            "sub": SUB_NAMES.get(code) if code else None,
+            "sub_code": code,
+            "prob": 100 - PROB_STEP * (prob & 0x0F),
+            "sub_prob": 100 - PROB_STEP * (prob >> 4),
+            "mark": bool(sub & STEP_MARK),
+        }
+
+    def set_step(self, variation, inst: str, step: int, *, velocity: int | None = None,
+                 sub: str | None = None, prob: int | None = None, sub_prob: int | None = None):
+        """
+        Change one step's settings; arguments left as None are kept. `sub="none"` removes a
+        sub step or flam. Only the step's own bytes change: never a motion lane, and never the
+        unknown mark bit in byte +1.
+        """
+        blk = self._blk(variation)
+        if not 0 <= step < STEPS:
+            raise PatternError(f"step {step} out of range 0..{STEPS - 1}")
+        o = self._inst_offset(blk, inst, step)
+        if velocity is not None:
+            if not 0 <= velocity <= VELOCITY_MAX:
+                raise PatternError(f"velocity must be 0..{VELOCITY_MAX} (0 removes the hit)")
+        vel = self.raw[o] if velocity is None else velocity
+        if vel == 0 and (sub not in (None, "none") or prob is not None or sub_prob is not None):
+            raise PatternError(f"{inst} step {step + 1}: no hit to give a sub step or probability")
+        if sub is not None:
+            if sub != "none" and sub not in SUB_CODES:
+                raise PatternError(f"sub must be one of {sorted(SUB_CODES)} or 'none'")
+            code = 0 if sub == "none" else SUB_CODES[sub]
+            self.raw[o + 1] = (self.raw[o + 1] & STEP_MARK) | code
+        for name, value in (("prob", prob), ("sub_prob", sub_prob)):
+            if value is None:
+                continue
+            if not (0 <= value <= 100 and value % PROB_STEP == 0):
+                raise PatternError(f"{name} must be 0..100 in steps of {PROB_STEP}")
+            n = (100 - value) // PROB_STEP
+            if name == "prob":
+                self.raw[o + 2] = (self.raw[o + 2] & 0xF0) | n
+            else:
+                self.raw[o + 2] = (self.raw[o + 2] & 0x0F) | (n << 4)
+        if velocity is not None:
+            self.raw[o] = velocity
+            if velocity == 0:
+                self.raw[o + 1] = self.raw[o + 2] = 0
 
     def clear_variation(self, variation):
         blk = self._blk(variation)
         for track in range(len(TRACKS)):
             for s in range(STEPS):
                 o = self._step_offset(blk, track, s)
-                self.raw[o] = 0
+                self.raw[o] = self.raw[o + 1] = self.raw[o + 2] = 0
         for inst in TRACKS:
             for s in range(STEPS):
                 o = self._motion_offset(blk, inst, s)

@@ -69,6 +69,38 @@ def analyse_block(p: Pattern, blk: int) -> dict:
             "poly": poly, "motion": motion}
 
 
+STEP_KINDS = ("flam", "1/2", "1/3", "1/4", "prob", "sub_prob")
+
+
+def step_extras(p: Pattern) -> list:
+    """
+    Which tracks already carry flams, sub steps (ratchets), step probability or sub step
+    probability, and in which blocks: [{"inst", "kind", "where": [block names], "steps"}].
+    Only steps with a hit count. Ordered by instrument, then kind.
+    """
+    found = {}
+    for blk in range(NBLOCKS):
+        for inst in TRACKS:
+            for s in range(STEPS):
+                st = p.get_step(blk, inst, s)
+                if not st["velocity"]:
+                    continue
+                kinds = []
+                if st["sub"]:
+                    kinds.append(st["sub"])
+                if st["prob"] < 100:
+                    kinds.append("prob")
+                if st["sub"] and st["sub"] != "flam" and st["sub_prob"] < 100:
+                    kinds.append("sub_prob")
+                for k in kinds:
+                    e = found.setdefault((inst, k), {"where": [], "steps": 0})
+                    e["steps"] += 1
+                    if BLOCK_NAMES[blk] not in e["where"]:
+                        e["where"].append(BLOCK_NAMES[blk])
+    order = sorted(found, key=lambda ik: (TRACKS.index(ik[0]), STEP_KINDS.index(ik[1])))
+    return [{"inst": i, "kind": k, **found[(i, k)]} for i, k in order]
+
+
 def analyse_pattern(blob: bytes, slot: int | None = None) -> dict:
     p = Pattern.from_bytes(blob)
     blocks = {}
@@ -104,7 +136,7 @@ def analyse_pattern(blob: bytes, slot: int | None = None) -> dict:
     out = {"name": p.name, "tempo": tempo, "kit": p.kit + 1, "scale": p.scale, "shuffle": p.shuffle,
            "blocks": sorted(blocks, key=BLOCK_NAMES.index), "uses_all_eight": all(v in blocks for v in VARIATIONS),
            "hits_per_variation": round(hits, 1), "pitched_motion": sorted(pitched), "poly_tracks": sorted(poly),
-           "scores": scores, "detail": blocks}
+           "scores": scores, "detail": blocks, "step_extras": step_extras(p)}
     if slot is not None:
         from .device import slot_to_panel
         out.update(slot=slot, panel=slot_to_panel(slot))

@@ -114,8 +114,14 @@ before relying on it.
   cycles against the 16 of the kick, which is a polyrhythm made in three button presses. Clear
   it with `[LAST]`, the instrument, `[CLEAR]`. Do this live on a hat or a rim during a long main,
   and undo it before the break.
-- **SUB, flam, rolls** (p.11-13): pads 12/13 held while pressing an instrument pad make 16th,
-  32nd or 64th rolls; a snare roll on the last bar of a build is a fill you play yourself.
+- **Ratchets: SUB steps** (p.19): in TR-REC, select the instrument, hold `[SUB]` and turn
+  `[VALUE]` for 1/2, 1/3 or 1/4, then (still holding `[SUB]`) press the step's pad. 1/3 is a
+  triplet ratchet; the pad shows yellow. For a flam, a short SHIFT + `[SUB]` switches SUB STEP
+  to FLAM (the display does not say so), then `[SUB]` + pad: the pad shows purple. SHIFT +
+  `[SUB]` again switches back. SUB PROB (above) thins a ratchet's sub steps.
+- **Rolls, live** (p.22): in INST PLAY, hold pad 12 (16th), 13 (32nd) or 12 + 13 (64th) and press
+  an instrument pad 1-11. INST PLAY + pad 12/13 holds the roll; press it again to stop. A snare
+  roll on the last bar of a build is a fill you play yourself.
 
 ## Each part of a set
 

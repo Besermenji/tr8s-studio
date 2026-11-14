@@ -27,7 +27,7 @@ from pathlib import Path
 
 from .device import DeviceError, check_blob, panel_to_slot, slot_to_panel
 from .kit import TRACKS, Kit
-from .pattern import Pattern
+from .pattern import PROB_STEP, STEPS, SUB_CODES, VARIATIONS, VELOCITY_MAX, VELOCITY_NORMAL, Pattern
 from .survey import analyse_pattern
 
 # The fader palette, confirmed on the panel 2026-11-13 (docs/PROTOCOL.md).
@@ -152,7 +152,98 @@ def load_spec(path) -> dict:
         if s["slot"] in seen:
             raise ReworkError(f"slot {s['slot']} appears twice")
         seen.add(s["slot"])
+        for n, st in enumerate(s.get("steps") or [], 1):
+            check_step_entry(st, f"slot {s['slot']}: steps[{n}]")
     return spec
+
+
+STEP_SETTINGS = ("velocity", "sub", "prob", "sub_prob")
+STEP_KEYS = {"vars", "inst", "step", "steps", "add", *STEP_SETTINGS}
+
+
+def _entry_steps(st: dict) -> list:
+    steps = st.get("steps") if "steps" in st else [st.get("step")]
+    return steps if isinstance(steps, list) else [steps]
+
+
+def check_step_entry(st: dict, where: str):
+    """
+    A spec `steps` entry: which hits get a velocity, sub step (ratchet) or flam, step
+    probability or sub step probability. Refused before anything is built.
+
+        {"vars": "CG", "inst": "RS", "step": 15, "sub": "1/3", "sub_prob": 60}
+        {"vars": "ADH", "inst": "SD", "steps": [3, 11], "velocity": 55}
+
+    `step`/`steps` are panel numbers, 1-16. Only steps that already hold a hit change,
+    unless the entry says `"add": true`. BD on step 1 is never touched.
+    """
+    if not isinstance(st, dict):
+        raise ReworkError(f"{where}: must be an object")
+    unknown = set(st) - STEP_KEYS
+    if unknown:
+        raise ReworkError(f"{where}: unknown keys {sorted(unknown)}")
+    v = st.get("vars")
+    if not v or not isinstance(v, str) or set(v) - set(VARIATIONS):
+        raise ReworkError(f"{where}: vars must be letters from {VARIATIONS}")
+    if st.get("inst") not in TRACKS:
+        raise ReworkError(f"{where}: inst must be one of {TRACKS}")
+    if ("step" in st) == ("steps" in st):
+        raise ReworkError(f"{where}: give exactly one of step or steps")
+    steps = _entry_steps(st)
+    if not steps or not all(isinstance(n, int) and 1 <= n <= STEPS for n in steps):
+        raise ReworkError(f"{where}: steps are panel numbers 1-{STEPS}")
+    if st["inst"] == "BD" and 1 in steps:
+        raise ReworkError(f"{where}: the kick on step 1 is never changed")
+    if not any(k in st for k in STEP_SETTINGS):
+        raise ReworkError(f"{where}: nothing to set (one of {', '.join(STEP_SETTINGS)})")
+    vel = st.get("velocity")
+    if vel is not None and not (isinstance(vel, int) and 1 <= vel <= VELOCITY_MAX):
+        raise ReworkError(f"{where}: velocity is 1-{VELOCITY_MAX}")
+    sub = st.get("sub")
+    if sub is not None and sub != "none" and sub not in SUB_CODES:
+        raise ReworkError(f"{where}: sub is one of {sorted(SUB_CODES)} or 'none'")
+    for k in ("prob", "sub_prob"):
+        x = st.get(k)
+        if x is not None and not (isinstance(x, int) and 0 <= x <= 100 and x % PROB_STEP == 0):
+            raise ReworkError(f"{where}: {k} is 0-100 in steps of {PROB_STEP}")
+    if "add" in st and not isinstance(st["add"], bool):
+        raise ReworkError(f"{where}: add is true or false")
+
+
+def apply_steps(p: Pattern, entries: list) -> dict:
+    """Apply a slot's `steps` entries. Returns what changed and what was skipped (no hit)."""
+    changed, skipped = [], []
+    for st in entries or []:
+        settings = {k: st[k] for k in STEP_SETTINGS if k in st}
+        for var in st["vars"]:
+            for n in _entry_steps(st):
+                here = f"{var} {st['inst']} {n}"
+                cur = p.get_step(var, st["inst"], n - 1)
+                kw = dict(settings)
+                if not cur["velocity"]:
+                    if not st.get("add"):
+                        skipped.append(here)
+                        continue
+                    kw.setdefault("velocity", VELOCITY_NORMAL)
+                p.set_step(var, st["inst"], n - 1, **kw)
+                changed.append(here)
+    return {"changed": changed, "skipped": skipped}
+
+
+def describe_step_entry(st: dict) -> str:
+    what = []
+    if "sub" in st:
+        what.append("no sub step" if st["sub"] == "none" else
+                    "flam" if st["sub"] == "flam" else f"ratchet {st['sub']}")
+    if "sub_prob" in st:
+        what.append(f"SUB PROB {st['sub_prob']} %")
+    if "prob" in st:
+        what.append(f"PROB {st['prob']} %")
+    if "velocity" in st:
+        what.append(f"velocity {st['velocity']}")
+    steps = ", ".join(str(n) for n in _entry_steps(st))
+    add = " (adds the hit)" if st.get("add") else ""
+    return f"{st['inst']} step{'s' if len(_entry_steps(st)) > 1 else ''} {steps} in {st['vars']}: {', '.join(what)}{add}"
 
 
 def _slot(panel: str) -> int:
@@ -203,6 +294,8 @@ def plan(spec: dict, survey_dir) -> list:
             "shuffle": a.get("shuffle", 0),
             "soften": s.get("soften", spec.get("soften")),
             "keep_lines": s.get("keep_lines", [s["acid"]] if s.get("acid") else []),
+            "steps": s.get("steps", []),
+            "step_extras": a.get("step_extras", []),
         })
     kits = [e["kit"] for e in out]
     if len(set(kits)) != len(kits):
@@ -221,7 +314,9 @@ def writes(entries: list) -> list:
             what = f"copy of kit {e['source_kit_panel']} (from {e['source_panel']})"
         w.append(f"kit {e['kit_panel']}: {what}; named {e['name']!r}, colours by role")
     w += [f"pattern {e['panel']}: copy of {e['source_panel']} {e['source_name']!r}, named "
-          f"{e['name']!r}, {e['bpm']:g} BPM, kit {e['kit_panel']}" for e in entries]
+          f"{e['name']!r}, {e['bpm']:g} BPM, kit {e['kit_panel']}"
+          + "".join(f"; {describe_step_entry(st)}" for st in e.get("steps") or [])
+          for e in entries]
     return w
 
 
@@ -233,6 +328,8 @@ def build_pattern(src_blob: bytes, e: dict) -> Pattern:
         e["ctrl_cleared"] = clear_ctrl(p, e["clear_ctrl"])
     if e.get("soften") is not None:
         e["softened"] = soften(p, e.get("keep_lines") or [], e["soften"])
+    if e.get("steps"):
+        e["steps_applied"] = apply_steps(p, e["steps"])
     p.name = e["name"]
     p.tempo = e["bpm"]
     p.kit = e["kit"]

@@ -219,9 +219,32 @@ Instrument tracks are `t = 0..10` in panel order:
 BD SD LT MT HT RS HC CH OH CC RC
 ```
 
-**[V]** For instrument tracks, byte `+0` is velocity and `+1..+3` are always
-zero. Velocity `0` means the step is off. The generator uses `112` accent,
-`100` normal, `55` ghost.
+### Step bytes — velocity, sub steps, flams, probability
+
+**[V]** Decoded on the panel 2026-11-14 (firmware 3.00, 8-01 variation A, HC): one setting
+at a time, unsaved, then a read diffed against the built pattern. Instrument step:
+
+| Byte | Meaning | Values |
+|---|---|---|
+| `+0` | velocity, exactly the number the display shows (hold the pad, turn ACCENT LEVEL) | `1..127`; `0` = no hit (the display shows `---`) |
+| `+1` | sub step or flam (SUB, and SHIFT+SUB for flam) | `0` none, `1` flam, `2` 1/2, `3` 1/3, `4` 1/4 |
+| `+1` bit 7 | **[U]** a mark on 917 factory steps; not flam, not a sub step (perhaps ALT INST or weak beats) | kept as it is |
+| `+2` low nibble | PROB (long-press the pad, then COPY) | `(100 − %) / 10`: `0` = 100 % (the display's `----`, the default), `10` = 0 % |
+| `+2` high nibble | SUB PROB (long-press the pad, then UTILITY) | the same scale |
+| `+3` | always `0` | |
+
+Measured: PROB 80 / SUB PROB 60 → `0x42`; PROB 30 / SUB PROB 50 → `0x57`; PROB 0 → `0x0A`.
+PROB and SUB PROB move in 10 % steps. A new hit from the panel is velocity `80`; so is
+almost every factory step (28,918 of them). The generator's `112` accent, `100` normal and
+`55` ghost are its own choice. Removing a hit leaves all four bytes `0`.
+
+Factory patterns use all of this: of the 16 set patterns, 12 carry sub steps, flams or
+probability copied from their sources. `survey.step_extras` lists them, and the rework cue
+sheet prints them per pattern.
+
+**[V]** Holding a pad while turning a knob in TR-REC records **motion** on that step: HC step
+5 gained a Tune entry (`+0 = 0x80`, mask `0x80`) that a plain long-press (steps 1 and 9) did
+not make. That entry pins the hit to Tune 0, not the kit's tune.
 
 ### Motion lanes — the same geometry
 
