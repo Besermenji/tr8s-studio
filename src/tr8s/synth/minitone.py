@@ -65,24 +65,32 @@ def _track_seed(seed: int, track: int) -> int:
 def build_parts(style: str, key: str = "C minor", energy: float | None = None,
                 seed: int = 0, length: int = 16, overrides: Mapping | None = None) -> dict:
     """
-    {track: Part} for a style. `overrides` maps a track to `(shape, engine)`,
-    or to None to drop that track.
+    {track: Part} for a style. `overrides` maps a track to `(shape, engine)` or
+    `(shape, engine, extra)`, where `extra` may hold `root` (the part's register, e.g. "A1")
+    and `rhythm` ((pulses, rotate), a Euclidean placement), or to None to drop that track.
+    With `style` None there is no voicing underneath: the parts are the overrides alone.
     """
-    if style not in VOICING:
+    if style is not None and style not in VOICING:
         raise ValueError(f"unknown style {style!r}; have {', '.join(VOICING)}")
-    plan = {t: (shape, eng) for t, shape, eng in VOICING[style]}
+    plan = {t: (shape, eng, {}) for t, shape, eng in VOICING.get(style, [])}
     for t, v in (overrides or {}).items():
         if v is None:
             plan.pop(t, None)
         else:
-            plan[t] = tuple(v)
+            v = tuple(v)
+            plan[t] = (v[0], v[1], dict(v[2]) if len(v) > 2 and v[2] else {})
     out = {}
-    for t, (shape, eng) in sorted(plan.items()):
+    for t, (shape, eng, extra) in sorted(plan.items()):
         if not 0 <= t < TRACKS:
             raise ValueError(f"track {t} is outside 0..{TRACKS - 1}")
         if eng not in ENGINE_INDEX:
             raise ValueError(f"unknown engine {eng!r}; have {', '.join(ENGINE_INDEX)}")
-        out[t] = generate(shape, key=key, energy=energy, seed=_track_seed(seed, t), length=length, engine=eng)
+        unknown = set(extra) - {"root", "rhythm"}
+        if unknown:
+            raise ValueError(f"track {t}: unknown part settings {sorted(unknown)}; have root, rhythm")
+        rhythm = tuple(extra["rhythm"]) if extra.get("rhythm") is not None else None
+        out[t] = generate(shape, key=key, energy=energy, seed=_track_seed(seed, t), length=length,
+                          engine=eng, root=extra.get("root"), rhythm=rhythm)
     return out
 
 

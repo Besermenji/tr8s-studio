@@ -77,6 +77,19 @@
      "tone": "909 Ride Cymbal",
      "decay": 130
     }
+   },
+   "fm1": {
+    "project": "A",
+    "plays": {
+     "B": [],
+     "D": [],
+     "H": [],
+     "A": [],
+     "F": [],
+     "C": [],
+     "E": [],
+     "G": []
+    }
    }
   },
   {
@@ -135,6 +148,37 @@
      "tone": "909 Ride Cymbal",
      "decay": 130
     }
+   },
+   "fm1": {
+    "project": "A",
+    "plays": {
+     "A": [],
+     "C": [
+      1
+     ],
+     "E": [
+      1
+     ],
+     "D": [
+      1,
+      2
+     ],
+     "G": [
+      2
+     ],
+     "H": [
+      1,
+      2
+     ],
+     "B": [
+      1,
+      2
+     ],
+     "F": [
+      1,
+      2
+     ]
+    }
    }
   },
   {
@@ -190,6 +234,42 @@
     "RC": {
      "tone": "909 Ride Cymbal",
      "decay": 130
+    }
+   },
+   "fm1": {
+    "project": "A",
+    "plays": {
+     "D": [
+      1,
+      2
+     ],
+     "A": [
+      1,
+      2
+     ],
+     "E": [
+      1,
+      2
+     ],
+     "H": [
+      1,
+      2
+     ],
+     "G": [
+      2
+     ],
+     "B": [
+      1,
+      2
+     ],
+     "C": [
+      1,
+      2
+     ],
+     "F": [
+      1,
+      2
+     ]
     }
    }
   },
@@ -251,6 +331,21 @@
     "RC": {
      "tone": "909 Ride Cymbal",
      "decay": 130
+    }
+   },
+   "fm1": {
+    "project": "A",
+    "plays": {
+     "A": [
+      2
+     ],
+     "B": [],
+     "D": [],
+     "F": [],
+     "C": [],
+     "E": [],
+     "H": [],
+     "G": []
     }
    }
   },
@@ -318,6 +413,20 @@
      "tone": "909 Ride Cymbal",
      "decay": 130
     }
+   },
+   "fm1": {
+    "project": "A",
+    "plays": {
+     "D": [],
+     "A": [],
+     "E": [],
+     "F": [],
+     "B": [],
+     "C": [],
+     "H": [],
+     "G": []
+    },
+    "load": "B"
    }
   },
   {
@@ -373,6 +482,36 @@
      "tone": "909 Ride Cymbal",
      "decay": 125
     }
+   },
+   "fm1": {
+    "project": "B",
+    "plays": {
+     "E": [],
+     "A": [
+      0
+     ],
+     "H": [
+      0
+     ],
+     "B": [
+      0
+     ],
+     "G": [
+      0
+     ],
+     "C": [
+      0,
+      2
+     ],
+     "F": [
+      0,
+      2
+     ],
+     "D": [
+      0,
+      2
+     ]
+    }
    }
   },
   {
@@ -427,6 +566,42 @@
     "RC": {
      "tone": "909 Ride Cymbal",
      "decay": 125
+    }
+   },
+   "fm1": {
+    "project": "B",
+    "plays": {
+     "A": [
+      0,
+      2
+     ],
+     "C": [
+      0,
+      2
+     ],
+     "D": [
+      0,
+      2
+     ],
+     "E": [
+      0,
+      2
+     ],
+     "B": [
+      0
+     ],
+     "G": [
+      0,
+      2
+     ],
+     "F": [
+      0,
+      2
+     ],
+     "H": [
+      0,
+      2
+     ]
     }
    }
   },
@@ -491,6 +666,20 @@
      "decay": 100,
      "reverb": 40
     }
+   },
+   "fm1": {
+    "project": "B",
+    "plays": {
+     "B": [],
+     "F": [],
+     "G": [],
+     "D": [],
+     "C": [],
+     "H": [],
+     "A": [],
+     "E": []
+    },
+    "load": "C"
    }
   },
   {
@@ -548,6 +737,29 @@
     "RC": {
      "tone": "909 Ride Cymbal",
      "decay": 115
+    }
+   },
+   "fm1": {
+    "project": "C",
+    "plays": {
+     "H": [],
+     "A": [
+      1
+     ],
+     "G": [
+      1
+     ],
+     "F": [],
+     "B": [
+      1
+     ],
+     "C": [
+      1
+     ],
+     "D": [
+      1
+     ],
+     "E": []
     }
    }
   },
@@ -616,6 +828,19 @@
      "tone": "626 Ride Cymbal",
      "decay": 110
     }
+   },
+   "fm1": {
+    "project": "C",
+    "plays": {
+     "B": [],
+     "C": [],
+     "G": [],
+     "A": [],
+     "F": [],
+     "D": [],
+     "E": [],
+     "H": []
+    }
    }
   },
   {
@@ -670,6 +895,34 @@
     "RC": {
      "tone": "909 Ride Cymbal",
      "decay": 110
+    }
+   },
+   "fm1": {
+    "project": "C",
+    "plays": {
+     "A": [],
+     "H": [
+      1
+     ],
+     "C": [
+      1
+     ],
+     "B": [
+      1
+     ],
+     "F": [],
+     "D": [
+      0,
+      1
+     ],
+     "G": [
+      0,
+      1
+     ],
+     "E": [
+      0,
+      1
+     ]
     }
    }
   },
@@ -739,6 +992,20 @@
      "tone": "606 Cymbal",
      "decay": 100
     }
+   },
+   "fm1": {
+    "project": "C",
+    "plays": {
+     "H": [],
+     "A": [],
+     "E": [],
+     "F": [],
+     "G": [],
+     "B": [],
+     "D": [],
+     "C": []
+    },
+    "load": "D"
    }
   },
   {
@@ -795,6 +1062,19 @@
      "tone": "909 Ride Cymbal",
      "decay": 125
     }
+   },
+   "fm1": {
+    "project": "D",
+    "plays": {
+     "A": [],
+     "B": [],
+     "C": [],
+     "H": [],
+     "E": [],
+     "D": [],
+     "F": [],
+     "G": []
+    }
    }
   },
   {
@@ -849,6 +1129,36 @@
     "RC": {
      "tone": "909 Ride Cymbal",
      "decay": 120
+    }
+   },
+   "fm1": {
+    "project": "D",
+    "plays": {
+     "A": [],
+     "C": [
+      0
+     ],
+     "G": [
+      0
+     ],
+     "D": [
+      0
+     ],
+     "B": [
+      0
+     ],
+     "F": [
+      0,
+      3
+     ],
+     "H": [
+      0,
+      3
+     ],
+     "E": [
+      0,
+      3
+     ]
     }
    }
   },
@@ -905,6 +1215,37 @@
     "RC": {
      "tone": "909 Ride Cymbal",
      "decay": 130
+    }
+   },
+   "fm1": {
+    "project": "D",
+    "plays": {
+     "E": [
+      0,
+      2
+     ],
+     "F": [
+      0,
+      2
+     ],
+     "A": [
+      2
+     ],
+     "H": [
+      2
+     ],
+     "G": [
+      2
+     ],
+     "C": [
+      2
+     ],
+     "D": [
+      2
+     ],
+     "B": [
+      2
+     ]
     }
    }
   },
@@ -964,7 +1305,155 @@
      "tone": "606 Cymbal",
      "decay": 110
     }
+   },
+   "fm1": {
+    "project": "D",
+    "plays": {
+     "A": [
+      2
+     ],
+     "C": [],
+     "E": [],
+     "B": [],
+     "G": [],
+     "H": [],
+     "D": [],
+     "F": []
+    }
    }
   }
- ]
+ ],
+ "fm1": {
+  "about": "FM-1 (Mini-Tone) parts in four chapters, played as loops with mutes by hand. Rule: one bass and one line at a time; the FM-1 takes the melody only where the TR-8S's yellow voice has none. Keys come from measured roots (`tr8s roots`).",
+  "measure": [
+   {
+    "slot": "8-01",
+    "inst": "MT"
+   },
+   {
+    "slot": "8-01",
+    "inst": "HT"
+   },
+   {
+    "slot": "8-04",
+    "inst": "MT"
+   },
+   {
+    "slot": "8-04",
+    "inst": "HT"
+   },
+   {
+    "slot": "8-05",
+    "inst": "MT"
+   },
+   {
+    "slot": "8-15",
+    "inst": "MT"
+   }
+  ],
+  "roots": {},
+  "projects": {
+   "A": {
+    "name": "WARM",
+    "key_from": "Deep SH Bass",
+    "mode": "minor",
+    "seed": 101,
+    "energy": 0.5,
+    "length": 16,
+    "parts": {
+     "1": {
+      "shape": "bass",
+      "engine": "DUALVCO",
+      "register": "low",
+      "rhythm": [
+       4,
+       2
+      ]
+     },
+     "2": {
+      "shape": "stab",
+      "engine": "FMTONE",
+      "register": "mid",
+      "rhythm": [
+       4,
+       2
+      ]
+     }
+    }
+   },
+   "B": {
+    "name": "PEAK1",
+    "key_from": "Prog.Trance Bass",
+    "mode": "minor",
+    "seed": 202,
+    "energy": 0.75,
+    "length": 16,
+    "parts": {
+     "0": {
+      "shape": "acid",
+      "engine": "TB303",
+      "register": "mid"
+     },
+     "2": {
+      "shape": "stab",
+      "engine": "ANALOG4",
+      "register": "mid",
+      "rhythm": [
+       6,
+       0
+      ]
+     }
+    }
+   },
+   "C": {
+    "name": "HARD",
+    "key_from": "Deep SH Bass",
+    "mode": "phrygian",
+    "seed": 303,
+    "energy": 0.85,
+    "length": 16,
+    "parts": {
+     "0": {
+      "shape": "acid",
+      "engine": "TB303",
+      "register": "low"
+     },
+     "1": {
+      "shape": "bass",
+      "engine": "DUALVCO",
+      "register": "mid",
+      "rhythm": [
+       12,
+       3
+      ]
+     }
+    }
+   },
+   "D": {
+    "name": "SUMMIT",
+    "key_from": "Prog.Trance Bass",
+    "mode": "minor",
+    "seed": 404,
+    "energy": 0.9,
+    "length": 16,
+    "parts": {
+     "0": {
+      "shape": "acid",
+      "engine": "TB303",
+      "register": "mid"
+     },
+     "2": {
+      "shape": "pad",
+      "engine": "SWARM",
+      "register": "high"
+     },
+     "3": {
+      "shape": "lead",
+      "engine": "DUALVCO",
+      "register": "mid"
+     }
+    }
+   }
+  }
+ }
 }

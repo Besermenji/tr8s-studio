@@ -21,8 +21,11 @@ from __future__ import annotations
 
 import array
 import math
+import os
+import re
 import struct
 import subprocess
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -39,35 +42,100 @@ class AudioError(RuntimeError):
 
 
 # ------------------------------------------------------------------- capture
+# Linux records with ALSA's `arecord`; macOS with ffmpeg's AVFoundation input, which names the
+# device ("TR-8S") instead of an ALSA card. Both write a 96 kHz IEEE-float WAV that `read_wav` reads.
+
+MAC_DEVICE_HINTS = ("TR-8S", "TR8S")
+LIST_TIMEOUT = 15             # seconds for ffmpeg to list the devices
+SLACK = 20                    # seconds a recording may run past its length before it counts as hung
+
+
+def _run(cmd: list, timeout: float):
+    """A recorder or lister, with no terminal attached and a deadline. Failures are AudioError."""
+    try:
+        return subprocess.run(cmd, capture_output=True, text=True, stdin=subprocess.DEVNULL,
+                              timeout=timeout)
+    except FileNotFoundError:
+        raise AudioError(f"{cmd[0]} is not installed"
+                         + (" (brew install ffmpeg)" if cmd[0] == "ffmpeg" else "")) from None
+    except subprocess.TimeoutExpired:
+        raise AudioError(f"{cmd[0]} did not finish within {timeout:g} s") from None
+
+
+def mac_audio_devices() -> list:
+    """The AVFoundation audio input names ffmpeg lists, in its order. Read-only."""
+    proc = _run(["ffmpeg", "-nostdin", "-hide_banner", "-f", "avfoundation", "-list_devices", "true",
+                 "-i", ""], timeout=LIST_TIMEOUT)
+    names, audio = [], False
+    for line in proc.stderr.splitlines():
+        if "AVFoundation audio devices" in line:
+            audio = True
+        elif "AVFoundation video devices" in line:
+            audio = False
+        elif audio:
+            m = re.search(r"\[(\d+)\] (.+)$", line)
+            if m:
+                names.append(m.group(2).strip())
+    return names
+
+
+def find_device() -> str:
+    """The capture device: TR8S_AUDIO if set, else the TR-8S (an ALSA card, or the AVFoundation name)."""
+    env = os.environ.get("TR8S_AUDIO")
+    if env:
+        return env
+    if sys.platform != "darwin":
+        return config.find_audio_device()
+    names = mac_audio_devices()
+    for n in names:
+        if any(h in n for h in MAC_DEVICE_HINTS):
+            return n
+    raise AudioError("no TR-8S audio input in CoreAudio (AVFoundation lists: "
+                     f"{', '.join(names) or 'nothing'}). Is it connected, and is Roland's "
+                     "TR-8S driver installed? Override with TR8S_AUDIO=\"<device name>\"")
+
+
+def capture_cmd(seconds: float, out: Path, channels: int, device: str,
+                platform: str | None = None) -> list:
+    """The recorder's argv for this platform. Pure, so a test can check it."""
+    secs = str(max(1, int(round(seconds))))
+    if (platform or sys.platform) == "darwin":
+        # the first `channels` channels as they are (1-2 are the TR-8S's mix), never a downmix
+        pan = f"pan={channels}c|" + "|".join(f"c{i}=c{i}" for i in range(channels))
+        return ["ffmpeg", "-nostdin", "-hide_banner", "-loglevel", "error", "-y", "-f", "avfoundation",
+                "-i", f":{device}", "-t", secs, "-af", pan, "-ar", str(RATE),
+                "-c:a", "pcm_f32le", str(out)]
+    return ["arecord", "-D", device, "-f", FORMAT, "-c", str(channels), "-r", str(RATE),
+            "-d", secs, str(out)]
+
 
 def record(seconds: float, path: str | Path | None = None,
            channels: int = 2, device: str | None = None) -> Path:
     """Record the TR-8S's output. Blocks until done."""
     out = Path(path) if path else config.subdir("recordings") / "capture.wav"
-    dev = device or config.find_audio_device()
-    proc = subprocess.run(
-        ["arecord", "-D", dev, "-f", FORMAT, "-c", str(channels),
-         "-r", str(RATE), "-d", str(max(1, int(round(seconds)))), str(out)],
-        capture_output=True, text=True)
+    cmd = capture_cmd(seconds, out, channels, device or find_device())
+    proc = _run(cmd, timeout=seconds + SLACK)
     if proc.returncode != 0:
-        raise AudioError(f"arecord failed: {proc.stderr.strip()}")
+        raise AudioError(f"{cmd[0]} failed: {proc.stderr.strip()}")
     return out
 
 
 def record_async(seconds: float, path: str | Path | None = None,
                  channels: int = 2, device: str | None = None):
-    """Start a recording and return (process, path) so triggers can run during it."""
+    """Start a recording and return (process, path) so triggers can run during it. The recorder
+    gets no terminal (stdin is /dev/null): ffmpeg would otherwise read keys from it."""
     out = Path(path) if path else config.subdir("recordings") / "capture.wav"
-    dev = device or config.find_audio_device()
-    proc = subprocess.Popen(
-        ["arecord", "-D", dev, "-f", FORMAT, "-c", str(channels),
-         "-r", str(RATE), "-d", str(max(1, int(round(seconds)))), str(out)],
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    cmd = capture_cmd(seconds, out, channels, device or find_device())
+    try:
+        proc = subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                                stderr=subprocess.DEVNULL)
+    except FileNotFoundError:
+        raise AudioError(f"{cmd[0]} is not installed") from None
     return proc, out
 
 
 def read_wav(path: str | Path) -> tuple[int, int, array.array]:
-    """(channels, rate, samples). Handles the IEEE-float WAVs arecord writes."""
+    """(channels, rate, samples). Handles the IEEE-float WAVs arecord and ffmpeg write."""
     d = Path(path).read_bytes()
     if d[:4] != b"RIFF" or d[8:12] != b"WAVE":
         raise AudioError(f"{path} is not a RIFF/WAVE file")

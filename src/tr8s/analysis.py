@@ -466,3 +466,94 @@ def interpret(rows: list[dict]) -> dict:
         verdict, conf = "unclear", "low"
 
     return {"verdict": verdict, "confidence": conf, "signals": signals}
+
+
+# ------------------------------------------------------------------- roots of a set's tones
+# The note a tone sounds at, measured on the kit as it is: the instrument is triggered with a
+# note-on (nothing is written to the TR-8S), the TR-8S's own audio is recorded, and each hit is
+# pitch-tracked. A set kit plays a tone at Tune 0, so the root measured once holds for every
+# kit of the set that uses that tone.
+
+ROOT_HITS = 4
+ROOT_GAP = 1.2                # seconds between hits: a bass tail is gone well before the next
+ROOT_WINDOW = (0.03, 0.28)    # seconds after the onset: past the attack, before the tail
+ROOT_SPREAD = 25              # cents: hits further apart than this are not one clear pitch
+ROOT_DECIMATE = 4             # 96k -> 24k: a high tone (a kalimba) needs the resolution
+
+
+def onsets(seg: list, rate: float, min_gap: float, threshold: float = 0.2) -> list:
+    """Sample indices where the envelope rises through `threshold` x its peak, `min_gap` s apart."""
+    win = 0.005
+    env = audio.envelope(seg, rate, win)
+    if not env:
+        return []
+    top = max(env)
+    if top <= 0:
+        return []
+    per = max(1, int(win * rate))
+    out, last = [], None
+    for i in range(1, len(env)):
+        if env[i] >= top * threshold > env[i - 1]:
+            t = i * per
+            if last is None or t - last >= min_gap * rate:
+                out.append(t)
+                last = t
+    return out
+
+
+def root_of_hits(seg: list, rate: float, min_gap: float = ROOT_GAP * 0.6) -> dict:
+    """
+    The pitch of a recording of repeated hits: each hit measured in ROOT_WINDOW, then the median.
+    Returns hz, note, pitch class, cents, the per-hit values and their spread in cents, and
+    `clear` (enough pitched hits, close together). The octave can be wrong on a bass heard
+    through small speakers; the pitch class is what a key needs.
+    """
+    hzs = []
+    for t in onsets(seg, rate, min_gap):
+        a, b = t + int(ROOT_WINDOW[0] * rate), t + int(ROOT_WINDOW[1] * rate)
+        m = audio.measure(seg[a:b], rate)
+        if m.hz:
+            hzs.append(m.hz)
+    if not hzs:
+        return {"hits": 0, "clear": False}
+    s = sorted(hzs)
+    mid = s[len(s) // 2] if len(s) % 2 else (s[len(s) // 2 - 1] * s[len(s) // 2]) ** 0.5
+    note, cents = audio.note_of(mid)
+    import math
+    spread = round(1200 * math.log2(max(s) / min(s)))
+    return {"hz": round(mid, 2), "note": note, "pc": note.rstrip("-0123456789"), "cents": cents,
+            "hits": len(hzs), "per_hit_hz": [round(h, 2) for h in hzs], "spread_cents": spread,
+            "clear": len(hzs) >= 3 and spread <= ROOT_SPREAD}
+
+
+def measure_root(dev, inst: str, hits: int = ROOT_HITS, gap: float = ROOT_GAP,
+                 path: Path | None = None, log=_flush_print) -> dict:
+    """
+    Trigger `inst` of the kit the TR-8S has loaded `hits` times and measure its pitch.
+    Sends note-ons only: no kit, pattern or setting is written.
+    """
+    import subprocess
+    tmp = path or config.subdir("recordings") / f"root_{inst}.wav"
+    seconds = gap * hits + 3
+    proc, wav = audio.record_async(seconds, tmp)
+    try:
+        time.sleep(1.5)                               # the recorder is running before the first hit
+        for _ in range(hits):
+            dev.trigger(inst, 110)
+            time.sleep(gap)
+        proc.wait(timeout=seconds + audio.SLACK)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        raise audio.AudioError(f"the recorder did not stop within {seconds + audio.SLACK:g} s") from None
+    except BaseException:
+        proc.kill()                                   # Ctrl-C or a MIDI error: no recorder left behind
+        raise
+    if proc.returncode:
+        raise audio.AudioError(f"the recorder exited with {proc.returncode}; nothing was measured")
+    ch, rate, samples = audio.read_wav(wav)
+    out = root_of_hits(audio.mono(samples, ch, ROOT_DECIMATE), rate / ROOT_DECIMATE)
+    out["wav"] = str(wav)
+    log(f"  {inst}: {out.get('note') or '-'} {out.get('cents', 0):+d} cents, "
+        f"{out['hits']} hits, spread {out.get('spread_cents', '-')} cents"
+        + ("" if out["clear"] else "  (NOT CLEAR: measure again)"))
+    return out

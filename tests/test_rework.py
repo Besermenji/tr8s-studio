@@ -204,3 +204,150 @@ def test_only_touches_the_named_slots(survey):
     assert t.sent == []
     done = rework.build(d_, entries, d, sleep=lambda s: None, log=lambda *a: None, only=["8-16"])
     assert done["failed"] is None and done["patterns"] == ["8-16"]
+
+
+# ------------------------------------------------------------------ the FM-1 alongside the set
+
+def _fm1_spec(spec, entries, roots=True, plays=None):
+    route = [r["variation"] for r in entries[0]["route"]]
+    s = json.loads(json.dumps(spec))
+    s["fm1"] = {"roots": {"Deep SH Bass": {"pc": "A", "note": "A1", "cents": -8, "clear": True}} if roots else {},
+                "projects": {"A": {"name": "WARM", "key_from": "Deep SH Bass", "mode": "minor", "seed": 1,
+                                   "parts": {"1": {"shape": "bass", "engine": "DUALVCO", "register": "low",
+                                                   "rhythm": [4, 2]},
+                                             "2": {"shape": "stab", "engine": "FMTONE", "register": "mid"}}}}}
+    s["slots"][0]["fm1"] = {"project": "A",
+                            "plays": plays if plays is not None else
+                            {v: ([1] if n == 1 else [1, 2] if n > 1 else []) for n, v in enumerate(route)}}
+    return s
+
+
+def test_fm1_plan_needs_a_measured_root(survey):
+    d, spec, _ = survey
+    entries = rework.plan(spec, d)
+    with pytest.raises(rework.ReworkError, match="not measured"):
+        rework.fm1_plan(_fm1_spec(spec, entries, roots=False), entries)
+
+
+def test_fm1_plan_needs_every_route_variation_and_known_tracks(survey):
+    d, spec, _ = survey
+    entries = rework.plan(spec, d)
+    with pytest.raises(rework.ReworkError, match="exactly the route's variations"):
+        rework.fm1_plan(_fm1_spec(spec, entries, plays={"A": [1]}), entries)
+    route = [r["variation"] for r in entries[0]["route"]]
+    with pytest.raises(rework.ReworkError, match="no track"):
+        rework.fm1_plan(_fm1_spec(spec, entries, plays={v: [5] for v in route}), entries)
+
+
+def test_fm1_plan_keys_parts_and_hand_cues(survey):
+    d, spec, _ = survey
+    entries = rework.plan(spec, d)
+    fp = rework.fm1_plan(_fm1_spec(spec, entries), entries)
+    a = fp["projects"]["A"]
+    assert a["key"] == "A minor" and a["tracks"][1]["root"] == "A1" and a["tracks"][2]["root"] == "A2"
+    rows = fp["slots"][0]["rows"]
+    assert rows[0]["plays"] == [] and rows[1]["in"] == [1] and rows[2]["in"] == [2]
+    assert fp["slots"][0]["first_of_project"] and fp["first"] == "A"
+
+
+def test_the_cue_sheet_carries_the_fm1(survey):
+    from datetime import date
+    from tr8s.cuesheet import render_rework
+    d, spec, _ = survey
+    entries = rework.plan(spec, d)
+    s = _fm1_spec(spec, entries)
+    md = render_rework(s, entries, date(2026, 11, 13), rework.fm1_plan(s, entries))
+    for part in ("| FM-1 | Key |", "A: bass, stab", "## Before the set", "load project A, mute every track",
+                 "| FM-1 plays | By hand on the FM-1 |", "unmute track 2", "unmute track 3",
+                 "**Project A · WARM · A minor**", "CLK) **TRS**"):
+        assert part in md, part
+    quiet = _fm1_spec(spec, entries, plays={r["variation"]: [] for r in entries[0]["route"]})
+    md = render_rework(quiet, entries, date(2026, 11, 13), rework.fm1_plan(quiet, entries))
+    assert "every FM-1 track stays muted: the TR-8S alone" in md and "A, all muted" in md
+
+
+def test_a_project_nobody_loads_is_refused(survey):
+    d, spec, _ = survey
+    entries = rework.plan(spec, d)
+    s = _fm1_spec(spec, entries)
+    s["fm1"]["projects"]["B"] = s["fm1"]["projects"]["A"]
+    s["slots"][0]["fm1"]["project"] = "B"
+    s["slots"].insert(0, {**s["slots"][0], "slot": "8-15", "fm1": {"project": "A", "plays": {}}})
+    # only the ordering matters here: B after A with no load in between
+    entries2 = [dict(entries[0], panel="8-15", route=[]), entries[0]]
+    with pytest.raises(rework.ReworkError, match="no slot before loads B"):
+        rework.fm1_plan(s, entries2)
+
+
+def test_register_root_and_merge_roots():
+    assert rework.register_root("A", "low") == "A1"
+    assert rework.register_root("E", "low") == "E1" and rework.register_root("D#", "low") == "D#2"
+    assert rework.register_root("C", "high") == "C4"
+    one = {"clear": True, "pc": "A", "note": "A1", "cents": -10, "hz": 54.7, "hits": 4, "spread_cents": 2}
+    two = dict(one, cents=-4)
+    r = rework.merge_roots([("8-01", "MT", "Deep SH Bass", one), ("8-04", "HT", "Deep SH Bass", two)], "d")
+    assert r["Deep SH Bass"]["clear"] and r["Deep SH Bass"]["cents"] == -7
+    r = rework.merge_roots([("8-01", "MT", "X", one), ("8-04", "HT", "X", dict(one, pc="A#", note="A#1"))], "d")
+    assert not r["X"]["clear"] and "disagree" in r["X"]["why"]
+    r = rework.merge_roots([("8-01", "MT", "Y", {"clear": False, "hits": 1})], "d")
+    assert not r["Y"]["clear"]
+
+
+def test_sweeps_are_told_apart_from_semitone_lines():
+    assert rework.is_sweep([-3.25, 0.29, 2.72])
+    assert not rework.is_sweep([-5.0, 0.0, 1.01, 3.0])
+    assert not rework.is_sweep([])
+
+
+def test_a_push_writes_all_six_tracks_and_an_audition_takes_one_project(survey):
+    from tr8s.synth import minitone as mt
+    d, spec, _ = survey
+    entries = rework.plan(spec, d)
+    fp = rework.fm1_plan(_fm1_spec(spec, entries), entries)
+    full = rework.all_tracks(fp["projects"]["A"]["parts"])
+    assert sorted(full) == list(range(mt.TRACKS))
+    assert all(not s.sounding for t in (0, 3, 4, 5) for s in full[t].steps) and full[1].steps[2].sounding
+    frames = mt.setup_frames(full) + mt.to_syx(full)
+    assert {f[5] for f in frames if f[4] == mt.CMDS["TRACK_STEP"]} == set(range(mt.TRACKS))
+    fp["projects"]["B"] = fp["projects"]["A"]
+    with pytest.raises(rework.ReworkError, match="one project"):
+        rework.fm1_push(fp, ["A", "B"])                       # refused before any port is opened
+
+
+def test_a_first_project_loaded_mid_set_renders(survey):
+    from datetime import date
+    from tr8s.cuesheet import render_rework
+    d, spec, _ = survey
+    (e,) = rework.plan(spec, d)
+    s = _fm1_spec(spec, [e])
+    s["slots"].insert(0, {**s["slots"][0], "slot": "8-15", "fm1": {"load": "A"}})
+    entries = [dict(e, panel="8-15", index=1, route=[]), dict(e, index=2)]
+    fp = rework.fm1_plan(s, entries)
+    assert fp["first"] == "A" and fp["before_set"] is None
+    assert fp["slots"][0]["load"] == "A" and fp["slots"][1]["first_of_project"]
+    md = render_rework(s, entries, date(2026, 11, 14), fp)
+    assert "**Load project A during this pattern**" in md and "No project is loaded yet" in md
+    assert "The first project is loaded during the set" in md
+
+
+def test_negative_shuffle_swings_too():
+    from tr8s.synth.line import Part, SynthStep
+    steps = [SynthStep(notes=(45,)) if i % 2 else SynthStep() for i in range(16)]
+    project = {"parts": {2: Part("stab", "A minor", "A2", 0, 0.5, steps)}, "scale": [9, 11, 0, 2, 4, 5, 7],
+               "key": "A minor"}
+    e = {"roles": {}, "shuffle": -40}
+    assert any("swung 16ths" in w for w in rework._slot_warnings(e, project, [[2]], {}))
+    e["shuffle"] = 10
+    assert not any("swung 16ths" in w for w in rework._slot_warnings(e, project, [[2]], {}))
+
+
+def test_a_rerun_keeps_the_roots_it_did_not_measure_and_never_loses_a_good_one():
+    good = {"clear": True, "pc": "A", "note": "A1", "cents": -10, "hz": 54.7, "hits": 4, "spread_cents": 2}
+    first = rework.merge_roots([("8-01", "MT", "Deep SH Bass", good),
+                                ("8-04", "HT", "Deep SH Bass", dict(good, cents=-6))], "d1")
+    noisy = {"clear": False, "hits": 1}
+    again = rework.merge_roots([("8-04", "HT", "Deep SH Bass", noisy)], "d2", previous=first)
+    r = again["Deep SH Bass"]
+    assert r["clear"] and r["cents"] == -8 and len(r["each"]) == 2
+    better = rework.merge_roots([("8-04", "HT", "Deep SH Bass", dict(good, cents=-12))], "d2", previous=first)
+    assert better["Deep SH Bass"]["cents"] == -11 and better["Deep SH Bass"]["measured"] == "d2"

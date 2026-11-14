@@ -61,8 +61,9 @@ before relying on it.
   a 1, unmute on the 1. The cheapest and strongest tension trick there is.
 - **Choke (kit MUTE setting)**: in KIT Edit, `MUTE` makes one instrument silence another when it
   sounds (p.14). The kick choking a long rumble or acid tail ducks it on every beat, the effect
-  people use sidechain for. Set it per kit and WRITE the kit. **[check]** Whether firmware 3.00
-  has a real sidechain: look through the KIT Edit list on the panel.
+  people use sidechain for. Set it per kit and WRITE the kit. **[check]** Roland documents a
+  kit sidechain on External In (the FM-1's input); confirm its parameter names in the KIT Edit
+  list on firmware 3.00.
 
 ## The knobs
 
@@ -97,10 +98,18 @@ before relying on it.
 
 ## Variation and surprise
 
-- **Probability** (firmware 2.50+): per-step chance, and a master amount. A little on the hats
-  or an odd-cycle voice keeps a long loop alive. **[check]** the panel path in the Reference
-  Manual 3.00.
-- **Step loop** (1.10+): loops a few steps of the pattern, a live stutter. **[check]**.
+- **Probability** (firmware 2.50+, Reference Manual p.20): in TR-REC, select the instrument,
+  long-press the step's pad, and while holding it press `[COPY]` for PROB (the step's chance) or
+  `[UTILITY]` for SUB PROB (how many of its sub steps play). Turn `[VALUE]`. A step with no
+  probability shows `----`; pad + `[CLEAR]` removes it. Save the pattern to keep it (p.31).
+  A little on the hats or an odd-cycle voice keeps a long loop alive.
+- **Master Probability** (p.17): one amount per pattern, -100..0..100 %, that pushes every step's
+  probability up or down. It does nothing on a pattern with no step probabilities. Live: hold
+  `[TR-REC]` and turn `[ACCENT]`. Or SHIFT + PTN SELECT → MstrProb.
+- **Step loop** (p.23): while playing, SHIFT + `[INST PLAY]` (it blinks), then hold a pad 1-16:
+  that step loops until you let go. Turn `[VALUE]` or press `[SUB]` while it loops for a 1/2 or
+  1/4 roll. Instrument button + pad holds the loop after you let go; any pad stops it. PTN
+  SELECT, TR-REC, INST PLAY or INST REC leaves step loop mode.
 - **Per-track LAST** (p.9): press `[LAST]`, the instrument, then a pad 1-16. A track with LAST 7
   cycles against the 16 of the kick, which is a polyrhythm made in three button presses. Clear
   it with `[LAST]`, the instrument, `[CLEAR]`. Do this live on a hat or a rim during a long main,
@@ -123,6 +132,36 @@ before relying on it.
   space; the next peak needs it.
 - **Closer:** take things out on their own cycles, one per 8 bars, until a hat and a tail are
   left. Stop on a 1.
+
+## Playing the FM-1 with the set
+
+The FM-1 joins through EXT IN and follows the TR-8S's clock. The cue sheet says which project
+is loaded in each pattern and which FM-1 track to mute or unmute on each route row. Moves
+marked **[check]** wait for the FM-1 mechanics test (H2 in the plan, results in
+docs/FM1-PROTOCOL.md).
+
+- **One bass and one line at a time.** Where the yellow fader plays, the FM-1 has no bass
+  and no melody. The FM-1 takes the melody only where the TR-8S has none.
+- **Light parts are the TR-8S alone** (8-01, 8-08, 8-12, and the outro after its intro). Let
+  the space be space.
+- **The FM-1's volume knob is its fader.** EXT IN level is set once, in the setup. Pull the
+  FM-1 down with the knob when a part gets in the way, rather than muting it mid-phrase.
+- **Bring a part in on a 1,** with the FM-1's filter (cutoff) mostly shut, and open it over
+  8 bars. Take it out on a 1 too, or at the end of a phrase.
+- **The acid's cutoff knob is the squelch,** as MT's CTRL is on the TR-8S. Ride resonance
+  and cutoff together on the peaks.
+- **Dub throws on the FM-1's own delay** (CC 94): whether the TR-8S's delay and reverb reach
+  EXT IN is **[check]**.
+- **Mutes [check]:** the exact presses on the FM-1 panel to mute and unmute a track while it
+  plays.
+- **Loading the next project** happens in a pattern where every FM-1 track is muted (8-05,
+  8-08, 8-12): volume down, load, mute every track, volume back up. **[check]** that a load
+  keeps the loop running on the grid; if it stops the FM-1, the restart is PLAY on a
+  downbeat (also **[check]**).
+- **The kick and the FM-1 bass:** the bass sits on the offbeats; the kit's sidechain on EXT IN
+  (from BD) ducks the rest. Duck in one place only, not in the FM-1 as well.
+- **Rescue:** the FM-1 off the grid or too loud: volume down first, then mute every track,
+  then sort it out on the next 1.
 
 ## When something goes wrong
 

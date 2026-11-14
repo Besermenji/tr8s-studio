@@ -17,17 +17,22 @@ from ._core import ToolError, _library_dir, close_fm1, fm1, opt, tool
 _OVERRIDE = {"type": "object",
              "description": "per FM-1 track (0-5), replace the voicing: "
                             "{\"1\": {\"shape\": \"acid\", \"engine\": \"TB303\"}} "
-                            "or null to drop that track. Shapes: "
+                            "or null to drop that track. Optional per track: root "
+                            "(register, e.g. \"A1\") and rhythm ([pulses, rotate], "
+                            "Euclidean; not for pad or drone). Shapes: "
                             "bass acid stab arp pad drone lead.",
              "additionalProperties": {"anyOf": [
                  {"type": "null"},
                  {"type": "object",
-                  "properties": {"shape": {"type": "string"}, "engine": {"type": "string"}},
+                  "properties": {"shape": {"type": "string"}, "engine": {"type": "string"},
+                                 "root": {"type": "string"},
+                                 "rhythm": {"type": "array", "items": {"type": "integer"},
+                                            "minItems": 2, "maxItems": 2}},
                   "required": ["shape", "engine"]}]}}
 
 
 def _overrides(raw) -> dict | None:
-    """{"1": {"shape", "engine"}, "2": null} -> {1: (shape, engine), 2: None}"""
+    """{"1": {"shape", "engine", "root"?, "rhythm"?}, "2": null} -> {1: (shape, engine, extra), 2: None}"""
     if not raw:
         return None
     if not isinstance(raw, dict):
@@ -38,10 +43,23 @@ def _overrides(raw) -> dict | None:
             track = int(t)
         except (TypeError, ValueError):
             raise ToolError(f"override track {t!r} is not a number 0-{mt.TRACKS - 1}") from None
-        if v is not None and not (isinstance(v, dict) and isinstance(v.get("shape"), str)
-                                  and isinstance(v.get("engine"), str)):
+        if v is None:
+            out[track] = None
+            continue
+        if not (isinstance(v, dict) and isinstance(v.get("shape"), str)
+                and isinstance(v.get("engine"), str)):
             raise ToolError(f"override for track {t}: null, or an object with a shape and an engine")
-        out[track] = None if v is None else (v["shape"], v["engine"])
+        extra = {}
+        if v.get("root") is not None:
+            if not isinstance(v["root"], str):
+                raise ToolError(f"override for track {t}: root is a note name such as 'A1'")
+            extra["root"] = v["root"]
+        if v.get("rhythm") is not None:
+            r = v["rhythm"]
+            if not (isinstance(r, (list, tuple)) and len(r) == 2 and all(isinstance(x, int) for x in r)):
+                raise ToolError(f"override for track {t}: rhythm is [pulses, rotate]")
+            extra["rhythm"] = tuple(r)
+        out[track] = (v["shape"], v["engine"], extra)
     return out
 
 

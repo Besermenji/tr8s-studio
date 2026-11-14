@@ -167,6 +167,15 @@ class Fm1Port:
             raise Fm1Error(f"the FM-1 answered the save of project {project} with {reply.hex(' ')}")
         return {"project": project, "used": bool(reply[2]) if len(reply) > 2 else None}
 
+    def project_used(self, project: int) -> bool:
+        """Whether project slot 0..3 holds a saved project (`PROJECT` query). Read only."""
+        if not 0 <= project <= 3:
+            raise Fm1Error(f"project {project} is outside 0..3")
+        reply = self.request(CMDS["PROJECT"], [2, project])
+        if len(reply) < 3 or reply[1] != project:
+            raise Fm1Error(f"the FM-1 answered the query of project {project} with {reply.hex(' ')}")
+        return bool(reply[2])
+
     def song(self) -> dict:
         """The FM-1's song chain (op 4), decoded. Read only."""
         return parse_song(self.request(CMDS["SONG"], [SONG_OPS["query"]]))

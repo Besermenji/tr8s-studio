@@ -32,6 +32,7 @@ FM1_PANEL = {
     "unmute": "unmute track {tracks}",
     "volume_down": "turn the FM-1's volume down: it follows the TR-8S's Start with whatever "
                    "project is loaded",
+    "volume_down_short": "FM-1 volume down",
 }
 
 
@@ -98,19 +99,24 @@ def _start(t: dict) -> list:
     ]
 
 
+def _hand(ins, outs) -> str:
+    """The FM-1 mutes to press on a row: what comes in and what goes out (0-based tracks)."""
+    hand = []
+    if ins:
+        hand.append(FM1_PANEL["unmute"].format(tracks=_tracks(ins)))
+    if outs:
+        hand.append(FM1_PANEL["mute"].format(tracks=_tracks(outs)))
+    return "; ".join(hand) or "—"
+
+
 def _timeline(t: dict) -> list:
     s = t.get("synth")
     parts = s["parts"] if s else {}
     rows = []
     if s and not s["arrange"]:
         for r in t["timeline"]:
-            hand = []
-            if r["in"]:
-                hand.append(FM1_PANEL["unmute"].format(tracks=_tracks(r["in"])))
-            if r["out"]:
-                hand.append(FM1_PANEL["mute"].format(tracks=_tracks(r["out"])))
             rows.append([r["bar"], r["variation"], r["role"], _labels(r["plays"], parts),
-                         "; ".join(hand) or "—"])
+                         _hand(r["in"], r["out"])])
         rows.append([t["end_bar"], "—", "end", "", "the loop plays on until the TR-8S stops"])
         return _table(["Bar", "TR-8S", "Role", "FM-1 plays", "By hand on the FM-1"], rows)
     if s:
@@ -238,8 +244,12 @@ def _voices(e: dict) -> list:
                    f"one pitch. With {inst}'s CTRL on the filter cutoff (setup), opening it slowly over a "
                    "phrase is the movement. Ride DECAY with it.")
     elif "acid" in by_role:
+        from .rework import is_sweep
         inst = ", ".join(by_role["acid"])
-        out.append(f"**Acid voice (yellow fader): {inst}.** It plays a recorded line in Fine Tune motion, so its "
+        what = ("a recorded TUNE-knob sweep in Fine Tune motion (off the semitone grid, so in no key: "
+                "the FM-1 plays no melody against it)" if is_sweep(e.get("tune_offsets") or [])
+                else "a recorded line in Fine Tune motion")
+        out.append(f"**Acid voice (yellow fader): {inst}.** It plays {what}, so its "
                    f"CTRL knob is free: with {inst}'s CTRL on the filter cutoff (setup) it is the squelch. "
                    "Ride DECAY with it. Mute it for 8 bars and bring it back on a 1.")
     odd = [i for r in ("odd1", "odd2") for i in by_role.get(r, [])]
@@ -266,8 +276,70 @@ def _transition(e: dict, nxt: dict | None) -> list:
             "the next pad during the final bar. Keep the kick running across the switch."]
 
 
-def render_rework(spec: dict, entries: list, built_on) -> str:
-    """The printable cue sheet for a set built by `tr8s rework`."""
+FM1_RIG = [
+    "FM-1 (Mini-Tone): TR-8S MIDI OUT → DIN-to-TRS adapter → FM-1 TRS MIDI IN; FM-1 audio out → TR-8S "
+    "EXT IN L/R. The FM-1 follows the TR-8S's clock and its Start and Stop.",
+    "The FM-1 plays loops, one project per chapter of the set. Its parts come in and go out by hand, with "
+    "its track mutes, on the rows the route tables give. One bass and one line at a time: where the "
+    "yellow fader plays, the FM-1 has no bass and no melody.",
+]
+
+FM1_SETUP = [
+    "FM-1: clock source (CLK) **TRS**, MIDI IN block **CH1-6**, master volume about 70%: the volume knob is "
+    "the FM-1's fader for the whole set.",
+    "TR-8S: EXT IN type **stereo**; EXT IN level so the loudest FM-1 part peaks about 6 dB under the kick. "
+    "Sidechain on EXT IN from BD in each kit where the FM-1 plays (moderate for bass and 303, deeper for "
+    "the pad, release about an 8th), then WRITE the kit. [check] the parameter names on firmware 3.00.",
+]
+
+
+def _fm1_label(t: int, project: dict) -> str:
+    return f"{t + 1} ({project['tracks'][t]['shape']})"
+
+
+def _fm1_labels(tracks, project) -> str:
+    return ", ".join(_fm1_label(t, project) for t in tracks) or "—"
+
+
+def _fm1_order_cell(slot: dict, project: dict | None) -> str:
+    if project is None:
+        return "—"
+    playing = sorted({t for r in slot["rows"] for t in r["plays"]})
+    if not playing:
+        return f"{project['letter']}, all muted"
+    return f"{project['letter']}: " + ", ".join(project["tracks"][t]["shape"] for t in playing)
+
+
+def _fm1_block(slot: dict, project: dict | None, first: bool) -> list:
+    """The FM-1 part of a pattern's page; `project` is None while nothing is loaded yet."""
+    out = ["### FM-1", ""]
+    if project is None:
+        out += ["No project is loaded yet: the FM-1 stays silent (volume down).", ""]
+    elif first:
+        out += [f"**Project {project['letter']} · {project['name']} · {project['key']}** (the root is "
+                f"{project['key_from']}'s, measured: {project['root'].get('note', project['root']['pc'])} "
+                f"{project['root'].get('cents', 0):+d} cents).", ""]
+        rows = [[t + 1, p["channel"], p["shape"], p["engine"], p["root"], p["steps"]]
+                for t, p in sorted(project["tracks"].items())]
+        out += _table(["FM-1 track", "Ch", "Shape", "Engine", "Root", "Steps"], rows) + [""]
+    playing = sorted({t for r in slot["rows"] for t in r["plays"]})
+    if project is not None and not playing:
+        out += [f"Project {project['letter']} is loaded and every FM-1 track stays muted: the TR-8S alone.", ""]
+    if slot["load"]:
+        out += [f"**Load project {slot['load']} during this pattern** (every FM-1 track is muted here): "
+                f"{FM1_PANEL['volume_down_short']}, {FM1_PANEL['load'].format(project=slot['load'])}, "
+                f"mute every track, then the volume back up. [check] that a load keeps the loop running "
+                "on the grid.", ""]
+    if slot["warnings"]:
+        out += ["Warnings:", ""] + [f"- {w}" for w in slot["warnings"]] + [""]
+    return out if len(out) > 2 else []        # the route table already says it all
+
+
+def render_rework(spec: dict, entries: list, built_on, fm1: dict | None = None) -> str:
+    """The printable cue sheet for a set built by `tr8s rework`, with the FM-1 when `fm1` is
+    `rework.fm1_plan`'s result."""
+    slots = {s["panel"]: s for s in fm1["slots"]} if fm1 else {}
+    projects = fm1["projects"] if fm1 else {}
     total_bars = 0
     total_min = 0.0
     order = []
@@ -276,17 +348,37 @@ def render_rework(spec: dict, entries: list, built_on) -> str:
         m = _mins(bars, e["bpm"])
         total_min += m
         total_bars += bars
-        order.append([e["index"], e["panel"], e["name"], e["role"], f"{e['bpm']:g}", e["kit_panel"],
-                      f"{e['source_panel']} {e['source_name']}", f"{m:.1f}"])
+        row = [e["index"], e["panel"], e["name"], e["role"], f"{e['bpm']:g}", e["kit_panel"],
+               f"{e['source_panel']} {e['source_name']}", f"{m:.1f}"]
+        if fm1:
+            s = slots[e["panel"]]
+            p = projects.get(s["project"])
+            playing = any(r["plays"] for r in s["rows"])
+            row += [_fm1_order_cell(s, p), p["key"] if p and playing else "—"]
+        order.append(row)
     out = [f"# Set: {spec['name']}", "",
            f"Built {built_on.isoformat()} by `tr8s rework` · {len(entries)} patterns · about "
-           f"{total_min:.0f} minutes · bank 8, kits {entries[0]['kit_panel']}-{entries[-1]['kit_panel']}", "",
+           f"{total_min:.0f} minutes · bank 8, kits {entries[0]['kit_panel']}-{entries[-1]['kit_panel']}"
+           + (f" · FM-1 projects {', '.join(sorted(projects))}" if fm1 else ""), "",
            "## Rig", ""] + [f"- {x}" for x in REWORK_RIG]
-    out += ["", "## One-time setup on the panel", ""] + [f"{i}. {x}" for i, x in enumerate(SETUP, 1)]
+    if fm1:
+        out += [f"- {x}" for x in FM1_RIG]
+    setup = SETUP + (FM1_SETUP if fm1 else [])
+    out += ["", "## One-time setup on the panel", ""] + [f"{i}. {x}" for i, x in enumerate(setup, 1)]
+    if fm1 and fm1.get("before_set"):
+        out += ["", "## Before the set", "",
+                f"1. FM-1: {FM1_PANEL['load'].format(project=fm1['before_set'])}, mute every track.",
+                f"2. TR-8S: select {entries[0]['panel']}, press Start. The FM-1's loop starts with it, muted."]
+    elif fm1:
+        out += ["", "## Before the set", "",
+                f"1. FM-1: {FM1_PANEL['volume_down']}. The first project is loaded during the set "
+                "(see the patterns below).",
+                f"2. TR-8S: select {entries[0]['panel']}, press Start."]
     out += ["", "## Fader colours (the same in every kit of the set)", ""]
     out += _table(["Colour", "Role"], COLOUR_LEGEND)
     out += ["", "## Running order", ""]
-    out += _table(["#", "Pad", "Name", "Role", "BPM", "Kit", "Made from", "Min"], order)
+    head = ["#", "Pad", "Name", "Role", "BPM", "Kit", "Made from", "Min"] + (["FM-1", "Key"] if fm1 else [])
+    out += _table(head, order)
     out += ["", "## Energy", "", "```"]
     out += [f"{e['panel']} {e['bpm']:>5g}  {_energy_bar(e.get('energy'))}" for e in entries]
     out += ["```", ""]
@@ -305,11 +397,20 @@ def render_rework(spec: dict, entries: list, built_on) -> str:
                      for inst in _TR if inst in e["kit_design"]]
             out += [f"### Kit {e['kit_panel']}", ""] + _table(["Fader", "Colour", "Tone"], krows) + [""]
         out += ["### Route through A-H", ""]
-        out += _table(["Bar", "Var", "Role", "Bars", "Hits"], rows)
+        s = slots.get(e["panel"])
+        p = projects.get(s["project"]) if s else None
+        if p is not None:
+            rows = [r + [_fm1_labels(fr["plays"], p), _hand(fr["in"], fr["out"])]
+                    for r, fr in zip(rows, s["rows"])]
+            out += _table(["Bar", "Var", "Role", "Bars", "Hits", "FM-1 plays", "By hand on the FM-1"], rows)
+        else:
+            out += _table(["Bar", "Var", "Role", "Bars", "Hits"], rows)
         out += [""]
         voices = _voices(e)
         if voices:
             out += ["### Voices", ""] + [f"- {v}" for v in voices] + [""]
+        if s is not None:
+            out += _fm1_block(s, p, s["first_of_project"])
         out += ["### Moves", "",
                 "- **Intro:** mute everything but the kick and one hat; unmute a voice every 8 bars.",
                 "- **Main:** AUTO FILL IN on (16 bars). Ride the ACCENT knob up over 16 bars before the break.",

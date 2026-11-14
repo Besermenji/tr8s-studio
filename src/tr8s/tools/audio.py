@@ -27,14 +27,12 @@ from ._core import device as _device_helper
       {"seconds": {"type": "number", "minimum": 0.5, "maximum": 60},
        "path": opt({"type": "string"})})
 def audio_record(seconds: float, path: str | None = None):
-    out = Path(path) if path else (config.subdir("recordings") / "capture.wav")
-    dev = config.find_audio_device()
-    proc = subprocess.run(
-        ["arecord", "-D", dev, "-f", "FLOAT_LE", "-c", "2", "-r", "96000",
-         "-d", str(int(seconds)), str(out)],
-        capture_output=True, text=True)
-    if proc.returncode != 0:
-        raise ToolError(f"arecord failed: {proc.stderr.strip()}")
+    from .. import audio
+    try:
+        dev = audio.find_device()
+        out = audio.record(seconds, path, device=dev)
+    except audio.AudioError as e:
+        raise ToolError(str(e)) from None
     return {"path": str(out), "seconds": seconds, "device": dev,
             "format": "FLOAT_LE 96kHz stereo (the only format the TR-8S accepts)"}
 

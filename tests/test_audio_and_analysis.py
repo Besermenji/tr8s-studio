@@ -339,3 +339,32 @@ def test_a_monotonic_step_is_still_not_tuning():
     assert r["signals"]["pitch_trend"] < -0.8, "it really is monotonic"
     assert r["signals"]["pitch_step_dominance"] > 0.9
     assert "tuning" not in r["verdict"]
+
+
+def test_capture_commands_per_platform(tmp_path):
+    out = tmp_path / "c.wav"
+    mac = audio.capture_cmd(2.4, out, 2, "TR-8S", platform="darwin")
+    assert mac[:2] == ["ffmpeg", "-nostdin"] and ":TR-8S" in mac and "pcm_f32le" in mac
+    assert "pan=2c|c0=c0|c1=c1" in mac and mac[mac.index("-t") + 1] == "2"
+    lin = audio.capture_cmd(2.4, out, 2, "hw:1,0", platform="linux")
+    assert lin[:3] == ["arecord", "-D", "hw:1,0"] and "FLOAT_LE" in lin
+
+
+def test_root_of_repeated_hits():
+    from tr8s.analysis import root_of_hits
+    rate = 24000
+    f = 55.0 * 2 ** (-0.2 / 12)                       # A1, 20 cents flat
+    hit = [math.sin(2 * math.pi * f * i / rate) * math.exp(-i / (0.12 * rate)) for i in range(int(1.2 * rate))]
+    seg = [0.0] * 6000 + hit * 4
+    r = root_of_hits(seg, rate)
+    assert r["clear"] and r["hits"] == 4 and r["note"] == "A1" and r["pc"] == "A"
+    assert -25 <= r["cents"] <= -15
+    assert root_of_hits([0.0] * 24000, rate) == {"hits": 0, "clear": False}
+
+
+def test_a_missing_recorder_is_an_audio_error(monkeypatch):
+    def gone(*a, **k):
+        raise FileNotFoundError("ffmpeg")
+    monkeypatch.setattr(audio.subprocess, "run", gone)
+    with pytest.raises(audio.AudioError, match="not installed"):
+        audio.mac_audio_devices()

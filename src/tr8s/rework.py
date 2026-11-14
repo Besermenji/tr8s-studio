@@ -124,6 +124,21 @@ def tune_lines(blob: bytes, minimum: int = 4) -> list:
                    for b in range(NBLOCKS) for st in range(STEPS)) >= minimum]
 
 
+def tune_offsets(blob: bytes, inst: str | None) -> list:
+    """The distinct Fine Tune offsets `inst` carries in the source, in semitones, lowest first."""
+    if not inst:
+        return []
+    from .pattern import NBLOCKS, STEPS
+    p = Pattern.from_bytes(blob)
+    vals = {p.get_motion(b, inst, st)["tune"] for b in range(NBLOCKS) for st in range(STEPS)}
+    return sorted(round(v / FINE_UNITS, 2) for v in vals if v is not None)
+
+
+def is_sweep(offsets: list, tolerance: float = 0.15) -> bool:
+    """Offsets off the semitone grid: a recorded knob sweep, not a melody in any key."""
+    return any(abs(o - round(o)) > tolerance for o in offsets)
+
+
 def load_spec(path) -> dict:
     spec = json.loads(Path(path).read_text())
     slots = spec.get("slots") or []
@@ -184,6 +199,8 @@ def plan(spec: dict, survey_dir) -> list:
             "kit_design": s.get("kit"), "coarse_to_fine": s.get("coarse_to_fine", []),
             "clear_ctrl": s.get("clear_ctrl", []), "acid": s.get("acid"),
             "tune_lines": tune_lines(pblob),
+            "tune_offsets": tune_offsets(pblob, s.get("acid")),
+            "shuffle": a.get("shuffle", 0),
             "soften": s.get("soften", spec.get("soften")),
             "keep_lines": s.get("keep_lines", [s["acid"]] if s.get("acid") else []),
         })
@@ -529,3 +546,298 @@ def design_kits(spec: dict, entries: list, survey_dir) -> dict:
         design = {i: {**defaults, **v} for i, v in e["kit_design"].items()}
         out[e["index"]] = design_kit(base, donors, design, tones, e["name"], e["colours"])
     return out
+
+
+# ------------------------------------------------------------------ the FM-1 alongside the set
+#
+# The spec's "fm1" block: {"measure": [{slot, inst}], "roots": {tone: measured}, "projects":
+# {"A": {name, key_from, mode, seed, energy, length, parts: {"track": {shape, engine, register,
+# rhythm?}}}}}, and per slot "fm1": {"project": letter, "plays": {variation: [tracks]},
+# "load": letter?}. A slot names the project the FM-1 holds while it plays; "load" says the
+# next one goes in during this slot, with every track muted. Parts come in and out by hand
+# (mutes): `plays` is what the cue sheet tells the player, per route row.
+#
+# The rule the checks follow (docs/PERFORMANCE.md): one bass and one line at a time. A key comes
+# only from a measured root (`tr8s roots`); nothing here guesses one.
+
+PROJECT_LETTERS = "ABCD"
+REGISTERS = {"low": "E1", "mid": "E2", "high": "E3"}   # the octave a part's root falls in, from here up
+SWING_SHUFFLE = 15            # above this a straight 16th on an even step flams against the TR-8S
+LINE_SHAPES = ("acid", "lead", "arp")
+BASS_SHAPES = ("bass", "acid")
+
+
+def register_root(pc: str, register: str) -> str:
+    """The note of pitch class `pc` in a register: the first one at or above its start (E1, E2, E3)."""
+    from .audio import NOTE_NAMES
+    from .melody import midi_to_note, note_to_midi
+    if register not in REGISTERS:
+        raise ReworkError(f"register {register!r}: one of {', '.join(REGISTERS)}")
+    if pc not in NOTE_NAMES:
+        raise ReworkError(f"pitch class {pc!r}: one of {' '.join(NOTE_NAMES)}")
+    start = note_to_midi(REGISTERS[register])
+    return midi_to_note(start + (NOTE_NAMES.index(pc) - start) % 12)
+
+
+def _measured(roots: dict, tone: str):
+    r = roots.get(tone)
+    return r if r and r.get("clear") and r.get("pc") else None
+
+
+def _fm1_projects(f: dict) -> dict:
+    from .lines import scale_pitches
+    from .synth import minitone as mt
+    from .tools._core import ToolError
+    from .tools.synth import build as synth_build
+    roots = f.get("roots") or {}
+    out = {}
+    for letter, pj in sorted((f.get("projects") or {}).items()):
+        if letter not in PROJECT_LETTERS:
+            raise ReworkError(f"FM-1 project {letter!r}: the FM-1 has projects A-D")
+        tone = pj.get("key_from")
+        r = _measured(roots, tone)
+        if r is None:
+            raise ReworkError(f"FM-1 project {letter}: the root of {tone!r} is not measured (or not "
+                              "clearly); run `tr8s roots SPEC`. No key is guessed")
+        key = f"{r['pc']} {pj.get('mode', 'minor')}"
+        override = {}
+        for t, part in (pj.get("parts") or {}).items():
+            o = {"shape": part["shape"], "engine": part["engine"],
+                 "root": register_root(r["pc"], part.get("register", "low"))}
+            if part.get("rhythm") is not None:
+                o["rhythm"] = part["rhythm"]
+            override[str(t)] = o
+        if not override:
+            raise ReworkError(f"FM-1 project {letter}: no parts")
+        try:
+            parts = synth_build(None, key, pj.get("energy"), pj.get("seed", 0), pj.get("length", 16),
+                                override)
+        except (ValueError, ToolError) as e:
+            raise ReworkError(f"FM-1 project {letter}: {e}") from None
+        out[letter] = {"letter": letter, "index": PROJECT_LETTERS.index(letter),
+                       "name": pj.get("name", letter), "key": key, "key_from": tone, "root": r,
+                       "scale": scale_pitches(key)[1], "parts": parts,
+                       "tracks": {t: {"shape": p.shape, "engine": p.engine, "channel": mt.CHANNELS[t],
+                                      "root": p.root, "steps": p.length, "notes": p.names()}
+                                  for t, p in parts.items()},
+                       "warnings": [w for p in parts.values() for w in p.warnings]
+                                   + _too_low(parts)}
+    return out
+
+
+LOWEST = "E1"                 # about 41 Hz: below this a part only muddies the kick
+
+
+def _too_low(parts: dict) -> list:
+    from .melody import midi_to_note, note_to_midi
+    floor = note_to_midi(LOWEST)
+    out = []
+    for t, p in sorted(parts.items()):
+        low = min((n for s in p.steps for n in s.notes), default=None)
+        if low is not None and low < floor:
+            out.append(f"track {t + 1} ({p.shape}) reaches {midi_to_note(low)}, below {LOWEST}: "
+                       "raise its register")
+    return out
+
+
+def _slot_warnings(e: dict, project: dict, plays_sets: list, roots: dict) -> list:
+    from .audio import NOTE_NAMES
+    from .synth import minitone as mt
+    out = []
+    parts = project["parts"]
+    playing = sorted({t for p in plays_sets for t in p})
+    if not playing:
+        return out
+    yellow = [i for i, role in e["roles"].items() if role == "acid"]
+    for t in playing:
+        p = parts[t]
+        label = f"FM-1 track {t + 1} ({p.shape})"
+        if abs(e.get("shuffle", 0)) > SWING_SHUFFLE:       # signed: either way swings
+            odd = [i + 1 for i, s in enumerate(p.steps) if s.sounding and not s.tie and i % 2]
+            if odd:
+                out.append(f"shuffle {e['shuffle']}: {label} has notes on swung 16ths "
+                           f"(steps {', '.join(map(str, odd[:6]))}): they flam against the TR-8S")
+        for inst in yellow:
+            line = inst in (e.get("tune_lines") or [])
+            if p.shape in BASS_SHAPES:
+                out.append(f"{label} plays under the TR-8S's {inst} (yellow): two basses at once")
+            elif line and p.shape in LINE_SHAPES:
+                out.append(f"{label} plays over the TR-8S's {inst} line: two lines at once")
+    for plays in {tuple(p) for p in plays_sets if p}:
+        out += [f"tracks {', '.join(str(t + 1) for t in plays)}: {w}"
+                for w in mt.voice_budget({t: parts[t] for t in plays})]
+    for inst, d in (e.get("kit_design") or {}).items():
+        r = _measured(roots, d.get("tone"))
+        if r and NOTE_NAMES.index(r["pc"]) not in project["scale"]:
+            out.append(f"{inst} ({d['tone']}) sounds {r['pc']}, outside {project['key']}: pull its "
+                       "fader while the FM-1 plays")
+    return out
+
+
+def fm1_plan(spec: dict, entries: list) -> dict | None:
+    """
+    The FM-1 side of the set, resolved: each project's key (from a measured root) and parts,
+    and per slot the route rows with what the FM-1 plays and what goes in and out by hand.
+    Pure. None when the spec has no "fm1" block. Refuses an unmeasured root, a project nobody
+    loads, a route variation without a `plays`, and a track the project does not have.
+    """
+    from .cuesheet import _route_rows
+    f = spec.get("fm1")
+    if not f:
+        return None
+    projects = _fm1_projects(f)
+    roots = f.get("roots") or {}
+    given = {s["slot"]: s.get("fm1") for s in spec["slots"]}
+    slots, prev, loaded, first = [], [], None, None
+    for e in entries:
+        where = e["panel"]
+        sf = given.get(where) or {}
+        project = sf.get("project")
+        if project is not None:
+            if project not in projects:
+                raise ReworkError(f"{where}: FM-1 project {project!r} is not in fm1.projects")
+            if loaded is None:
+                first = loaded = project
+            elif project != loaded:
+                raise ReworkError(f"{where}: plays FM-1 project {project}, but {loaded} is loaded and no "
+                                  f"slot before loads {project}")
+        plays_map = sf.get("plays") or {}
+        variations = [r["variation"] for r in e["route"]]
+        if project is not None:
+            missing = [v for v in variations if v not in plays_map]
+            extra = [v for v in plays_map if v not in variations]
+            if missing or extra:
+                raise ReworkError(f"{where}: fm1.plays needs exactly the route's variations "
+                                  f"{''.join(variations)}; missing {missing}, not in the route {extra}")
+        elif any(plays_map.values()):
+            raise ReworkError(f"{where}: fm1.plays without a project")
+        rows = []
+        for bar, variation, role, n, _hits in _route_rows(e)[0]:     # the very rows the sheet prints
+            plays = sorted(plays_map.get(variation) or [])
+            bad = [t for t in plays if not isinstance(t, int) or t not in projects[project]["parts"]]
+            if bad:
+                raise ReworkError(f"{where} {variation}: FM-1 project {project} has no track {bad}")
+            rows.append({"bar": bar, "variation": variation, "role": role, "bars": n,
+                         "plays": plays, "in": [t for t in plays if t not in prev],
+                         "out": [t for t in prev if t not in plays]})
+            prev = plays
+        load = sf.get("load")
+        if load is not None:
+            if load not in projects or load == loaded:
+                raise ReworkError(f"{where}: fm1.load {load!r} is not another project of fm1.projects")
+            if any(r["plays"] for r in rows):
+                raise ReworkError(f"{where}: loads project {load}, so every FM-1 track is muted in it")
+            if first is None:
+                first = load                  # the set's first project arrives by a load mid-set
+        warnings = _slot_warnings(e, projects[project], [r["plays"] for r in rows], roots) \
+            if project is not None else []
+        slots.append({"panel": where, "project": loaded, "rows": rows, "load": load,
+                      "first_of_project": project is not None and (not slots or slots[-1]["project"] != project),
+                      "warnings": warnings})
+        if load is not None:
+            loaded = load
+    # loaded before the set only when the first slot already plays it; otherwise a slot loads it
+    before = first if slots and slots[0]["project"] == first and first is not None else None
+    return {"projects": projects, "slots": slots, "first": first, "before_set": before,
+            "roots": roots, "measure": f.get("measure") or []}
+
+
+ROOTS_AGREE = 15              # cents: two measurements of one tone further apart than this disagree
+
+
+EACH_KEYS = ("pc", "note", "cents", "hz", "hits", "spread_cents", "clear", "measured")
+
+
+def merge_roots(measured: list, on: str, previous: dict | None = None) -> dict:
+    """
+    {tone: root} from [(slot, inst, tone, measure_root result)], merged with the roots stored
+    before (`previous`, as this returns them): a stored measurement of a slot and instruction
+    not measured again is kept, and a new one replaces it unless the new one is not clear and
+    the stored one is (a noisy re-run never loses a good root). A tone measured more than once
+    must agree (one pitch class, within ROOTS_AGREE cents) or it is not clear. Pure.
+    """
+    by_tone: dict = {}
+    for tone, root in (previous or {}).items():
+        for x in root.get("each") or []:
+            r = dict(x)
+            r.setdefault("pc", (r.get("note") or "").rstrip("-0123456789") or None)
+            by_tone.setdefault(tone, {})[(x["slot"], x["inst"])] = r
+    for slot, inst, tone, r in measured:
+        old = by_tone.setdefault(tone, {}).get((slot, inst))
+        if old and old.get("clear") and not r.get("clear"):
+            continue
+        by_tone[tone][(slot, inst)] = {**r, "measured": on}
+    out = {}
+    for tone, each in by_tone.items():
+        rows = [(s, i, r) for (s, i), r in each.items()]
+        clear = [(s, i, r) for s, i, r in rows if r.get("clear")]
+        how = ", ".join(f"{s} {i}" for s, i, _ in rows)
+        base = {"measured": max(r.get("measured") or on for _, _, r in rows),
+                "how": f"TR-8S USB audio, note-ons on {how}",
+                "each": [{"slot": s, "inst": i, **{k: r.get(k) for k in EACH_KEYS}} for s, i, r in rows]}
+        if not clear:
+            out[tone] = {**base, "clear": False, "why": "no clear measurement"}
+            continue
+        pcs = {r["pc"] for _, _, r in clear}
+        cents = [r["cents"] for _, _, r in clear]
+        if len(pcs) > 1 or max(cents) - min(cents) > ROOTS_AGREE:
+            out[tone] = {**base, "clear": False, "why": f"the measurements disagree: "
+                         + ", ".join(f"{r['note']} {r['cents']:+d}" for _, _, r in clear)}
+            continue
+        r0 = clear[0][2]
+        out[tone] = {**base, "clear": True, "pc": r0["pc"], "note": r0["note"],
+                     "cents": round(sum(cents) / len(cents)), "hz": r0["hz"]}
+    return out
+
+
+SILENT_STEPS = 16
+
+
+def all_tracks(parts: dict) -> dict:
+    """`parts` plus a silent part (rests, no engine change) on every other FM-1 track. Pure."""
+    from .synth import minitone as mt
+    from .synth.line import Part, SynthStep
+    out = dict(parts)
+    key = next(iter(parts.values())).key if parts else "C minor"
+    for t in range(mt.TRACKS):
+        if t not in out:
+            out[t] = Part("rest", key, "C2", 0, 0.0, [SynthStep() for _ in range(SILENT_STEPS)])
+    return out
+
+
+def fm1_push(fplan: dict, letters, save: bool = False, ask=None, log=print) -> list:
+    """
+    Write projects' parts to the FM-1: RAM only (an audition: they play now, gone at power-off),
+    or with `save` then saved to their slot, which stops the FM-1's transport and overwrites the
+    slot (no undo). `ask(question) -> bool` is asked before each save; a no skips that project
+    and nothing of it is sent. Never opens the TR-8S.
+
+    All six tracks are written: a track the project does not use gets a silent part (rests, 16
+    steps), so nothing left in the FM-1's working memory by an earlier project is saved with
+    this one. An audition (RAM only) takes one project: a second would replace the first.
+    """
+    from .tools._core import fm1
+    from .tools.synth import push
+    letters = list(letters)
+    if not save and len(letters) != 1:
+        raise ReworkError(f"an audition writes one project into the FM-1's working memory, got "
+                          f"{', '.join(letters) or 'none'}: name one (--project A)")
+    done = []
+    for letter in letters:
+        pj = fplan["projects"].get(letter)
+        if pj is None:
+            raise ReworkError(f"FM-1 project {letter!r} is not in the plan")
+        if save:
+            used = fm1().project_used(pj["index"])
+            q = (f"FM-1 project {letter} {'holds a saved project' if used else 'is empty'}. Overwrite "
+                 f"it with {pj['name']} ({pj['key']}, {len(pj['parts'])} parts)? This stops the "
+                 "FM-1's transport and cannot be undone.")
+            if ask is None or not ask(q):
+                log(f"project {letter}: not saved, nothing sent")
+                done.append({"project": letter, "sent": None, "saved": None, "skipped": True})
+                continue
+        r = push(all_tracks(pj["parts"]), project=pj["index"] if save else None)
+        log(f"project {letter}: {r['sent']['frames']} frames sent"
+            + (f", saved to slot {letter}" if r.get("saved") else " (RAM only: an audition)"))
+        done.append({"project": letter, **r})
+    return done

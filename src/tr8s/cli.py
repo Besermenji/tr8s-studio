@@ -149,6 +149,18 @@ def main(argv=None):
                                    "patterns; every other slot is left alone, not even read")
     rw.add_argument("--sheet", action="store_true",
                     help="only (re)write the cue sheet next to the spec (NAME.md); touch no device")
+    rw.add_argument("--fm1", action="store_true",
+                    help="write the spec's FM-1 projects to the FM-1 only (the TR-8S is not opened): "
+                         "into its working memory, an audition, unless --save")
+    rw.add_argument("--project", help="with --fm1: comma-separated FM-1 projects (default every one)")
+    rw.add_argument("--save", action="store_true",
+                    help="with --fm1: also SAVE each project to its slot, asking first for each "
+                         "(stops the FM-1's transport, overwrites the slot, no undo)")
+
+    rt = sub.add_parser("roots", help="measure the root of the set's tones (the spec's fm1.measure): "
+                                      "note-ons and the TR-8S's USB audio; nothing is written to the TR-8S")
+    rt.add_argument("file")
+    rt.add_argument("--slot", help="comma-separated slots to measure (default every one in fm1.measure)")
 
     se = sub.add_parser("set", help="build a set from a JSON file and print its cue sheet")
     se.add_argument("file", help="{name, start_slot?, tracks}; a library/sets/NAME.json works too")
@@ -271,17 +283,55 @@ def main(argv=None):
             spec = rework.load_spec(args.file)
             survey_dir = Path(spec.get("survey", "")).expanduser()
             entries = rework.plan(spec, survey_dir)
+            from datetime import date
+            from .cuesheet import render_rework
+            sheet_path = Path(args.file).with_suffix(".md")
+
+            def fm1_or_none():
+                """The FM-1 plan for the sheet; without measured roots the sheet is the TR-8S's alone."""
+                try:
+                    return rework.fm1_plan(spec, entries)
+                except rework.ReworkError as e:
+                    print(f"note: the cue sheet leaves the FM-1 out: {e}", file=sys.stderr)
+                    return None
+
+            if args.fm1:                       # the FM-1 only: the TR-8S is never opened on this path
+                fp = rework.fm1_plan(spec, entries)
+                if fp is None:
+                    print("error: the spec has no fm1 block", file=sys.stderr)
+                    return 1
+                letters = [x.strip() for x in args.project.split(",")] if args.project \
+                    else sorted(fp["projects"])
+                if not args.save and len(letters) != 1:
+                    print("error: an audition writes one project into the FM-1's working memory "
+                          "(a second replaces the first): name it with --project A", file=sys.stderr)
+                    return 1
+                for letter in letters:
+                    pj = fp["projects"].get(letter)
+                    if pj is None:
+                        print(f"error: no FM-1 project {letter!r} in the spec", file=sys.stderr)
+                        return 1
+                    print(f"project {letter} {pj['name']}: {pj['key']}")
+                    for t, p in sorted(pj["tracks"].items()):
+                        print(f"  track {t + 1} ch {p['channel']} {p['shape']:<5} {p['engine']:<8} "
+                              f"{p['root']:<4} {p['notes']}")
+                    for w in pj["warnings"]:
+                        print(f"  warning: {w}")
+
+                def ask(q):
+                    return input(q + " [y/N] ").strip().lower() in ("y", "yes")
+                done = rework.fm1_push(fp, letters, save=args.save, ask=ask,
+                                       log=lambda m: print(m, file=sys.stderr, flush=True))
+                print(json.dumps(done, default=str))
+                return 0
             designed = rework.design_kits(spec, entries, survey_dir) if not args.sheet else {}
             for e in entries:
                 route = " ".join(f"{r['variation']}={r['role']}" for r in e["route"])
                 print(f"{e['panel']} {e['name']:<16} {e['bpm']:>5g} BPM  kit {e['kit_panel']}  "
                       f"from {e['source_panel']} {e['source_name']!r} ({e['source_tempo']:g}, "
                       f"kit {e['source_kit_panel']})  route {route}")
-            from datetime import date
-            from .cuesheet import render_rework
-            sheet_path = Path(args.file).with_suffix(".md")
             if args.sheet:
-                sheet_path.write_text(render_rework(spec, entries, date.today()))
+                sheet_path.write_text(render_rework(spec, entries, date.today(), fm1_or_none()))
                 print(f"wrote {sheet_path}", file=sys.stderr)
                 return 0
             if args.preview:
@@ -298,9 +348,78 @@ def main(argv=None):
             out.write_text(json.dumps({"entries": entries, "done": done}, indent=1, default=str))
             print(json.dumps(done), file=sys.stderr)
             if not done["failed"]:
-                sheet_path.write_text(render_rework(spec, entries, date.today()))
+                sheet_path.write_text(render_rework(spec, entries, date.today(), fm1_or_none()))
                 print(f"wrote {sheet_path}", file=sys.stderr)
             return 1 if done["failed"] else 0
+        elif args.cmd == "roots":
+            from datetime import date
+            from pathlib import Path
+            from . import audio, rework
+            from .analysis import measure_root
+            from .device import Device, DeviceError
+            from .midi_backends import TransportError
+            spec = rework.load_spec(args.file)
+            entries = {e["panel"]: e for e in rework.plan(spec, Path(spec.get("survey", "")).expanduser())}
+            targets = (spec.get("fm1") or {}).get("measure") or []
+            if args.slot:
+                want = {x.strip() for x in args.slot.split(",")}
+                targets = [t for t in targets if t["slot"] in want]
+            if not targets:
+                print("error: nothing to measure (the spec's fm1.measure, or --slot)", file=sys.stderr)
+                return 1
+            # every target names a tone before anything is opened
+            tones = {}
+            for t in targets:
+                e = entries.get(t["slot"])
+                tone = ((e or {}).get("kit_design") or {}).get(t["inst"], {}).get("tone")
+                if tone is None:
+                    print(f"error: fm1.measure {t['slot']} {t['inst']}: no such slot, or its kit "
+                          "names no tone there", file=sys.stderr)
+                    return 1
+                tones[(t["slot"], t["inst"])] = tone
+            try:
+                print(f"recording from {audio.find_device()!r}", file=sys.stderr)   # before the TR-8S
+            except audio.AudioError as e:
+                print(f"error: {e}", file=sys.stderr)
+                return 1
+            slots = []
+            for t in targets:
+                if t["slot"] not in slots:
+                    slots.append(t["slot"])
+            today = date.today().isoformat()
+            measured_tones = set()
+
+            def keep(rows):
+                """Merge with what is stored and write the spec now: an interruption loses no slot."""
+                stored = spec.setdefault("fm1", {}).setdefault("roots", {})
+                stored.update(rework.merge_roots(rows, today, previous=stored))
+                Path(args.file).write_text(json.dumps(spec, indent=1) + "\n")
+
+            try:
+                with Device() as dev:
+                    for slot in slots:
+                        e = entries[slot]
+                        input(f"Select pattern {slot} on the TR-8S and leave it stopped (KitSel = PTN "
+                              f"brings kit {e['kit_panel']}). Press Enter. ")
+                        rows = []
+                        for t in (t for t in targets if t["slot"] == slot):
+                            tone = tones[(slot, t["inst"])]
+                            print(f"{slot} {t['inst']} {tone}", file=sys.stderr)
+                            rows.append((slot, t["inst"], tone, measure_root(dev, t["inst"])))
+                        keep(rows)
+                        measured_tones |= {r[2] for r in rows}
+            except (audio.AudioError, DeviceError, TransportError, KeyboardInterrupt, EOFError) as e:
+                done = ", ".join(sorted(measured_tones)) or "nothing"
+                print(f"\nstopped: {e or type(e).__name__}. Kept in {args.file}: {done}. Re-run with "
+                      "--slot for the rest.", file=sys.stderr)
+                return 1
+            roots = spec["fm1"]["roots"]
+            for tone in sorted(measured_tones):
+                r = roots[tone]
+                print(f"{tone:<18} " + (f"{r['note']} {r['cents']:+d} cents" if r["clear"]
+                                         else f"NOT CLEAR: {r['why']}"))
+            print(f"wrote the roots into {args.file}", file=sys.stderr)
+            return 0 if all(roots[t]["clear"] for t in measured_tones) else 1
         elif args.cmd == "set":
             from pathlib import Path
             try:

@@ -588,3 +588,13 @@ def test_the_library_refuses_an_arrangement_that_cannot_be_built(wired, library)
     with pytest.raises(ToolError):
         tools.call("library.save", {"slot": 0, "name": "bad", "style": "dub", "key": "D minor", "synth": block})
     assert not list(library.glob("*.json"))
+
+
+def test_overrides_carry_a_register_and_a_rhythm():
+    from tr8s.tools.synth import build
+    parts = build(None, "A minor", None, 3, 16,
+                  {"1": {"shape": "bass", "engine": "DUALVCO", "root": "A1", "rhythm": [4, 2]}})
+    assert list(parts) == [1] and parts[1].root == "A1"
+    assert [i for i, s in enumerate(parts[1].steps) if s.sounding] == [2, 6, 10, 14]
+    with pytest.raises(ToolError, match="rhythm"):
+        build(None, "A minor", None, 3, 16, {"1": {"shape": "bass", "engine": "DUALVCO", "rhythm": 4}})
