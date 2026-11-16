@@ -34,6 +34,7 @@ OFF_TEMPO = 16
 OFF_KIT = 18
 OFF_SCALE = 19
 OFF_SHUFFLE = 32
+OFF_MASTER_PROB = 115           # Master Probability: 101 + value (-100..100); 0 = never set
 
 SCALES = {"8T": 0, "16T": 1, "16": 2, "32": 3}
 SCALE_NAMES = {v: k for k, v in SCALES.items()}
@@ -128,6 +129,18 @@ class Pattern:
         if value not in SCALES:
             raise PatternError(f"scale must be one of {sorted(SCALES)}")
         self.raw[OFF_SCALE] = SCALES[value]
+
+    @property
+    def master_prob(self) -> int:
+        """Master Probability, -100..100 %. A pattern where it was never set stores 0: it plays as 0."""
+        b = self.raw[OFF_MASTER_PROB]
+        return 0 if b == 0 else b - 101
+
+    @master_prob.setter
+    def master_prob(self, value: int):
+        if not (isinstance(value, int) and -100 <= value <= 100):
+            raise PatternError("master_prob must be -100..100")
+        self.raw[OFF_MASTER_PROB] = 101 + value
 
     @property
     def shuffle(self) -> int:

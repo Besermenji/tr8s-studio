@@ -26,6 +26,7 @@
     "RS"
    ],
    "acid": "MT",
+   "master_prob": 51,
    "steps": [
     {
      "vars": "ACEG",

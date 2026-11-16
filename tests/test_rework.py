@@ -373,3 +373,65 @@ def test_kits_only_writes_the_kit_and_no_pattern_content(survey):
     assert {i for k, i in t.sent if k == "pattern"} == {127}       # own step + kit-reference repair
     assert any("--kits-only" in w for w in rework.writes(entries, kits_only=True))
 
+
+
+def test_master_probability_is_101_plus_the_value_and_0_when_never_set():
+    p = Pattern.from_bytes(load_fixture_pattern())
+    p.raw[115] = 0
+    assert p.master_prob == 0
+    p.master_prob = 51
+    assert p.raw[115] == 152 and p.master_prob == 51
+    p.master_prob = -100
+    assert p.raw[115] == 1
+    with pytest.raises(Exception, match="-100..100"):
+        p.master_prob = 101
+
+
+def test_the_spec_refuses_a_master_probability_out_of_range(tmp_path):
+    f = tmp_path / "s.json"
+    f.write_text(json.dumps({"slots": [{"slot": "8-01", "source": "5-01", "bpm": 128, "label": "X",
+                                        "master_prob": 150}]}))
+    with pytest.raises(rework.ReworkError, match="master_prob"):
+        rework.load_spec(f)
+
+
+def test_patch_kit_changes_only_what_the_spec_names():
+    current = Kit.from_bytes(load_fixture_kit())
+    o_oh, o_rs, o_bd = (Kit.record_offset(i) for i in ("OH", "RS", "BD"))
+    current.raw[o_oh + 5] = 75                                   # set by the machine or the panel
+    current.set("BD", "lfo", 20)                                  # a panel tweak the spec does not name
+    current.raw[o_rs + 4] = 99                                    # the RS fader
+    designed = current.copy()
+    designed.name = "NEW"
+    designed.raw[o_oh + 5] = 104
+    designed.set("BD", "lfo", 0)
+    designed.set("BD", "decay", (current.get("BD", "decay") + 10) % 256)
+    designed.set("RS", "tone", (current.get("RS", "tone") + 1) % 600)
+    designed.raw[o_rs + 7] = 33                                   # part of the new record
+    designed.set_color("RS", 9)
+    k, what = rework.patch_kit(current, designed, {"BD": {"tone": "x"}, "RS": {"tone": "y"}})
+    assert k.name == "NEW" and k.color("RS") == 9
+    assert k.raw[o_oh + 5] == 75                                  # OH is not in the spec: kept
+    assert k.get("BD", "lfo") == 20 and k.get("BD", "decay") == designed.get("BD", "decay")
+    assert k.get("RS", "tone") == designed.get("RS", "tone") and k.raw[o_rs + 7] == 33
+    assert k.raw[o_rs + 4] == 99                                  # the fader level is the machine's
+    assert what == ["BD decay", "RS tone"]
+
+
+def test_steps_only_sets_probability_on_the_machines_pattern_and_reads_no_source(survey):
+    d, spec, src = survey
+    spec = json.loads(json.dumps(spec))
+    spec["slots"][0]["steps"] = [{"vars": "A", "inst": "RS", "steps": [4, 5], "prob": 60}]
+    spec["slots"][0]["master_prob"] = 51
+    entries = rework.plan(spec, d)
+    mine = Pattern.from_bytes(src)
+    mine.set_steps("A", "RS", "x..x............")               # edited on the panel: no hit on 5
+    d_, t = make_device(patterns={127: mine.to_bytes()}, kits={})  # the source 5-01 is not there
+    done = rework.build(d_, entries, d, sleep=lambda s: None, log=lambda *a: None, steps_only=True)
+    assert done["failed"] is None and done["patterns"] == ["8-16"] and done["kits"] == []
+    assert done["steps_skipped"] == {"8-16": ["A RS 5"]}
+    back = Pattern.from_bytes(t.slots["pattern"][127])
+    assert back.get_step("A", "RS", 3)["prob"] == 60 and back.master_prob == 51
+    assert back.get_steps("A", "RS") == mine.get_steps("A", "RS")   # nothing rebuilt
+    again = rework.build(d_, entries, d, sleep=lambda s: None, log=lambda *a: None, steps_only=True)
+    assert again["patterns"] == [] and again["skipped"] == ["pattern 8-16"]

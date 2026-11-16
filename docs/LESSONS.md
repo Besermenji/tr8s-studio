@@ -890,3 +890,34 @@ Decoding them took five panel edits and five reads (2026-11-14, docs/PROTOCOL.md
 
 **When the docs call bytes "always zero", check that against content the project did not
 write.** And settle each byte with a value someone set on purpose, read straight back.
+
+## A silent recording is not proof of a silent machine
+
+On 2026-11-16 every capture of the TR-8S on the Mac came back as pure zeros, 14 channels,
+the mix included, while the pattern played. It was not the TR-8S, the cable or the
+permission: QuickTime's meter moved on the same input. ffmpeg's AVFoundation input gets
+zeros from Roland's driver on macOS 15, and CoreAudio's AudioQueue gets the audio, so the
+Mac now records through `tr8s-macrec` (PROTOCOL.md §5).
+
+What found it fast: rule out the cheap layers in order. Is the file exact zeros or just
+quiet? Does another input record through the same program? Does another program record
+through the same input? Two earlier symptoms had pointed the same way and were read as
+timing: a 40 s recording that came out 37 s long, and one that hung.
+
+## Change what the spec names, nothing more
+
+`rework` built every kit from the blank base kit plus the spec, and every pattern from its
+source plus the spec. That erases whatever the player changed on the panel since the set
+was built, and the player works on these patterns between builds. Two things now go the
+other way round:
+
+- **A designed kit is the machine's kit with the spec applied** (`patch_kit`): a new tone
+  takes a new record, a kept tone gets only the spec's fields, and the rest stays.
+  `--fresh-kits` builds whole kits again.
+- **`--steps-only` puts the spec's step settings and Master Probability on the pattern the
+  machine holds now.**
+
+A read-and-compare first is cheap. It found five kits whose OH byte `+5` differed from the
+design, and those kits got only their RS record. And one change, then listen: the player
+judges a voice heard on its own, not a kit changed all at once.
+

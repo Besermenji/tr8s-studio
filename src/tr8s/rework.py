@@ -26,7 +26,7 @@ import time
 from pathlib import Path
 
 from .device import DeviceError, check_blob, panel_to_slot, slot_to_panel
-from .kit import TRACKS, Kit
+from .kit import REC_STRIDE, TRACKS, Kit
 from .pattern import PROB_STEP, STEPS, SUB_CODES, VARIATIONS, VELOCITY_MAX, VELOCITY_NORMAL, Pattern
 from .survey import analyse_pattern
 
@@ -154,6 +154,9 @@ def load_spec(path) -> dict:
         seen.add(s["slot"])
         for n, st in enumerate(s.get("steps") or [], 1):
             check_step_entry(st, f"slot {s['slot']}: steps[{n}]")
+        mp = s.get("master_prob")
+        if mp is not None and not (isinstance(mp, int) and not isinstance(mp, bool) and -100 <= mp <= 100):
+            raise ReworkError(f"slot {s['slot']}: master_prob is -100..100")
     return spec
 
 
@@ -295,6 +298,7 @@ def plan(spec: dict, survey_dir) -> list:
             "soften": s.get("soften", spec.get("soften")),
             "keep_lines": s.get("keep_lines", [s["acid"]] if s.get("acid") else []),
             "steps": s.get("steps", []),
+            "master_prob": s.get("master_prob"),
             "step_extras": a.get("step_extras", []),
         })
     kits = [e["kit"] for e in out]
@@ -303,21 +307,32 @@ def plan(spec: dict, survey_dir) -> list:
     return out
 
 
-def writes(entries: list, kits_only: bool = False) -> list:
+def _pattern_settings(e: dict) -> str:
+    out = "".join(f"; {describe_step_entry(st)}" for st in e.get("steps") or [])
+    if e.get("master_prob") is not None:
+        out += f"; Master Probability {e['master_prob']:+d} %"
+    return out
+
+
+def writes(entries: list, kits_only: bool = False, steps_only: bool = False,
+           fresh_kits: bool = False) -> list:
+    if steps_only:
+        return [f"pattern {e['panel']}: the machine's current pattern{_pattern_settings(e) or '; nothing to set'}"
+                " (--steps-only: read, changed only there, written back)" for e in entries]
     last = max(entries, key=lambda e: e["slot"])
     w = [f"pattern {last['panel']}: rewritten with its own current bytes first (the slot every "
          "kit commit re-points, repaired at once)"]
     for e in entries:
         if e.get("kit_design"):
-            what = "new: " + ", ".join(f"{i} {t['tone']}" for i, t in e["kit_design"].items())
+            what = ("new: " if fresh_kits else "the machine's kit with the spec's tones and settings: ") + \
+                ", ".join(f"{i} {t['tone']}" for i, t in e["kit_design"].items())
         else:
             what = f"copy of kit {e['source_kit_panel']} (from {e['source_panel']})"
         w.append(f"kit {e['kit_panel']}: {what}; named {e['name']!r}, colours by role")
     if kits_only:
         return w + ["no pattern content is written (--kits-only)"]
     w += [f"pattern {e['panel']}: copy of {e['source_panel']} {e['source_name']!r}, named "
-          f"{e['name']!r}, {e['bpm']:g} BPM, kit {e['kit_panel']}"
-          + "".join(f"; {describe_step_entry(st)}" for st in e.get("steps") or [])
+          f"{e['name']!r}, {e['bpm']:g} BPM, kit {e['kit_panel']}" + _pattern_settings(e)
           for e in entries]
     return w
 
@@ -332,6 +347,8 @@ def build_pattern(src_blob: bytes, e: dict) -> Pattern:
         e["softened"] = soften(p, e.get("keep_lines") or [], e["soften"])
     if e.get("steps"):
         e["steps_applied"] = apply_steps(p, e["steps"])
+    if e.get("master_prob") is not None:
+        p.master_prob = e["master_prob"]
     p.name = e["name"]
     p.tempo = e["bpm"]
     p.kit = e["kit"]
@@ -347,7 +364,8 @@ def build_kit(src_blob: bytes, e: dict) -> Kit:
 
 
 def build(dev, entries: list, survey_dir, pause: float = 1.5, sleep=time.sleep, log=print,
-          designed: dict | None = None, only=None, kits_only: bool = False) -> dict:
+          designed: dict | None = None, only=None, kits_only: bool = False,
+          steps_only: bool = False, fresh_kits: bool = False) -> dict:
     """
     Write the set. Stops at the first failure and says what was done.
 
@@ -359,6 +377,13 @@ def build(dev, entries: list, survey_dir, pause: float = 1.5, sleep=time.sleep, 
     the patterns are not rebuilt, so edits made on the panel survive. The highest slot's own
     pattern is still rewritten from its own read first, because every kit commit re-points the
     last pattern transferred (docs/PROTOCOL.md).
+
+    A designed kit is written as `patch_kit` of the kit the machine holds, so a panel edit the
+    spec does not name survives; `fresh_kits` builds it whole from the base kit instead.
+
+    `steps_only` writes no kit and rebuilds nothing: each slot's current pattern is read, its
+    `steps` entries and `master_prob` are applied there, and it is written back only if that
+    changed something. A planned step with no hit is reported, not added (unless `add`).
     """
     d = Path(survey_dir)
     if only:
@@ -372,6 +397,36 @@ def build(dev, entries: list, survey_dir, pause: float = 1.5, sleep=time.sleep, 
     def fail(stage, e, err):
         done["failed"] = {"stage": stage, "slot": e and e.get("panel"), "error": str(err)}
         log(f"FAILED at {stage} {e and e.get('panel')}: {err}")
+        return done
+
+    if steps_only:
+        done["skipped"], done["steps_skipped"] = [], {}
+        for e in entries:
+            try:
+                now = dev.read_checked("pattern", e["slot"], twice=True, sleep=sleep)
+            except DeviceError as err:
+                return fail("read pattern", e, err)
+            p = Pattern.from_bytes(now)
+            r = apply_steps(p, e.get("steps"))
+            if r["skipped"]:
+                done["steps_skipped"][e["panel"]] = r["skipped"]
+                log(f"pattern {e['panel']}: no hit at {', '.join(r['skipped'])}: left as it is")
+            if e.get("master_prob") is not None:
+                p.master_prob = e["master_prob"]
+            if p.to_bytes() == now:
+                done["skipped"].append(f"pattern {e['panel']}")
+                log(f"pattern {e['panel']} already holds its settings: skipped")
+                sleep(pause)
+                continue
+            try:
+                r = dev.write_pattern(e["slot"], p, commit=True, verify=True)
+            except DeviceError as err:
+                return fail("pattern", e, err)
+            if not r.get("verified"):
+                return fail("pattern", e, r)
+            done["patterns"].append(e["panel"])
+            log(f"pattern {e['panel']}: steps and Master Probability written")
+            sleep(pause)
         return done
 
     src_patterns, src_kits = {}, {}
@@ -426,6 +481,10 @@ def build(dev, entries: list, survey_dir, pause: float = 1.5, sleep=time.sleep, 
         except DeviceError:
             current = None
         sleep(pause)
+        if current is not None and designed and e["index"] in designed and not fresh_kits:
+            kit, what = patch_kit(Kit.from_bytes(current), kit, e.get("kit_design"))
+            if what:
+                log(f"kit {e['kit_panel']}: {', '.join(what)}")
         if current is not None and same_kit(current, kit.to_bytes()):
             done["skipped"].append(f"kit {e['kit_panel']}")
             log(f"kit {e['kit_panel']} already holds {e['name']}: skipped")
@@ -560,6 +619,38 @@ def tone_index(tones: dict) -> dict:
         if t["name"] and t["name"] not in out:
             out[t["name"]] = (int(k), t["type"])
     return out
+
+
+KIT_SPEC_FIELDS = ("tune", "decay", "pan", "reverb", "delay")
+
+
+def patch_kit(current: Kit, designed: Kit, design: dict) -> tuple:
+    """
+    The machine's kit with the spec applied, and nothing else: the name and fader colours from the
+    design; an instrument whose tone changes takes the designed record (its fader level kept); one
+    that keeps its tone gets only the spec's fields (tune, decay, pan, sends). Everything else stays
+    as the machine holds it: LFO, INST FX, sample parameters, whatever was set on the panel.
+    Returns (kit, what changed).
+    """
+    k = current.copy()
+    k.name = designed.name
+    changed = []
+    for inst in TRACKS:
+        k.set_color(inst, designed.color(inst))
+        if inst not in (design or {}):
+            continue
+        if k.get(inst, "tone") != designed.get(inst, "tone"):
+            o = Kit.record_offset(inst)
+            level = k.raw[o + 4]
+            k.raw[o:o + REC_STRIDE] = designed.raw[o:o + REC_STRIDE]
+            k.raw[o + 4] = level
+            changed.append(f"{inst} tone")
+            continue
+        for f in KIT_SPEC_FIELDS:
+            if k.get(inst, f) != designed.get(inst, f):
+                k.set(inst, f, designed.get(inst, f))
+                changed.append(f"{inst} {f}")
+    return k, changed
 
 
 def design_kit(base: Kit, donors: dict, design: dict, tones: dict, name: str, colours: dict) -> tuple:

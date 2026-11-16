@@ -151,6 +151,12 @@ def main(argv=None):
                     help="write the kits only: no pattern is rebuilt, so panel edits survive (the "
                          "highest slot's pattern is still rewritten from its own read, for the "
                          "kit-reference repair)")
+    rw.add_argument("--steps-only", action="store_true",
+                    help="write no kit and rebuild no pattern: apply each slot's steps entries and "
+                         "master_prob to the pattern the machine holds now")
+    rw.add_argument("--fresh-kits", action="store_true",
+                    help="build each designed kit whole from the base kit, instead of changing only "
+                         "what the spec names in the kit the machine holds")
     rw.add_argument("--sheet", action="store_true",
                     help="only (re)write the cue sheet next to the spec (NAME.md); touch no device")
     rw.add_argument("--fm1", action="store_true",
@@ -342,13 +348,15 @@ def main(argv=None):
             if args.preview:
                 print("preview only: nothing was written. The build would write:", file=sys.stderr)
                 chosen = [e for e in entries if not only or e["panel"] in only]
-                for w in rework.writes(chosen, kits_only=args.kits_only):
+                for w in rework.writes(chosen, kits_only=args.kits_only, steps_only=args.steps_only,
+                                       fresh_kits=args.fresh_kits):
                     print(f"  - {w}", file=sys.stderr)
                 return 0
             from .device import Device
             with Device() as dev:
                 done = rework.build(dev, entries, survey_dir, designed=designed, only=only,
-                                    kits_only=args.kits_only,
+                                    kits_only=args.kits_only, steps_only=args.steps_only,
+                                    fresh_kits=args.fresh_kits,
                                     log=lambda m: print(m, file=sys.stderr, flush=True))
             out = Path(args.file).with_suffix(".plan.json")
             out.write_text(json.dumps({"entries": entries, "done": done}, indent=1, default=str))
