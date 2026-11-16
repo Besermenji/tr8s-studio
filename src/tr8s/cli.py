@@ -147,6 +147,10 @@ def main(argv=None):
     rw.add_argument("--preview", action="store_true", help="say what would be written; touch nothing")
     rw.add_argument("--only", help="comma-separated slots (e.g. 8-09,8-10): write only their kits and "
                                    "patterns; every other slot is left alone, not even read")
+    rw.add_argument("--kits-only", action="store_true",
+                    help="write the kits only: no pattern is rebuilt, so panel edits survive (the "
+                         "highest slot's pattern is still rewritten from its own read, for the "
+                         "kit-reference repair)")
     rw.add_argument("--sheet", action="store_true",
                     help="only (re)write the cue sheet next to the spec (NAME.md); touch no device")
     rw.add_argument("--fm1", action="store_true",
@@ -324,6 +328,7 @@ def main(argv=None):
                                        log=lambda m: print(m, file=sys.stderr, flush=True))
                 print(json.dumps(done, default=str))
                 return 0
+            only = [x.strip() for x in args.only.split(",")] if args.only else None
             designed = rework.design_kits(spec, entries, survey_dir) if not args.sheet else {}
             for e in entries:
                 route = " ".join(f"{r['variation']}={r['role']}" for r in e["route"])
@@ -336,13 +341,14 @@ def main(argv=None):
                 return 0
             if args.preview:
                 print("preview only: nothing was written. The build would write:", file=sys.stderr)
-                for w in rework.writes(entries):
+                chosen = [e for e in entries if not only or e["panel"] in only]
+                for w in rework.writes(chosen, kits_only=args.kits_only):
                     print(f"  - {w}", file=sys.stderr)
                 return 0
             from .device import Device
             with Device() as dev:
-                only = [x.strip() for x in args.only.split(",")] if args.only else None
                 done = rework.build(dev, entries, survey_dir, designed=designed, only=only,
+                                    kits_only=args.kits_only,
                                     log=lambda m: print(m, file=sys.stderr, flush=True))
             out = Path(args.file).with_suffix(".plan.json")
             out.write_text(json.dumps({"entries": entries, "done": done}, indent=1, default=str))

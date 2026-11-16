@@ -351,3 +351,25 @@ def test_a_rerun_keeps_the_roots_it_did_not_measure_and_never_loses_a_good_one()
     assert r["clear"] and r["cents"] == -8 and len(r["each"]) == 2
     better = rework.merge_roots([("8-04", "HT", "Deep SH Bass", dict(good, cents=-12))], "d2", previous=first)
     assert better["Deep SH Bass"]["cents"] == -11 and better["Deep SH Bass"]["measured"] == "d2"
+
+
+def test_kits_only_writes_the_kit_and_no_pattern_content(survey):
+    d, spec, src = survey
+    (d / "tones.json").write_text(json.dumps({"0": {"name": "909 Bass1", "type": "ACB"}}))
+    base = Kit.from_bytes(load_fixture_kit())
+    base.name = "DEFAULT"
+    (d / "kit_112.bin").write_bytes(base.to_bytes())
+    spec = json.loads(json.dumps(spec))
+    spec["base_kit"] = 113
+    spec["slots"][0]["kit"] = {"BD": {"tone": "909 Bass1"}}
+    entries = rework.plan(spec, d)
+    designed = rework.design_kits(spec, entries, d)
+    edited = load_fixture_pattern()                           # the player's own 8-16, edited
+    d_, t = make_device(patterns={64: src, 127: edited}, kits={127: load_fixture_kit()})
+    done = rework.build(d_, entries, d, designed=designed, sleep=lambda s: None,
+                        log=lambda *a: None, kits_only=True)
+    assert done["failed"] is None and done["kits"] == [128] and done["patterns"] == []
+    assert t.slots["pattern"][127] == edited                  # only rewritten from its own read
+    assert {i for k, i in t.sent if k == "pattern"} == {127}       # own step + kit-reference repair
+    assert any("--kits-only" in w for w in rework.writes(entries, kits_only=True))
+

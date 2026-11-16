@@ -303,7 +303,7 @@ def plan(spec: dict, survey_dir) -> list:
     return out
 
 
-def writes(entries: list) -> list:
+def writes(entries: list, kits_only: bool = False) -> list:
     last = max(entries, key=lambda e: e["slot"])
     w = [f"pattern {last['panel']}: rewritten with its own current bytes first (the slot every "
          "kit commit re-points, repaired at once)"]
@@ -313,6 +313,8 @@ def writes(entries: list) -> list:
         else:
             what = f"copy of kit {e['source_kit_panel']} (from {e['source_panel']})"
         w.append(f"kit {e['kit_panel']}: {what}; named {e['name']!r}, colours by role")
+    if kits_only:
+        return w + ["no pattern content is written (--kits-only)"]
     w += [f"pattern {e['panel']}: copy of {e['source_panel']} {e['source_name']!r}, named "
           f"{e['name']!r}, {e['bpm']:g} BPM, kit {e['kit_panel']}"
           + "".join(f"; {describe_step_entry(st)}" for st in e.get("steps") or [])
@@ -345,13 +347,18 @@ def build_kit(src_blob: bytes, e: dict) -> Kit:
 
 
 def build(dev, entries: list, survey_dir, pause: float = 1.5, sleep=time.sleep, log=print,
-          designed: dict | None = None, only=None) -> dict:
+          designed: dict | None = None, only=None, kits_only: bool = False) -> dict:
     """
     Write the set. Stops at the first failure and says what was done.
 
     Each source pattern is read again (twice) and must equal its survey read, so a slot that
     changed since the survey is never copied blind. Each source kit is read twice and kept in
     the survey directory.
+
+    `kits_only` writes the kits and no pattern content: the source patterns are not read and
+    the patterns are not rebuilt, so edits made on the panel survive. The highest slot's own
+    pattern is still rewritten from its own read first, because every kit commit re-points the
+    last pattern transferred (docs/PROTOCOL.md).
     """
     d = Path(survey_dir)
     if only:
@@ -369,6 +376,8 @@ def build(dev, entries: list, survey_dir, pause: float = 1.5, sleep=time.sleep, 
 
     src_patterns, src_kits = {}, {}
     for e in entries:
+        if kits_only and designed and e["index"] in designed:
+            continue                                 # nothing from the source is needed
         try:
             blob = dev.read_checked("pattern", e["source"], twice=True, sleep=sleep)
         except DeviceError as err:
@@ -431,7 +440,7 @@ def build(dev, entries: list, survey_dir, pause: float = 1.5, sleep=time.sleep, 
         log(f"kit {e['kit_panel']} written ({e['name']})")
         sleep(pause)
 
-    for e in entries:
+    for e in entries if not kits_only else []:
         want = build_pattern(src_patterns[e["index"]], e)
         try:
             current = dev.read_checked("pattern", e["slot"], sleep=sleep)
