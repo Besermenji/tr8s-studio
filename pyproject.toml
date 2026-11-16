@@ -30,7 +30,7 @@ tr8s-studio = "tr8s.server:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-tr8s = ["web/*.html", "web/*.css", "web/*.js"]
+tr8s = ["web/*.html", "web/*.css", "web/*.js", "macrec.swift"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

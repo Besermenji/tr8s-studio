@@ -343,9 +343,8 @@ def test_a_monotonic_step_is_still_not_tuning():
 
 def test_capture_commands_per_platform(tmp_path):
     out = tmp_path / "c.wav"
-    mac = audio.capture_cmd(2.4, out, 2, "TR-8S", platform="darwin")
-    assert mac[:2] == ["ffmpeg", "-nostdin"] and ":TR-8S" in mac and "pcm_f32le" in mac
-    assert "pan=2c|c0=c0|c1=c1" in mac and mac[mac.index("-t") + 1] == "2"
+    mac = audio.capture_cmd(2.4, out, 2, "TR-8S", platform="darwin", recorder="/x/rec")
+    assert mac == ["/x/rec", "TR-8S", "2", "96000", "2", str(out)]
     lin = audio.capture_cmd(2.4, out, 2, "hw:1,0", platform="linux")
     assert lin[:3] == ["arecord", "-D", "hw:1,0"] and "FLOAT_LE" in lin
 

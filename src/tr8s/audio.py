@@ -42,8 +42,10 @@ class AudioError(RuntimeError):
 
 
 # ------------------------------------------------------------------- capture
-# Linux records with ALSA's `arecord`; macOS with ffmpeg's AVFoundation input, which names the
-# device ("TR-8S") instead of an ALSA card. Both write a 96 kHz IEEE-float WAV that `read_wav` reads.
+# Linux records with ALSA's `arecord`. macOS records with `tr8s-macrec` (macrec.swift, compiled on
+# first use), which reads the device through CoreAudio's AudioQueue: with Roland's TR-8S driver on
+# macOS 15, ffmpeg's AVFoundation input delivers frames that are all zero, the mix included. ffmpeg
+# still lists the device names. Both write an IEEE-float WAV that `read_wav` reads.
 
 MAC_DEVICE_HINTS = ("TR-8S", "TR8S")
 LIST_TIMEOUT = 15             # seconds for ffmpeg to list the devices
@@ -96,24 +98,41 @@ def find_device() -> str:
 
 
 def capture_cmd(seconds: float, out: Path, channels: int, device: str,
-                platform: str | None = None) -> list:
-    """The recorder's argv for this platform. Pure, so a test can check it."""
+                platform: str | None = None, recorder: str = "tr8s-macrec") -> list:
+    """The recorder's argv for this platform. Pure, so a test can check it. `recorder` is the
+    compiled macrec.swift, for macOS only."""
     secs = str(max(1, int(round(seconds))))
     if (platform or sys.platform) == "darwin":
         # the first `channels` channels as they are (1-2 are the TR-8S's mix), never a downmix
-        pan = f"pan={channels}c|" + "|".join(f"c{i}=c{i}" for i in range(channels))
-        return ["ffmpeg", "-nostdin", "-hide_banner", "-loglevel", "error", "-y", "-f", "avfoundation",
-                "-i", f":{device}", "-t", secs, "-af", pan, "-ar", str(RATE),
-                "-c:a", "pcm_f32le", str(out)]
+        return [recorder, device, secs, str(RATE), str(channels), str(out)]
     return ["arecord", "-D", device, "-f", FORMAT, "-c", str(channels), "-r", str(RATE),
             "-d", secs, str(out)]
+
+
+MACREC_SRC = Path(__file__).with_name("macrec.swift")
+
+
+def mac_recorder() -> str:
+    """The compiled macOS recorder, built from macrec.swift with swiftc when missing or older."""
+    exe = config.subdir("bin") / "tr8s-macrec"
+    if exe.exists() and exe.stat().st_mtime >= MACREC_SRC.stat().st_mtime:
+        return str(exe)
+    proc = _run(["swiftc", "-O", "-swift-version", "5", str(MACREC_SRC), "-o", str(exe)], timeout=300)
+    if proc.returncode != 0:
+        raise AudioError(f"could not build the macOS recorder: {proc.stderr.strip()[-400:]}")
+    return str(exe)
+
+
+def _cmd(seconds, out, channels, device) -> list:
+    rec = mac_recorder() if sys.platform == "darwin" else "tr8s-macrec"
+    return capture_cmd(seconds, out, channels, device, recorder=rec)
 
 
 def record(seconds: float, path: str | Path | None = None,
            channels: int = 2, device: str | None = None) -> Path:
     """Record the TR-8S's output. Blocks until done."""
     out = Path(path) if path else config.subdir("recordings") / "capture.wav"
-    cmd = capture_cmd(seconds, out, channels, device or find_device())
+    cmd = _cmd(seconds, out, channels, device or find_device())
     proc = _run(cmd, timeout=seconds + SLACK)
     if proc.returncode != 0:
         raise AudioError(f"{cmd[0]} failed: {proc.stderr.strip()}")
@@ -123,9 +142,9 @@ def record(seconds: float, path: str | Path | None = None,
 def record_async(seconds: float, path: str | Path | None = None,
                  channels: int = 2, device: str | None = None):
     """Start a recording and return (process, path) so triggers can run during it. The recorder
-    gets no terminal (stdin is /dev/null): ffmpeg would otherwise read keys from it."""
+    gets no terminal (stdin is /dev/null): a recorder must never read keys from it."""
     out = Path(path) if path else config.subdir("recordings") / "capture.wav"
-    cmd = capture_cmd(seconds, out, channels, device or find_device())
+    cmd = _cmd(seconds, out, channels, device or find_device())
     try:
         proc = subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
                                 stderr=subprocess.DEVNULL)
@@ -135,7 +154,7 @@ def record_async(seconds: float, path: str | Path | None = None,
 
 
 def read_wav(path: str | Path) -> tuple[int, int, array.array]:
-    """(channels, rate, samples). Handles the IEEE-float WAVs arecord and ffmpeg write."""
+    """(channels, rate, samples). Handles the IEEE-float WAVs arecord and tr8s-macrec write."""
     d = Path(path).read_bytes()
     if d[:4] != b"RIFF" or d[8:12] != b"WAVE":
         raise AudioError(f"{path} is not a RIFF/WAVE file")
