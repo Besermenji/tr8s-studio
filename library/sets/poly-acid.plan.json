@@ -1,0 +1,2854 @@
+{
+ "entries": [
+  {
+   "index": 1,
+   "slot": 112,
+   "panel": "8-01",
+   "source": 64,
+   "source_panel": "5-01",
+   "source_name": "Brisk Afternoon",
+   "source_tempo": 125.0,
+   "source_sha256": "150e183215b000359c30b8e4814c7872c379d0b203ebbc325994651363e70493",
+   "name": "01 WARM-UP",
+   "bpm": 128,
+   "role": "Warm-up: light entry",
+   "energy": 0.25,
+   "notes": "Dub opening: the rim's 3-cycle and the kalimba throw into the delay. The bass voice (MT) is there from bar 1: keep its filter almost shut.",
+   "kit": 112,
+   "kit_panel": 113,
+   "source_kit": 64,
+   "source_kit_panel": 65,
+   "roles": {
+    "BD": "kick",
+    "SD": "snare",
+    "HC": "snare",
+    "CH": "hat",
+    "OH": "open",
+    "CC": "cymbal",
+    "RC": "cymbal",
+    "RS": "odd1",
+    "LT": "light",
+    "MT": "acid",
+    "HT": "light"
+   },
+   "colours": {
+    "BD": 0,
+    "SD": 1,
+    "HC": 1,
+    "CH": 6,
+    "OH": 7,
+    "CC": 8,
+    "RC": 8,
+    "RS": 3,
+    "LT": 5,
+    "MT": 2,
+    "HT": 5
+   },
+   "route": [
+    {
+     "variation": "B",
+     "role": "intro",
+     "hits": 19
+    },
+    {
+     "variation": "D",
+     "role": "main",
+     "hits": 21
+    },
+    {
+     "variation": "H",
+     "role": "main",
+     "hits": 21
+    },
+    {
+     "variation": "A",
+     "role": "main",
+     "hits": 27
+    },
+    {
+     "variation": "F",
+     "role": "break (mute the kick)",
+     "hits": 20
+    },
+    {
+     "variation": "C",
+     "role": "drop",
+     "hits": 27
+    },
+    {
+     "variation": "E",
+     "role": "peak",
+     "hits": 27
+    },
+    {
+     "variation": "G",
+     "role": "peak",
+     "hits": 27
+    }
+   ],
+   "blocks": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "F1",
+    "F2"
+   ],
+   "poly_tracks": [
+    "RS/3"
+   ],
+   "pitched_motion": [],
+   "kit_design": {
+    "BD": {
+     "tone": "909 Bass1",
+     "decay": 110
+    },
+    "SD": {
+     "tone": "Cross Stick",
+     "decay": 100,
+     "delay": 60
+    },
+    "LT": {
+     "tone": "808 Low Tom",
+     "decay": 120
+    },
+    "MT": {
+     "tone": "Deep SH Bass",
+     "decay": 110,
+     "reverb": 40
+    },
+    "HT": {
+     "tone": "Kalimba Mid",
+     "decay": 140,
+     "delay": 110,
+     "reverb": 60
+    },
+    "RS": {
+     "tone": "808 Rim Shot",
+     "decay": 90,
+     "delay": 90
+    },
+    "HC": {
+     "tone": "808 Hand Clap",
+     "decay": 120,
+     "reverb": 50
+    },
+    "CH": {
+     "tone": "909 Closed HH",
+     "decay": 70
+    },
+    "OH": {
+     "tone": "909 Open HH",
+     "decay": 110
+    },
+    "CC": {
+     "tone": "909 Crash Cymbal",
+     "decay": 140
+    },
+    "RC": {
+     "tone": "909 Ride Cymbal",
+     "decay": 130
+    }
+   },
+   "coarse_to_fine": [],
+   "clear_ctrl": [
+    "SD",
+    "LT",
+    "MT",
+    "HT",
+    "RS"
+   ],
+   "acid": "MT",
+   "tune_lines": [],
+   "tune_offsets": [],
+   "shuffle": 0,
+   "soften": 0.25,
+   "keep_lines": [
+    "MT"
+   ],
+   "steps": [],
+   "step_extras": []
+  },
+  {
+   "index": 2,
+   "slot": 113,
+   "panel": "8-02",
+   "source": 107,
+   "source_panel": "7-12",
+   "source_name": "Msqto In Machine",
+   "source_tempo": 133.0,
+   "source_sha256": "8a48079aa45ccd8f4c21557dd159e78ee76c9f5346ad434f7ed0fee00338fb89",
+   "name": "02 HYPNO",
+   "bpm": 130,
+   "role": "Warm-up: hypnotic",
+   "energy": 0.35,
+   "notes": "",
+   "kit": 113,
+   "kit_panel": 114,
+   "source_kit": 107,
+   "source_kit_panel": 108,
+   "roles": {
+    "BD": "kick",
+    "SD": "snare",
+    "HC": "snare",
+    "CH": "hat",
+    "OH": "open",
+    "CC": "cymbal",
+    "RC": "cymbal",
+    "RS": "rim",
+    "LT": "light",
+    "MT": "light",
+    "HT": "light"
+   },
+   "colours": {
+    "BD": 0,
+    "SD": 1,
+    "HC": 1,
+    "CH": 6,
+    "OH": 7,
+    "CC": 8,
+    "RC": 8,
+    "RS": 9,
+    "LT": 5,
+    "MT": 5,
+    "HT": 5
+   },
+   "route": [
+    {
+     "variation": "A",
+     "role": "intro",
+     "hits": 12
+    },
+    {
+     "variation": "C",
+     "role": "main",
+     "hits": 12
+    },
+    {
+     "variation": "E",
+     "role": "main",
+     "hits": 13
+    },
+    {
+     "variation": "D",
+     "role": "main",
+     "hits": 16
+    },
+    {
+     "variation": "G",
+     "role": "break (no kick)",
+     "hits": 14
+    },
+    {
+     "variation": "H",
+     "role": "drop",
+     "hits": 18
+    },
+    {
+     "variation": "B",
+     "role": "peak",
+     "hits": 21
+    },
+    {
+     "variation": "F",
+     "role": "peak",
+     "hits": 21
+    }
+   ],
+   "blocks": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "F1",
+    "F2"
+   ],
+   "poly_tracks": [],
+   "pitched_motion": [],
+   "kit_design": {
+    "BD": {
+     "tone": "909 Low Bass",
+     "decay": 120
+    },
+    "SD": {
+     "tone": "909 Snare2",
+     "decay": 100
+    },
+    "LT": {
+     "tone": "Analog Tom",
+     "decay": 120,
+     "reverb": 40
+    },
+    "MT": {
+     "tone": "Modular Tom",
+     "decay": 110
+    },
+    "HT": {
+     "tone": "626 High Tom1",
+     "decay": 100,
+     "delay": 80
+    },
+    "RS": {
+     "tone": "909 Rim Shot",
+     "decay": 100,
+     "delay": 100
+    },
+    "HC": {
+     "tone": "909 Hand Clap",
+     "decay": 120,
+     "reverb": 40
+    },
+    "CH": {
+     "tone": "909 Closed HH",
+     "decay": 70
+    },
+    "OH": {
+     "tone": "909 Open HH",
+     "decay": 100
+    },
+    "CC": {
+     "tone": "909 Crash Cymbal",
+     "decay": 140
+    },
+    "RC": {
+     "tone": "909 Ride Cymbal",
+     "decay": 130
+    }
+   },
+   "coarse_to_fine": [],
+   "clear_ctrl": [],
+   "acid": null,
+   "tune_lines": [
+    "LT",
+    "MT",
+    "HT"
+   ],
+   "tune_offsets": [],
+   "shuffle": 29,
+   "soften": 0.25,
+   "keep_lines": [],
+   "steps": [],
+   "step_extras": [
+    {
+     "inst": "BD",
+     "kind": "prob",
+     "where": [
+      "F"
+     ],
+     "steps": 1
+    }
+   ]
+  },
+  {
+   "index": 3,
+   "slot": 114,
+   "panel": "8-03",
+   "source": 96,
+   "source_panel": "7-01",
+   "source_name": "Back 2 Basics",
+   "source_tempo": 140.0,
+   "source_sha256": "34f3bcc1a9ae60f7fbc28840b7d2590b1866a2c4da15bba276c25d9143bf93a4",
+   "name": "03 GROOVE",
+   "bpm": 132,
+   "role": "Warm-up: groove",
+   "energy": 0.45,
+   "notes": "",
+   "kit": 114,
+   "kit_panel": 115,
+   "source_kit": 96,
+   "source_kit_panel": 97,
+   "roles": {
+    "BD": "kick",
+    "SD": "snare",
+    "HC": "snare",
+    "CH": "hat",
+    "OH": "open",
+    "CC": "cymbal",
+    "RC": "cymbal",
+    "RS": "rim",
+    "LT": "light",
+    "MT": "light",
+    "HT": "light"
+   },
+   "colours": {
+    "BD": 0,
+    "SD": 1,
+    "HC": 1,
+    "CH": 6,
+    "OH": 7,
+    "CC": 8,
+    "RC": 8,
+    "RS": 9,
+    "LT": 5,
+    "MT": 5,
+    "HT": 5
+   },
+   "route": [
+    {
+     "variation": "D",
+     "role": "intro",
+     "hits": 12
+    },
+    {
+     "variation": "A",
+     "role": "main",
+     "hits": 15
+    },
+    {
+     "variation": "E",
+     "role": "main",
+     "hits": 16
+    },
+    {
+     "variation": "H",
+     "role": "main",
+     "hits": 17
+    },
+    {
+     "variation": "G",
+     "role": "break (no kick)",
+     "hits": 14
+    },
+    {
+     "variation": "B",
+     "role": "drop",
+     "hits": 18
+    },
+    {
+     "variation": "C",
+     "role": "peak",
+     "hits": 25
+    },
+    {
+     "variation": "F",
+     "role": "peak",
+     "hits": 30
+    }
+   ],
+   "blocks": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "F1",
+    "F2"
+   ],
+   "poly_tracks": [],
+   "pitched_motion": [],
+   "kit_design": {
+    "BD": {
+     "tone": "909 Bass2",
+     "decay": 120
+    },
+    "SD": {
+     "tone": "909 Snare1",
+     "decay": 110
+    },
+    "LT": {
+     "tone": "Analog Tom",
+     "decay": 110
+    },
+    "MT": {
+     "tone": "Can Tom",
+     "decay": 110
+    },
+    "HT": {
+     "tone": "909 High Tom",
+     "decay": 110
+    },
+    "RS": {
+     "tone": "Real Rim",
+     "decay": 90,
+     "delay": 70
+    },
+    "HC": {
+     "tone": "909 Hand Clap",
+     "decay": 120,
+     "reverb": 30
+    },
+    "CH": {
+     "tone": "909 Closed HH",
+     "decay": 70
+    },
+    "OH": {
+     "tone": "909 Open HH",
+     "decay": 110
+    },
+    "CC": {
+     "tone": "909 Crash Cymbal",
+     "decay": 140
+    },
+    "RC": {
+     "tone": "909 Ride Cymbal",
+     "decay": 130
+    }
+   },
+   "coarse_to_fine": [],
+   "clear_ctrl": [],
+   "acid": null,
+   "tune_lines": [
+    "MT"
+   ],
+   "tune_offsets": [],
+   "shuffle": 3,
+   "soften": 0.25,
+   "keep_lines": [],
+   "steps": [],
+   "step_extras": []
+  },
+  {
+   "index": 4,
+   "slot": 115,
+   "panel": "8-04",
+   "source": 99,
+   "source_panel": "7-04",
+   "source_name": "4am Roller",
+   "source_tempo": 139.0,
+   "source_sha256": "d1aa6478c02a08856cb1f4d56d23d6b0693ec7a81cf7478b4949a4f21e13321c",
+   "name": "04 ACID IN",
+   "bpm": 134,
+   "role": "Build: first acid",
+   "energy": 0.55,
+   "notes": "The acid line is on HT (yellow) in this one. The CC track runs 16ths: a ride cup, not a crash.",
+   "kit": 115,
+   "kit_panel": 116,
+   "source_kit": 99,
+   "source_kit_panel": 100,
+   "roles": {
+    "BD": "kick",
+    "SD": "snare",
+    "HC": "snare",
+    "CH": "hat",
+    "OH": "open",
+    "CC": "cymbal",
+    "RC": "cymbal",
+    "RS": "odd2",
+    "LT": "light",
+    "MT": "odd1",
+    "HT": "acid"
+   },
+   "colours": {
+    "BD": 0,
+    "SD": 1,
+    "HC": 1,
+    "CH": 6,
+    "OH": 7,
+    "CC": 8,
+    "RC": 8,
+    "RS": 4,
+    "LT": 5,
+    "MT": 3,
+    "HT": 2
+   },
+   "route": [
+    {
+     "variation": "A",
+     "role": "intro",
+     "hits": 10
+    },
+    {
+     "variation": "B",
+     "role": "main",
+     "hits": 26
+    },
+    {
+     "variation": "D",
+     "role": "main",
+     "hits": 26
+    },
+    {
+     "variation": "F",
+     "role": "break (no kick)",
+     "hits": 46
+    },
+    {
+     "variation": "C",
+     "role": "drop",
+     "hits": 27
+    },
+    {
+     "variation": "E",
+     "role": "peak",
+     "hits": 44
+    },
+    {
+     "variation": "H",
+     "role": "peak",
+     "hits": 70
+    },
+    {
+     "variation": "G",
+     "role": "breather (no kick)",
+     "hits": 48
+    }
+   ],
+   "blocks": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "F1",
+    "F2"
+   ],
+   "poly_tracks": [],
+   "pitched_motion": [
+    "HT",
+    "MT",
+    "RS"
+   ],
+   "kit_design": {
+    "BD": {
+     "tone": "909 Attack Bass",
+     "decay": 115
+    },
+    "SD": {
+     "tone": "909 Snare1",
+     "decay": 110
+    },
+    "LT": {
+     "tone": "909 Low Tom",
+     "decay": 110
+    },
+    "MT": {
+     "tone": "Percussive Bass",
+     "decay": 100
+    },
+    "HT": {
+     "tone": "Deep SH Bass",
+     "decay": 110,
+     "reverb": 30
+    },
+    "RS": {
+     "tone": "707 Rim Shot/CB",
+     "decay": 100,
+     "delay": 60
+    },
+    "HC": {
+     "tone": "909 Hand Clap",
+     "decay": 120
+    },
+    "CH": {
+     "tone": "909 Closed HH",
+     "decay": 65
+    },
+    "OH": {
+     "tone": "909 Open HH",
+     "decay": 100
+    },
+    "CC": {
+     "tone": "626 Ride Cup",
+     "decay": 90
+    },
+    "RC": {
+     "tone": "909 Ride Cymbal",
+     "decay": 130
+    }
+   },
+   "coarse_to_fine": [],
+   "clear_ctrl": [
+    "HC"
+   ],
+   "acid": "HT",
+   "tune_lines": [
+    "MT",
+    "HT",
+    "RS"
+   ],
+   "tune_offsets": [
+    -3.25,
+    -3.21,
+    -0.53,
+    -0.49,
+    -0.45,
+    0.29,
+    2.72,
+    4.36,
+    4.57,
+    4.94,
+    5.19,
+    5.23
+   ],
+   "shuffle": 7,
+   "soften": 0.25,
+   "keep_lines": [
+    "HT"
+   ],
+   "steps": [],
+   "step_extras": [
+    {
+     "inst": "LT",
+     "kind": "1/2",
+     "where": [
+      "F",
+      "G",
+      "H",
+      "F1",
+      "F2"
+     ],
+     "steps": 5
+    },
+    {
+     "inst": "RS",
+     "kind": "1/2",
+     "where": [
+      "E",
+      "H",
+      "F1"
+     ],
+     "steps": 6
+    }
+   ]
+  },
+  {
+   "index": 5,
+   "slot": 116,
+   "panel": "8-05",
+   "source": 73,
+   "source_panel": "5-10",
+   "source_name": "Hopes and Fears",
+   "source_tempo": 125.0,
+   "source_sha256": "7f03e87abf7f6c919855525678312751eca6aa6fd8caf150cbb654dac0b35b4e",
+   "name": "05 POLY ACID",
+   "bpm": 136,
+   "role": "Build: acid on 3-cycles",
+   "energy": 0.65,
+   "notes": "Five voices on 3-step cycles against the four. MT carries the acid line; LT and HT answer it.",
+   "kit": 116,
+   "kit_panel": 117,
+   "source_kit": 73,
+   "source_kit_panel": 74,
+   "roles": {
+    "BD": "kick",
+    "SD": "snare",
+    "HC": "snare",
+    "CH": "hat",
+    "OH": "open",
+    "CC": "cymbal",
+    "RC": "cymbal",
+    "RS": "rim",
+    "LT": "odd1",
+    "MT": "acid",
+    "HT": "odd2"
+   },
+   "colours": {
+    "BD": 0,
+    "SD": 1,
+    "HC": 1,
+    "CH": 6,
+    "OH": 7,
+    "CC": 8,
+    "RC": 8,
+    "RS": 9,
+    "LT": 3,
+    "MT": 2,
+    "HT": 4
+   },
+   "route": [
+    {
+     "variation": "D",
+     "role": "intro",
+     "hits": 23
+    },
+    {
+     "variation": "A",
+     "role": "main",
+     "hits": 31
+    },
+    {
+     "variation": "E",
+     "role": "main",
+     "hits": 32
+    },
+    {
+     "variation": "F",
+     "role": "main",
+     "hits": 37
+    },
+    {
+     "variation": "B",
+     "role": "break (mute the kick)",
+     "hits": 30
+    },
+    {
+     "variation": "C",
+     "role": "drop",
+     "hits": 39
+    },
+    {
+     "variation": "H",
+     "role": "peak",
+     "hits": 42
+    },
+    {
+     "variation": "G",
+     "role": "peak",
+     "hits": 61
+    }
+   ],
+   "blocks": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "F1",
+    "F2"
+   ],
+   "poly_tracks": [
+    "HT/3",
+    "LT/3",
+    "MT/3",
+    "RS/3",
+    "SD/3"
+   ],
+   "pitched_motion": [
+    "HT",
+    "LT",
+    "MT",
+    "RS"
+   ],
+   "kit_design": {
+    "BD": {
+     "tone": "909 Attack Bass",
+     "decay": 115
+    },
+    "SD": {
+     "tone": "Analog Snare1",
+     "decay": 100
+    },
+    "LT": {
+     "tone": "Analog Tom",
+     "decay": 110
+    },
+    "MT": {
+     "tone": "Prog.Trance Bass",
+     "decay": 110,
+     "reverb": 30
+    },
+    "HT": {
+     "tone": "Modular Tom",
+     "decay": 100,
+     "delay": 60
+    },
+    "RS": {
+     "tone": "MG888 Rim",
+     "decay": 90
+    },
+    "HC": {
+     "tone": "Analog Clap1",
+     "decay": 120
+    },
+    "CH": {
+     "tone": "Comp Closed HH",
+     "decay": 65
+    },
+    "OH": {
+     "tone": "Comp Open HH",
+     "decay": 100
+    },
+    "CC": {
+     "tone": "909 Crash Cymbal",
+     "decay": 140
+    },
+    "RC": {
+     "tone": "909 Ride Cymbal",
+     "decay": 130
+    }
+   },
+   "coarse_to_fine": [],
+   "clear_ctrl": [
+    "SD",
+    "MT",
+    "RS",
+    "LT",
+    "HT",
+    "RC"
+   ],
+   "acid": "MT",
+   "tune_lines": [],
+   "tune_offsets": [],
+   "shuffle": 77,
+   "soften": 0.25,
+   "keep_lines": [
+    "MT"
+   ],
+   "steps": [],
+   "step_extras": []
+  },
+  {
+   "index": 6,
+   "slot": 117,
+   "panel": "8-06",
+   "source": 101,
+   "source_panel": "7-06",
+   "source_name": "Senses",
+   "source_tempo": 140.0,
+   "source_sha256": "a9d6968883f02bd96384fd0a56496f91dc7e3d3292d3d9a60c66c190834ff9b2",
+   "name": "06 PEAK1 APP",
+   "bpm": 138,
+   "role": "Peak 1: approach",
+   "energy": 0.8,
+   "notes": "",
+   "kit": 117,
+   "kit_panel": 118,
+   "source_kit": 101,
+   "source_kit_panel": 102,
+   "roles": {
+    "BD": "kick",
+    "SD": "snare",
+    "HC": "snare",
+    "CH": "hat",
+    "OH": "open",
+    "CC": "cymbal",
+    "RC": "cymbal",
+    "RS": "rim",
+    "LT": "light",
+    "MT": "light",
+    "HT": "light"
+   },
+   "colours": {
+    "BD": 0,
+    "SD": 1,
+    "HC": 1,
+    "CH": 6,
+    "OH": 7,
+    "CC": 8,
+    "RC": 8,
+    "RS": 9,
+    "LT": 5,
+    "MT": 5,
+    "HT": 5
+   },
+   "route": [
+    {
+     "variation": "E",
+     "role": "intro",
+     "hits": 14
+    },
+    {
+     "variation": "A",
+     "role": "main",
+     "hits": 21
+    },
+    {
+     "variation": "H",
+     "role": "main",
+     "hits": 22
+    },
+    {
+     "variation": "B",
+     "role": "main",
+     "hits": 28
+    },
+    {
+     "variation": "G",
+     "role": "break (mute the kick)",
+     "hits": 15
+    },
+    {
+     "variation": "C",
+     "role": "drop",
+     "hits": 28
+    },
+    {
+     "variation": "F",
+     "role": "peak",
+     "hits": 29
+    },
+    {
+     "variation": "D",
+     "role": "peak",
+     "hits": 37
+    }
+   ],
+   "blocks": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "F1",
+    "F2"
+   ],
+   "poly_tracks": [],
+   "pitched_motion": [],
+   "kit_design": {
+    "BD": {
+     "tone": "Tube Kick",
+     "decay": 115
+    },
+    "SD": {
+     "tone": "Industrial Snare",
+     "decay": 105
+    },
+    "LT": {
+     "tone": "Modular Tom",
+     "decay": 105
+    },
+    "MT": {
+     "tone": "Analog Tom",
+     "decay": 105
+    },
+    "HT": {
+     "tone": "Sat Mod High Tom",
+     "decay": 100
+    },
+    "RS": {
+     "tone": "Real Rim",
+     "decay": 90,
+     "delay": 50
+    },
+    "HC": {
+     "tone": "EDM Clap",
+     "decay": 115
+    },
+    "CH": {
+     "tone": "Comp Closed HH",
+     "decay": 60
+    },
+    "OH": {
+     "tone": "Comp Open HH",
+     "decay": 95
+    },
+    "CC": {
+     "tone": "Stereo Cymbal",
+     "decay": 140
+    },
+    "RC": {
+     "tone": "909 Ride Cymbal",
+     "decay": 125
+    }
+   },
+   "coarse_to_fine": [],
+   "clear_ctrl": [],
+   "acid": null,
+   "tune_lines": [
+    "SD"
+   ],
+   "tune_offsets": [],
+   "shuffle": 0,
+   "soften": 0.25,
+   "keep_lines": [],
+   "steps": [],
+   "step_extras": [
+    {
+     "inst": "HT",
+     "kind": "prob",
+     "where": [
+      "B"
+     ],
+     "steps": 4
+    }
+   ]
+  },
+  {
+   "index": 7,
+   "slot": 118,
+   "panel": "8-07",
+   "source": 58,
+   "source_panel": "4-11",
+   "source_name": "Club Internatnal",
+   "source_tempo": 145.0,
+   "source_sha256": "fdbeeb88464f9a58cc8924fb9c08a25948305ae2d905d61eefd135016f4c0c13",
+   "name": "07 PEAK 1",
+   "bpm": 140,
+   "role": "Peak 1",
+   "energy": 0.95,
+   "notes": "The ride carries a pitched line (tune motion): ride it on its fader.",
+   "kit": 118,
+   "kit_panel": 119,
+   "source_kit": 58,
+   "source_kit_panel": 59,
+   "roles": {
+    "BD": "kick",
+    "SD": "snare",
+    "HC": "snare",
+    "CH": "hat",
+    "OH": "open",
+    "CC": "cymbal",
+    "RC": "cymbal",
+    "RS": "rim",
+    "LT": "light",
+    "MT": "light",
+    "HT": "light"
+   },
+   "colours": {
+    "BD": 0,
+    "SD": 1,
+    "HC": 1,
+    "CH": 6,
+    "OH": 7,
+    "CC": 8,
+    "RC": 8,
+    "RS": 9,
+    "LT": 5,
+    "MT": 5,
+    "HT": 5
+   },
+   "route": [
+    {
+     "variation": "A",
+     "role": "intro",
+     "hits": 15
+    },
+    {
+     "variation": "C",
+     "role": "main",
+     "hits": 39
+    },
+    {
+     "variation": "D",
+     "role": "main",
+     "hits": 40
+    },
+    {
+     "variation": "E",
+     "role": "main",
+     "hits": 42
+    },
+    {
+     "variation": "B",
+     "role": "break (mute the kick)",
+     "hits": 24
+    },
+    {
+     "variation": "G",
+     "role": "drop",
+     "hits": 46
+    },
+    {
+     "variation": "F",
+     "role": "peak",
+     "hits": 47
+    },
+    {
+     "variation": "H",
+     "role": "peak",
+     "hits": 61
+    }
+   ],
+   "blocks": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "F1",
+    "F2"
+   ],
+   "poly_tracks": [],
+   "pitched_motion": [],
+   "kit_design": {
+    "BD": {
+     "tone": "Sat Kick",
+     "decay": 110
+    },
+    "SD": {
+     "tone": "909 Dist. Snare",
+     "decay": 100
+    },
+    "LT": {
+     "tone": "Sat Mod Low Tom",
+     "decay": 105
+    },
+    "MT": {
+     "tone": "Modular Tom",
+     "decay": 100
+    },
+    "HT": {
+     "tone": "Sat Mod High Tom",
+     "decay": 100
+    },
+    "RS": {
+     "tone": "909 Rim Shot",
+     "decay": 95
+    },
+    "HC": {
+     "tone": "909 Dist.Clap",
+     "decay": 110
+    },
+    "CH": {
+     "tone": "Comp Closed HH",
+     "decay": 60
+    },
+    "OH": {
+     "tone": "Comp Open HH",
+     "decay": 95
+    },
+    "CC": {
+     "tone": "Industrial Hit1",
+     "decay": 120
+    },
+    "RC": {
+     "tone": "909 Ride Cymbal",
+     "decay": 125
+    }
+   },
+   "coarse_to_fine": [],
+   "clear_ctrl": [],
+   "acid": null,
+   "tune_lines": [
+    "RC"
+   ],
+   "tune_offsets": [],
+   "shuffle": 0,
+   "soften": 0.25,
+   "keep_lines": [],
+   "steps": [],
+   "step_extras": []
+  },
+  {
+   "index": 8,
+   "slot": 119,
+   "panel": "8-08",
+   "source": 68,
+   "source_panel": "5-05",
+   "source_name": "Shining Dream",
+   "source_tempo": 125.0,
+   "source_sha256": "285927d875649be8922107a8d31f03183a47565577313f69503f56526b44b0db",
+   "name": "08 INTERLUDE",
+   "bpm": 140,
+   "role": "Light interlude",
+   "energy": 0.3,
+   "notes": "Toms on 6- and 3-step cycles become a melodic polyrhythm: kalimba, mallet and udu. Bring the kick back on a 1 before 8-09.",
+   "kit": 119,
+   "kit_panel": 120,
+   "source_kit": 68,
+   "source_kit_panel": 69,
+   "roles": {
+    "BD": "kick",
+    "SD": "snare",
+    "HC": "snare",
+    "CH": "hat",
+    "OH": "open",
+    "CC": "cymbal",
+    "RC": "cymbal",
+    "RS": "rim",
+    "LT": "odd2",
+    "MT": "light",
+    "HT": "odd1"
+   },
+   "colours": {
+    "BD": 0,
+    "SD": 1,
+    "HC": 1,
+    "CH": 6,
+    "OH": 7,
+    "CC": 8,
+    "RC": 8,
+    "RS": 9,
+    "LT": 4,
+    "MT": 5,
+    "HT": 3
+   },
+   "route": [
+    {
+     "variation": "B",
+     "role": "intro",
+     "hits": 29
+    },
+    {
+     "variation": "F",
+     "role": "main",
+     "hits": 29
+    },
+    {
+     "variation": "G",
+     "role": "main",
+     "hits": 29
+    },
+    {
+     "variation": "D",
+     "role": "main",
+     "hits": 30
+    },
+    {
+     "variation": "C",
+     "role": "break (mute the kick)",
+     "hits": 29
+    },
+    {
+     "variation": "H",
+     "role": "drop",
+     "hits": 30
+    },
+    {
+     "variation": "A",
+     "role": "peak",
+     "hits": 31
+    },
+    {
+     "variation": "E",
+     "role": "peak",
+     "hits": 31
+    }
+   ],
+   "blocks": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "F1",
+    "F2"
+   ],
+   "poly_tracks": [
+    "HT/6",
+    "LT/3",
+    "MT/3"
+   ],
+   "pitched_motion": [],
+   "kit_design": {
+    "BD": {
+     "tone": "808 Bass1 Long",
+     "decay": 140
+    },
+    "SD": {
+     "tone": "808 Snare1",
+     "decay": 110,
+     "reverb": 60
+    },
+    "LT": {
+     "tone": "Kalimba Mid",
+     "decay": 150,
+     "reverb": 90,
+     "delay": 60
+    },
+    "MT": {
+     "tone": "Tropical Mallet",
+     "decay": 150,
+     "reverb": 90
+    },
+    "HT": {
+     "tone": "Udu Pot Short",
+     "decay": 130,
+     "reverb": 60
+    },
+    "RS": {
+     "tone": "Cross Stick",
+     "decay": 100
+    },
+    "HC": {
+     "tone": "808 Finger Snap",
+     "decay": 110,
+     "reverb": 70
+    },
+    "CH": {
+     "tone": "808 Closed HH",
+     "decay": 70
+    },
+    "OH": {
+     "tone": "808 Open HH",
+     "decay": 110
+    },
+    "CC": {
+     "tone": "Udu Pot Mute",
+     "decay": 110,
+     "reverb": 50
+    },
+    "RC": {
+     "tone": "626 Ride Cup",
+     "decay": 100,
+     "reverb": 40
+    }
+   },
+   "coarse_to_fine": [],
+   "clear_ctrl": [],
+   "acid": null,
+   "tune_lines": [
+    "RC"
+   ],
+   "tune_offsets": [],
+   "shuffle": 0,
+   "soften": 0.25,
+   "keep_lines": [],
+   "steps": [],
+   "step_extras": []
+  },
+  {
+   "index": 9,
+   "slot": 120,
+   "panel": "8-09",
+   "source": 84,
+   "source_panel": "6-05",
+   "source_name": "TMB GROOVE 1",
+   "source_tempo": 135.0,
+   "source_sha256": "9ca94d461d0a0b203d491c18d3d70a9a88e5b70e047615cd4aff0653a16b6def",
+   "name": "09 HARD 1",
+   "bpm": 141,
+   "role": "Hard run: rolling",
+   "energy": 0.75,
+   "notes": "Rolling toms under a straight four. Saturated kit; the open hat is the push.",
+   "kit": 120,
+   "kit_panel": 121,
+   "source_kit": 84,
+   "source_kit_panel": 85,
+   "roles": {
+    "BD": "kick",
+    "SD": "snare",
+    "HC": "snare",
+    "CH": "hat",
+    "OH": "open",
+    "CC": "cymbal",
+    "RC": "cymbal",
+    "RS": "rim",
+    "LT": "light",
+    "MT": "light",
+    "HT": "light"
+   },
+   "colours": {
+    "BD": 0,
+    "SD": 1,
+    "HC": 1,
+    "CH": 6,
+    "OH": 7,
+    "CC": 8,
+    "RC": 8,
+    "RS": 9,
+    "LT": 5,
+    "MT": 5,
+    "HT": 5
+   },
+   "route": [
+    {
+     "variation": "H",
+     "role": "intro",
+     "hits": 23
+    },
+    {
+     "variation": "A",
+     "role": "main",
+     "hits": 27
+    },
+    {
+     "variation": "G",
+     "role": "main",
+     "hits": 27
+    },
+    {
+     "variation": "F",
+     "role": "break (no kick)",
+     "hits": 36
+    },
+    {
+     "variation": "B",
+     "role": "drop",
+     "hits": 41
+    },
+    {
+     "variation": "C",
+     "role": "peak",
+     "hits": 48
+    },
+    {
+     "variation": "D",
+     "role": "peak",
+     "hits": 58
+    },
+    {
+     "variation": "E",
+     "role": "breather (no kick)",
+     "hits": 49
+    }
+   ],
+   "blocks": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "F1",
+    "F2"
+   ],
+   "poly_tracks": [],
+   "pitched_motion": [],
+   "kit_design": {
+    "BD": {
+     "tone": "Modular Kick",
+     "decay": 105
+    },
+    "SD": {
+     "tone": "Sat Snare",
+     "decay": 100
+    },
+    "LT": {
+     "tone": "Sat Mod Low Tom",
+     "decay": 100
+    },
+    "MT": {
+     "tone": "Modular Tom",
+     "decay": 95
+    },
+    "HT": {
+     "tone": "Sat Mod High Tom",
+     "decay": 95
+    },
+    "RS": {
+     "tone": "MG888 Rim",
+     "decay": 80
+    },
+    "HC": {
+     "tone": "909 Dist.Clap",
+     "decay": 105
+    },
+    "CH": {
+     "tone": "Sat Closed HH",
+     "decay": 50
+    },
+    "OH": {
+     "tone": "Sat Open HH",
+     "decay": 85
+    },
+    "CC": {
+     "tone": "Industrial Hit1",
+     "decay": 110
+    },
+    "RC": {
+     "tone": "909 Ride Cymbal",
+     "decay": 115
+    }
+   },
+   "coarse_to_fine": [],
+   "clear_ctrl": [
+    "SD"
+   ],
+   "acid": null,
+   "tune_lines": [
+    "SD"
+   ],
+   "tune_offsets": [],
+   "shuffle": 0,
+   "soften": 0.25,
+   "keep_lines": [],
+   "steps": [],
+   "step_extras": [
+    {
+     "inst": "CH",
+     "kind": "1/2",
+     "where": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "G",
+      "F2"
+     ],
+     "steps": 7
+    }
+   ]
+  },
+  {
+   "index": 10,
+   "slot": 121,
+   "panel": "8-10",
+   "source": 89,
+   "source_panel": "6-10",
+   "source_name": "Space 0n Earth",
+   "source_tempo": 128.0,
+   "source_sha256": "4a4db5f2e83b411456e0abe029131640db1caf6228705b5ee3dba10487568960",
+   "name": "10 HARD 2",
+   "bpm": 143,
+   "role": "Hard run: acid on HT",
+   "energy": 0.85,
+   "notes": "HT carries an acid line, MT answers on a 3-step cycle. Lo-fi hats, metal on the crash.",
+   "kit": 121,
+   "kit_panel": 122,
+   "source_kit": 89,
+   "source_kit_panel": 90,
+   "roles": {
+    "BD": "kick",
+    "SD": "snare",
+    "HC": "snare",
+    "CH": "hat",
+    "OH": "open",
+    "CC": "cymbal",
+    "RC": "cymbal",
+    "RS": "rim",
+    "LT": "light",
+    "MT": "odd1",
+    "HT": "acid"
+   },
+   "colours": {
+    "BD": 0,
+    "SD": 1,
+    "HC": 1,
+    "CH": 6,
+    "OH": 7,
+    "CC": 8,
+    "RC": 8,
+    "RS": 9,
+    "LT": 5,
+    "MT": 3,
+    "HT": 2
+   },
+   "route": [
+    {
+     "variation": "B",
+     "role": "intro",
+     "hits": 33
+    },
+    {
+     "variation": "C",
+     "role": "main",
+     "hits": 34
+    },
+    {
+     "variation": "G",
+     "role": "main",
+     "hits": 34
+    },
+    {
+     "variation": "A",
+     "role": "main",
+     "hits": 35
+    },
+    {
+     "variation": "F",
+     "role": "break (mute the kick)",
+     "hits": 33
+    },
+    {
+     "variation": "D",
+     "role": "drop",
+     "hits": 35
+    },
+    {
+     "variation": "E",
+     "role": "peak",
+     "hits": 35
+    },
+    {
+     "variation": "H",
+     "role": "peak",
+     "hits": 36
+    }
+   ],
+   "blocks": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "F1",
+    "F2"
+   ],
+   "poly_tracks": [
+    "MT/3"
+   ],
+   "pitched_motion": [
+    "HT"
+   ],
+   "kit_design": {
+    "BD": {
+     "tone": "Tube Kick",
+     "decay": 105
+    },
+    "SD": {
+     "tone": "Noise Snare",
+     "decay": 95
+    },
+    "LT": {
+     "tone": "Analog Tom",
+     "decay": 100
+    },
+    "MT": {
+     "tone": "Modular Tom",
+     "decay": 95
+    },
+    "HT": {
+     "tone": "Deep SH Bass",
+     "decay": 100,
+     "reverb": 20
+    },
+    "RS": {
+     "tone": "Real Rim",
+     "decay": 80,
+     "delay": 50
+    },
+    "HC": {
+     "tone": "MG888 Clap",
+     "decay": 105
+    },
+    "CH": {
+     "tone": "Lo-Bit Closed HH",
+     "decay": 50
+    },
+    "OH": {
+     "tone": "Lo-Bit Open HH",
+     "decay": 85
+    },
+    "CC": {
+     "tone": "Metal Bang",
+     "decay": 110
+    },
+    "RC": {
+     "tone": "626 Ride Cymbal",
+     "decay": 110
+    }
+   },
+   "coarse_to_fine": [],
+   "clear_ctrl": [
+    "HT",
+    "MT",
+    "OH",
+    "RC"
+   ],
+   "acid": "HT",
+   "tune_lines": [],
+   "tune_offsets": [],
+   "shuffle": 0,
+   "soften": 0.25,
+   "keep_lines": [
+    "HT"
+   ],
+   "steps": [],
+   "step_extras": [
+    {
+     "inst": "CH",
+     "kind": "1/2",
+     "where": [
+      "F1"
+     ],
+     "steps": 2
+    }
+   ]
+  },
+  {
+   "index": 11,
+   "slot": 122,
+   "panel": "8-11",
+   "source": 80,
+   "source_panel": "6-01",
+   "source_name": "KiNK 1",
+   "source_tempo": 129.0,
+   "source_sha256": "f3dfaab3291e666630d1920d2d1dc944004ad6b4468a59f7886eef33331f1c56",
+   "name": "11 HARD 3",
+   "bpm": 145,
+   "role": "Hard run: peak",
+   "energy": 0.9,
+   "notes": "The densest groove of the set: a rolling 16th rim over a hard four. Industrial snare, saturated hats.",
+   "kit": 122,
+   "kit_panel": 123,
+   "source_kit": 80,
+   "source_kit_panel": 81,
+   "roles": {
+    "BD": "kick",
+    "SD": "snare",
+    "HC": "snare",
+    "CH": "hat",
+    "OH": "open",
+    "CC": "cymbal",
+    "RC": "cymbal",
+    "RS": "rim",
+    "LT": "light",
+    "MT": "light",
+    "HT": "light"
+   },
+   "colours": {
+    "BD": 0,
+    "SD": 1,
+    "HC": 1,
+    "CH": 6,
+    "OH": 7,
+    "CC": 8,
+    "RC": 8,
+    "RS": 9,
+    "LT": 5,
+    "MT": 5,
+    "HT": 5
+   },
+   "route": [
+    {
+     "variation": "A",
+     "role": "intro",
+     "hits": 29
+    },
+    {
+     "variation": "H",
+     "role": "main",
+     "hits": 33
+    },
+    {
+     "variation": "C",
+     "role": "main",
+     "hits": 38
+    },
+    {
+     "variation": "B",
+     "role": "main",
+     "hits": 45
+    },
+    {
+     "variation": "F",
+     "role": "break (no kick)",
+     "hits": 62
+    },
+    {
+     "variation": "D",
+     "role": "drop",
+     "hits": 46
+    },
+    {
+     "variation": "G",
+     "role": "peak",
+     "hits": 58
+    },
+    {
+     "variation": "E",
+     "role": "peak",
+     "hits": 66
+    }
+   ],
+   "blocks": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "F1",
+    "F2"
+   ],
+   "poly_tracks": [],
+   "pitched_motion": [],
+   "kit_design": {
+    "BD": {
+     "tone": "Sat Kick",
+     "decay": 100
+    },
+    "SD": {
+     "tone": "Industrial Snare",
+     "decay": 95
+    },
+    "LT": {
+     "tone": "Sat Mod Low Tom",
+     "decay": 95
+    },
+    "MT": {
+     "tone": "Modular Tom",
+     "decay": 90
+    },
+    "HT": {
+     "tone": "Sat Mod High Tom",
+     "decay": 90
+    },
+    "RS": {
+     "tone": "MG888 Rim",
+     "decay": 60
+    },
+    "HC": {
+     "tone": "909 Dist.Clap",
+     "decay": 100
+    },
+    "CH": {
+     "tone": "Sat Closed HH",
+     "decay": 48
+    },
+    "OH": {
+     "tone": "Sat Open HH",
+     "decay": 80
+    },
+    "CC": {
+     "tone": "Industrial Hit2",
+     "decay": 110
+    },
+    "RC": {
+     "tone": "909 Ride Cymbal",
+     "decay": 110
+    }
+   },
+   "coarse_to_fine": [],
+   "clear_ctrl": [],
+   "acid": null,
+   "tune_lines": [],
+   "tune_offsets": [],
+   "shuffle": 0,
+   "soften": 0.25,
+   "keep_lines": [],
+   "steps": [],
+   "step_extras": []
+  },
+  {
+   "index": 12,
+   "slot": 123,
+   "panel": "8-12",
+   "source": 85,
+   "source_panel": "6-06",
+   "source_name": "TMB GROOVE 2",
+   "source_tempo": 130.0,
+   "source_sha256": "24737531c71014ee1ee7560583d6b1b51da33aea0667b656480788bece8b6c01",
+   "name": "12 BRIDGE",
+   "bpm": 144,
+   "role": "Light breather before peak 2",
+   "energy": 0.3,
+   "notes": "Ambient acid: the MT line in a long reverb over a pad. A short rest after the hard run; arrive with the kick muted.",
+   "kit": 123,
+   "kit_panel": 124,
+   "source_kit": 85,
+   "source_kit_panel": 86,
+   "roles": {
+    "BD": "kick",
+    "SD": "snare",
+    "HC": "snare",
+    "CH": "hat",
+    "OH": "open",
+    "CC": "cymbal",
+    "RC": "cymbal",
+    "RS": "rim",
+    "LT": "odd1",
+    "MT": "acid",
+    "HT": "odd2"
+   },
+   "colours": {
+    "BD": 0,
+    "SD": 1,
+    "HC": 1,
+    "CH": 6,
+    "OH": 7,
+    "CC": 8,
+    "RC": 8,
+    "RS": 9,
+    "LT": 3,
+    "MT": 2,
+    "HT": 4
+   },
+   "route": [
+    {
+     "variation": "H",
+     "role": "intro",
+     "hits": 9
+    },
+    {
+     "variation": "A",
+     "role": "main",
+     "hits": 25
+    },
+    {
+     "variation": "E",
+     "role": "main",
+     "hits": 26
+    },
+    {
+     "variation": "F",
+     "role": "break (no kick)",
+     "hits": 20
+    },
+    {
+     "variation": "G",
+     "role": "drop",
+     "hits": 29
+    },
+    {
+     "variation": "B",
+     "role": "peak",
+     "hits": 35
+    },
+    {
+     "variation": "D",
+     "role": "peak",
+     "hits": 46
+    },
+    {
+     "variation": "C",
+     "role": "breather (no kick)",
+     "hits": 42
+    }
+   ],
+   "blocks": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "F1",
+    "F2"
+   ],
+   "poly_tracks": [],
+   "pitched_motion": [
+    "HT",
+    "LT",
+    "MT"
+   ],
+   "kit_design": {
+    "BD": {
+     "tone": "808 Bass1 Long",
+     "decay": 140
+    },
+    "SD": {
+     "tone": "808 Snare2",
+     "decay": 110,
+     "reverb": 70
+    },
+    "LT": {
+     "tone": "SoftPad minor7th",
+     "decay": 200,
+     "reverb": 110
+    },
+    "MT": {
+     "tone": "Deep SH Bass",
+     "decay": 120,
+     "reverb": 90,
+     "delay": 50
+    },
+    "HT": {
+     "tone": "Kalimba High",
+     "decay": 140,
+     "reverb": 90,
+     "delay": 80
+    },
+    "RS": {
+     "tone": "Cross Stick",
+     "decay": 100
+    },
+    "HC": {
+     "tone": "808 Finger Snap",
+     "decay": 110,
+     "reverb": 60
+    },
+    "CH": {
+     "tone": "808 Closed HH",
+     "decay": 65
+    },
+    "OH": {
+     "tone": "808 Open HH",
+     "decay": 110
+    },
+    "CC": {
+     "tone": "Stereo Cymbal",
+     "decay": 160,
+     "reverb": 60
+    },
+    "RC": {
+     "tone": "606 Cymbal",
+     "decay": 100
+    }
+   },
+   "coarse_to_fine": [],
+   "clear_ctrl": [],
+   "acid": "MT",
+   "tune_lines": [
+    "SD",
+    "LT",
+    "MT",
+    "HT"
+   ],
+   "tune_offsets": [
+    -5.27,
+    -4.77,
+    -4.12,
+    -2.51,
+    -1.56,
+    -1.44,
+    -1.4,
+    -1.23,
+    -1.11,
+    0.37,
+    0.7,
+    1.19,
+    1.32,
+    1.52,
+    1.89
+   ],
+   "shuffle": 41,
+   "soften": 0.25,
+   "keep_lines": [
+    "MT",
+    "LT"
+   ],
+   "steps": [],
+   "step_extras": []
+  },
+  {
+   "index": 13,
+   "slot": 124,
+   "panel": "8-13",
+   "source": 59,
+   "source_panel": "4-12",
+   "source_name": "The Lady",
+   "source_tempo": 147.0,
+   "source_sha256": "d4585c422acb0466d52c10507e04bdeec7e240bb28b624baa0efd2e852c23922",
+   "name": "13 PEAK2 APP",
+   "bpm": 144,
+   "role": "Peak 2: approach",
+   "energy": 0.85,
+   "notes": "",
+   "kit": 124,
+   "kit_panel": 125,
+   "source_kit": 59,
+   "source_kit_panel": 60,
+   "roles": {
+    "BD": "kick",
+    "SD": "snare",
+    "HC": "snare",
+    "CH": "hat",
+    "OH": "open",
+    "CC": "cymbal",
+    "RC": "cymbal",
+    "RS": "rim",
+    "LT": "light",
+    "MT": "acid",
+    "HT": "light"
+   },
+   "colours": {
+    "BD": 0,
+    "SD": 1,
+    "HC": 1,
+    "CH": 6,
+    "OH": 7,
+    "CC": 8,
+    "RC": 8,
+    "RS": 9,
+    "LT": 5,
+    "MT": 2,
+    "HT": 5
+   },
+   "route": [
+    {
+     "variation": "A",
+     "role": "intro",
+     "hits": 18
+    },
+    {
+     "variation": "B",
+     "role": "main",
+     "hits": 27
+    },
+    {
+     "variation": "C",
+     "role": "main",
+     "hits": 29
+    },
+    {
+     "variation": "H",
+     "role": "main",
+     "hits": 43
+    },
+    {
+     "variation": "E",
+     "role": "break (mute the kick)",
+     "hits": 23
+    },
+    {
+     "variation": "D",
+     "role": "drop",
+     "hits": 46
+    },
+    {
+     "variation": "F",
+     "role": "peak",
+     "hits": 46
+    },
+    {
+     "variation": "G",
+     "role": "peak",
+     "hits": 47
+    }
+   ],
+   "blocks": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "F1",
+    "F2"
+   ],
+   "poly_tracks": [],
+   "pitched_motion": [
+    "MT"
+   ],
+   "kit_design": {
+    "BD": {
+     "tone": "Tube Kick",
+     "decay": 112
+    },
+    "SD": {
+     "tone": "909 Dist. Snare",
+     "decay": 100
+    },
+    "LT": {
+     "tone": "Sat Mod Low Tom",
+     "decay": 105
+    },
+    "MT": {
+     "tone": "Prog.Trance Bass",
+     "decay": 105,
+     "reverb": 30
+    },
+    "HT": {
+     "tone": "Modular Tom",
+     "decay": 100
+    },
+    "RS": {
+     "tone": "909 Rim Shot",
+     "decay": 95
+    },
+    "HC": {
+     "tone": "Poly Clap",
+     "decay": 110
+    },
+    "CH": {
+     "tone": "Comp Closed HH",
+     "decay": 60
+    },
+    "OH": {
+     "tone": "Comp Open HH",
+     "decay": 95
+    },
+    "CC": {
+     "tone": "909 Crash Cymbal",
+     "decay": 140
+    },
+    "RC": {
+     "tone": "909 Ride Cymbal",
+     "decay": 125
+    }
+   },
+   "coarse_to_fine": [],
+   "clear_ctrl": [],
+   "acid": "MT",
+   "tune_lines": [
+    "MT"
+   ],
+   "tune_offsets": [
+    -4.4,
+    -4.36,
+    -4.32,
+    -4.28,
+    -4.07,
+    -3.91,
+    -3.62,
+    -3.42,
+    -3.17,
+    -3.05,
+    -2.92
+   ],
+   "shuffle": 0,
+   "soften": 0.25,
+   "keep_lines": [
+    "MT"
+   ],
+   "steps": [],
+   "step_extras": []
+  },
+  {
+   "index": 14,
+   "slot": 125,
+   "panel": "8-14",
+   "source": 60,
+   "source_panel": "4-13",
+   "source_name": "River Rock",
+   "source_tempo": 147.0,
+   "source_sha256": "f1583e59d65cedc37c877c0dad62854842e1baab1eb2a9bfedcdbd64c101fc9e",
+   "name": "14 SUMMIT",
+   "bpm": 146,
+   "role": "Peak 2: summit",
+   "energy": 1.0,
+   "notes": "The hardest kit of the set: saturated kick, industrial snare, metal on the rim, ride on every 8th.",
+   "kit": 125,
+   "kit_panel": 126,
+   "source_kit": 60,
+   "source_kit_panel": 61,
+   "roles": {
+    "BD": "kick",
+    "SD": "snare",
+    "HC": "snare",
+    "CH": "hat",
+    "OH": "open",
+    "CC": "cymbal",
+    "RC": "cymbal",
+    "RS": "rim",
+    "LT": "light",
+    "MT": "light",
+    "HT": "light"
+   },
+   "colours": {
+    "BD": 0,
+    "SD": 1,
+    "HC": 1,
+    "CH": 6,
+    "OH": 7,
+    "CC": 8,
+    "RC": 8,
+    "RS": 9,
+    "LT": 5,
+    "MT": 5,
+    "HT": 5
+   },
+   "route": [
+    {
+     "variation": "A",
+     "role": "intro",
+     "hits": 6
+    },
+    {
+     "variation": "C",
+     "role": "main",
+     "hits": 33
+    },
+    {
+     "variation": "G",
+     "role": "main",
+     "hits": 42
+    },
+    {
+     "variation": "D",
+     "role": "main",
+     "hits": 45
+    },
+    {
+     "variation": "B",
+     "role": "break (mute the kick)",
+     "hits": 16
+    },
+    {
+     "variation": "F",
+     "role": "drop",
+     "hits": 49
+    },
+    {
+     "variation": "H",
+     "role": "peak",
+     "hits": 49
+    },
+    {
+     "variation": "E",
+     "role": "peak",
+     "hits": 52
+    }
+   ],
+   "blocks": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "F1",
+    "F2"
+   ],
+   "poly_tracks": [],
+   "pitched_motion": [],
+   "kit_design": {
+    "BD": {
+     "tone": "Sat Kick",
+     "decay": 108
+    },
+    "SD": {
+     "tone": "Industrial Snare",
+     "decay": 100
+    },
+    "LT": {
+     "tone": "Sat Mod Low Tom",
+     "decay": 100
+    },
+    "MT": {
+     "tone": "Analog Tom",
+     "decay": 100
+    },
+    "HT": {
+     "tone": "Sat Mod High Tom",
+     "decay": 95
+    },
+    "RS": {
+     "tone": "MG888 MetalClap",
+     "decay": 90
+    },
+    "HC": {
+     "tone": "EDM Clap",
+     "decay": 110
+    },
+    "CH": {
+     "tone": "Comp Closed HH",
+     "decay": 58
+    },
+    "OH": {
+     "tone": "Comp Open HH",
+     "decay": 90
+    },
+    "CC": {
+     "tone": "Industrial Hit2",
+     "decay": 120
+    },
+    "RC": {
+     "tone": "909 Ride Cymbal",
+     "decay": 120
+    }
+   },
+   "coarse_to_fine": [],
+   "clear_ctrl": [],
+   "acid": null,
+   "tune_lines": [],
+   "tune_offsets": [],
+   "shuffle": 0,
+   "soften": 0.25,
+   "keep_lines": [],
+   "steps": [],
+   "step_extras": []
+  },
+  {
+   "index": 15,
+   "slot": 126,
+   "panel": "8-15",
+   "source": 102,
+   "source_panel": "7-07",
+   "source_name": "Camp Techno",
+   "source_tempo": 146.0,
+   "source_sha256": "f3bcdc313f8a5e95009a93ea9addfbf090e6fb7d338ca76ae2558cc4c884ee46",
+   "name": "15 RELEASE",
+   "bpm": 142,
+   "role": "Closer: release",
+   "energy": 0.65,
+   "notes": "",
+   "kit": 126,
+   "kit_panel": 127,
+   "source_kit": 102,
+   "source_kit_panel": 103,
+   "roles": {
+    "BD": "kick",
+    "SD": "snare",
+    "HC": "snare",
+    "CH": "hat",
+    "OH": "open",
+    "CC": "cymbal",
+    "RC": "cymbal",
+    "RS": "rim",
+    "LT": "light",
+    "MT": "light",
+    "HT": "light"
+   },
+   "colours": {
+    "BD": 0,
+    "SD": 1,
+    "HC": 1,
+    "CH": 6,
+    "OH": 7,
+    "CC": 8,
+    "RC": 8,
+    "RS": 9,
+    "LT": 5,
+    "MT": 5,
+    "HT": 5
+   },
+   "route": [
+    {
+     "variation": "E",
+     "role": "intro",
+     "hits": 9
+    },
+    {
+     "variation": "F",
+     "role": "main",
+     "hits": 12
+    },
+    {
+     "variation": "A",
+     "role": "main",
+     "hits": 18
+    },
+    {
+     "variation": "H",
+     "role": "main",
+     "hits": 24
+    },
+    {
+     "variation": "G",
+     "role": "break (no kick)",
+     "hits": 14
+    },
+    {
+     "variation": "C",
+     "role": "drop",
+     "hits": 29
+    },
+    {
+     "variation": "D",
+     "role": "peak",
+     "hits": 29
+    },
+    {
+     "variation": "B",
+     "role": "peak",
+     "hits": 30
+    }
+   ],
+   "blocks": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "F1",
+    "F2"
+   ],
+   "poly_tracks": [],
+   "pitched_motion": [],
+   "kit_design": {
+    "BD": {
+     "tone": "909 Attack Bass",
+     "decay": 120
+    },
+    "SD": {
+     "tone": "909 Snare1",
+     "decay": 110
+    },
+    "LT": {
+     "tone": "Analog Tom",
+     "decay": 115,
+     "reverb": 30
+    },
+    "MT": {
+     "tone": "Mute Bass",
+     "decay": 100
+    },
+    "HT": {
+     "tone": "Modular Tom",
+     "decay": 110,
+     "delay": 50
+    },
+    "RS": {
+     "tone": "909 Rim Shot",
+     "decay": 100
+    },
+    "HC": {
+     "tone": "909 Hand Clap",
+     "decay": 120
+    },
+    "CH": {
+     "tone": "909 Closed HH",
+     "decay": 70
+    },
+    "OH": {
+     "tone": "909 Open HH",
+     "decay": 110
+    },
+    "CC": {
+     "tone": "909 Crash Cymbal",
+     "decay": 150
+    },
+    "RC": {
+     "tone": "909 Ride Cymbal",
+     "decay": 130
+    }
+   },
+   "coarse_to_fine": [],
+   "clear_ctrl": [],
+   "acid": null,
+   "tune_lines": [
+    "SD",
+    "CH"
+   ],
+   "tune_offsets": [],
+   "shuffle": 10,
+   "soften": 0.25,
+   "keep_lines": [],
+   "steps": [],
+   "step_extras": [
+    {
+     "inst": "SD",
+     "kind": "1/2",
+     "where": [
+      "F2"
+     ],
+     "steps": 1
+    },
+    {
+     "inst": "SD",
+     "kind": "1/4",
+     "where": [
+      "F2"
+     ],
+     "steps": 1
+    },
+    {
+     "inst": "SD",
+     "kind": "prob",
+     "where": [
+      "F"
+     ],
+     "steps": 1
+    },
+    {
+     "inst": "RS",
+     "kind": "prob",
+     "where": [
+      "B",
+      "C",
+      "D"
+     ],
+     "steps": 3
+    },
+    {
+     "inst": "CH",
+     "kind": "1/4",
+     "where": [
+      "F1",
+      "F2"
+     ],
+     "steps": 8
+    },
+    {
+     "inst": "OH",
+     "kind": "prob",
+     "where": [
+      "C"
+     ],
+     "steps": 2
+    }
+   ]
+  },
+  {
+   "index": 16,
+   "slot": 127,
+   "panel": "8-16",
+   "source": 109,
+   "source_panel": "7-14",
+   "source_name": "Ghosted",
+   "source_tempo": 130.0,
+   "source_sha256": "cbe140a3e165b54416f61fbd8f3e29d30c4dfea3f83fb36a8811e8d985a788c6",
+   "name": "16 OUTRO",
+   "bpm": 138,
+   "role": "Closer: light outro",
+   "energy": 0.3,
+   "notes": "808 to close, the kalimba in the delay. Take one voice out every 8 bars, end on a hat and a tail.",
+   "kit": 127,
+   "kit_panel": 128,
+   "source_kit": 109,
+   "source_kit_panel": 110,
+   "roles": {
+    "BD": "kick",
+    "SD": "snare",
+    "HC": "snare",
+    "CH": "hat",
+    "OH": "open",
+    "CC": "cymbal",
+    "RC": "cymbal",
+    "RS": "rim",
+    "LT": "light",
+    "MT": "light",
+    "HT": "light"
+   },
+   "colours": {
+    "BD": 0,
+    "SD": 1,
+    "HC": 1,
+    "CH": 6,
+    "OH": 7,
+    "CC": 8,
+    "RC": 8,
+    "RS": 9,
+    "LT": 5,
+    "MT": 5,
+    "HT": 5
+   },
+   "route": [
+    {
+     "variation": "A",
+     "role": "intro",
+     "hits": 11
+    },
+    {
+     "variation": "C",
+     "role": "main",
+     "hits": 16
+    },
+    {
+     "variation": "E",
+     "role": "main",
+     "hits": 21
+    },
+    {
+     "variation": "B",
+     "role": "main",
+     "hits": 25
+    },
+    {
+     "variation": "G",
+     "role": "break (mute the kick)",
+     "hits": 13
+    },
+    {
+     "variation": "H",
+     "role": "drop",
+     "hits": 25
+    },
+    {
+     "variation": "D",
+     "role": "peak",
+     "hits": 30
+    },
+    {
+     "variation": "F",
+     "role": "peak",
+     "hits": 30
+    }
+   ],
+   "blocks": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "F1",
+    "F2"
+   ],
+   "poly_tracks": [],
+   "pitched_motion": [],
+   "kit_design": {
+    "BD": {
+     "tone": "808 Bass1",
+     "decay": 130
+    },
+    "SD": {
+     "tone": "808 Snare1",
+     "decay": 110
+    },
+    "LT": {
+     "tone": "808 Low Tom",
+     "decay": 130
+    },
+    "MT": {
+     "tone": "808 Mid Tom",
+     "decay": 130
+    },
+    "HT": {
+     "tone": "Kalimba Mid",
+     "decay": 140,
+     "reverb": 80,
+     "delay": 90
+    },
+    "RS": {
+     "tone": "808 Rim Shot",
+     "decay": 100
+    },
+    "HC": {
+     "tone": "808 Hand Clap",
+     "decay": 120,
+     "reverb": 50
+    },
+    "CH": {
+     "tone": "808 Closed HH",
+     "decay": 70
+    },
+    "OH": {
+     "tone": "808 Open HH",
+     "decay": 120
+    },
+    "CC": {
+     "tone": "808 Cymbal",
+     "decay": 150
+    },
+    "RC": {
+     "tone": "606 Cymbal",
+     "decay": 110
+    }
+   },
+   "coarse_to_fine": [],
+   "clear_ctrl": [],
+   "acid": null,
+   "tune_lines": [],
+   "tune_offsets": [],
+   "shuffle": 0,
+   "soften": 0.25,
+   "keep_lines": [],
+   "steps": [],
+   "step_extras": [
+    {
+     "inst": "BD",
+     "kind": "prob",
+     "where": [
+      "C"
+     ],
+     "steps": 1
+    },
+    {
+     "inst": "SD",
+     "kind": "1/2",
+     "where": [
+      "F2"
+     ],
+     "steps": 1
+    },
+    {
+     "inst": "SD",
+     "kind": "prob",
+     "where": [
+      "C",
+      "D",
+      "E",
+      "F"
+     ],
+     "steps": 4
+    },
+    {
+     "inst": "HT",
+     "kind": "1/2",
+     "where": [
+      "F1"
+     ],
+     "steps": 1
+    }
+   ]
+  }
+ ],
+ "done": {
+  "owned": "8-01",
+  "kits": [
+   113
+  ],
+  "patterns": [],
+  "failed": null,
+  "skipped": []
+ }
+}

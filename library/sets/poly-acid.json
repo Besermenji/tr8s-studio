@@ -26,6 +26,17 @@
     "RS"
    ],
    "acid": "MT",
+   "steps": [
+    {
+     "vars": "ACEG",
+     "inst": "RS",
+     "steps": [
+      12,
+      15
+     ],
+     "prob": 60
+    }
+   ],
    "kit": {
     "BD": {
      "tone": "909 Bass1",
@@ -52,7 +63,7 @@
      "reverb": 60
     },
     "RS": {
-     "tone": "Real Rim",
+     "tone": "808 Rim Shot",
      "decay": 90,
      "delay": 90
     },
@@ -118,7 +129,7 @@
      "decay": 110
     },
     "HT": {
-     "tone": "626 High Tom1",
+     "tone": "909 High Tom",
      "decay": 100,
      "delay": 80
     },
@@ -179,7 +190,18 @@
       2
      ]
     }
-   }
+   },
+   "steps": [
+    {
+     "vars": "ABD",
+     "inst": "RS",
+     "steps": [
+      4,
+      7
+     ],
+     "prob": 70
+    }
+   ]
   },
   {
    "slot": "8-03",
@@ -210,7 +232,7 @@
      "decay": 110
     },
     "RS": {
-     "tone": "Real Rim",
+     "tone": "808 Rim Shot",
      "decay": 90,
      "delay": 70
     },
@@ -271,7 +293,18 @@
       2
      ]
     }
-   }
+   },
+   "steps": [
+    {
+     "vars": "BC",
+     "inst": "RS",
+     "steps": [
+      4,
+      7
+     ],
+     "prob": 60
+    }
+   ]
   },
   {
    "slot": "8-04",
@@ -347,7 +380,18 @@
      "H": [],
      "G": []
     }
-   }
+   },
+   "steps": [
+    {
+     "vars": "B",
+     "inst": "CH",
+     "steps": [
+      6,
+      14
+     ],
+     "prob": 60
+    }
+   ]
   },
   {
    "slot": "8-05",
@@ -390,7 +434,7 @@
      "delay": 60
     },
     "RS": {
-     "tone": "MG888 Rim",
+     "tone": "808 Rim Shot",
      "decay": 90
     },
     "HC": {
@@ -427,7 +471,20 @@
      "G": []
     },
     "load": "B"
-   }
+   },
+   "steps": [
+    {
+     "vars": "ABEF",
+     "inst": "CH",
+     "steps": [
+      4,
+      8,
+      12,
+      16
+     ],
+     "prob": 70
+    }
+   ]
   },
   {
    "slot": "8-06",
@@ -458,7 +515,7 @@
      "decay": 100
     },
     "RS": {
-     "tone": "Real Rim",
+     "tone": "909 Rim Shot",
      "decay": 90,
      "delay": 50
     },
@@ -512,7 +569,18 @@
       2
      ]
     }
-   }
+   },
+   "steps": [
+    {
+     "vars": "BD",
+     "inst": "RS",
+     "steps": [
+      5,
+      10
+     ],
+     "prob": 60
+    }
+   ]
   },
   {
    "slot": "8-07",
@@ -552,11 +620,11 @@
      "decay": 110
     },
     "CH": {
-     "tone": "Comp Closed HH",
+     "tone": "909 Closed HH",
      "decay": 60
     },
     "OH": {
-     "tone": "Comp Open HH",
+     "tone": "909 Open HH",
      "decay": 95
     },
     "CC": {
@@ -603,7 +671,18 @@
       2
      ]
     }
-   }
+   },
+   "steps": [
+    {
+     "vars": "CDEFGH",
+     "inst": "CH",
+     "steps": [
+      14,
+      16
+     ],
+     "prob": 70
+    }
+   ]
   },
   {
    "slot": "8-08",
@@ -640,7 +719,7 @@
      "reverb": 60
     },
     "RS": {
-     "tone": "Cross Stick",
+     "tone": "808 Rim Shot",
      "decay": 100
     },
     "HC": {
@@ -680,7 +759,17 @@
      "E": []
     },
     "load": "C"
-   }
+   },
+   "steps": [
+    {
+     "vars": "ABCDEFGH",
+     "inst": "CH",
+     "steps": [
+      15
+     ],
+     "prob": 70
+    }
+   ]
   },
   {
    "slot": "8-09",
@@ -715,7 +804,7 @@
      "decay": 95
     },
     "RS": {
-     "tone": "MG888 Rim",
+     "tone": "909 Rim Shot",
      "decay": 80
     },
     "HC": {
@@ -761,7 +850,20 @@
      ],
      "E": []
     }
-   }
+   },
+   "steps": [
+    {
+     "vars": "ABCDE",
+     "inst": "OH",
+     "steps": [
+      4,
+      8,
+      12,
+      16
+     ],
+     "prob": 70
+    }
+   ]
   },
   {
    "slot": "8-10",
@@ -804,7 +906,7 @@
      "reverb": 20
     },
     "RS": {
-     "tone": "Real Rim",
+     "tone": "909 Rim Shot",
      "decay": 80,
      "delay": 50
     },
@@ -841,7 +943,18 @@
      "E": [],
      "H": []
     }
-   }
+   },
+   "steps": [
+    {
+     "vars": "ABCDEFGH",
+     "inst": "CH",
+     "steps": [
+      3,
+      11
+     ],
+     "prob": 70
+    }
+   ]
   },
   {
    "slot": "8-11",
@@ -873,7 +986,7 @@
      "decay": 90
     },
     "RS": {
-     "tone": "MG888 Rim",
+     "tone": "909 Rim Shot",
      "decay": 60
     },
     "HC": {
@@ -924,7 +1037,20 @@
       1
      ]
     }
-   }
+   },
+   "steps": [
+    {
+     "vars": "ABCDEFG",
+     "inst": "RS",
+     "steps": [
+      2,
+      6,
+      10,
+      14
+     ],
+     "prob": 70
+    }
+   ]
   },
   {
    "slot": "8-12",
@@ -1006,7 +1132,20 @@
      "C": []
     },
     "load": "D"
-   }
+   },
+   "steps": [
+    {
+     "vars": "ABCDG",
+     "inst": "CH",
+     "steps": [
+      2,
+      6,
+      10,
+      14
+     ],
+     "prob": 70
+    }
+   ]
   },
   {
    "slot": "8-13",
@@ -1047,11 +1186,11 @@
      "decay": 110
     },
     "CH": {
-     "tone": "Comp Closed HH",
+     "tone": "909 Closed HH",
      "decay": 60
     },
     "OH": {
-     "tone": "Comp Open HH",
+     "tone": "909 Open HH",
      "decay": 95
     },
     "CC": {
@@ -1075,7 +1214,20 @@
      "F": [],
      "G": []
     }
-   }
+   },
+   "steps": [
+    {
+     "vars": "DFGH",
+     "inst": "CH",
+     "steps": [
+      2,
+      6,
+      10,
+      14
+     ],
+     "prob": 70
+    }
+   ]
   },
   {
    "slot": "8-14",
@@ -1160,7 +1312,19 @@
       3
      ]
     }
-   }
+   },
+   "steps": [
+    {
+     "vars": "CDEFGH",
+     "inst": "RS",
+     "steps": [
+      10,
+      12,
+      14
+     ],
+     "prob": 70
+    }
+   ]
   },
   {
    "slot": "8-15",
@@ -1247,7 +1411,18 @@
       2
      ]
     }
-   }
+   },
+   "steps": [
+    {
+     "vars": "BC",
+     "inst": "CH",
+     "steps": [
+      9,
+      10
+     ],
+     "prob": 70
+    }
+   ]
   },
   {
    "slot": "8-16",
@@ -1320,7 +1495,18 @@
      "D": [],
      "F": []
     }
-   }
+   },
+   "steps": [
+    {
+     "vars": "ABCDFH",
+     "inst": "OH",
+     "steps": [
+      7,
+      15
+     ],
+     "prob": 70
+    }
+   ]
   }
  ],
  "fm1": {

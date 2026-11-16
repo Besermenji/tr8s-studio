@@ -1,6 +1,6 @@
 # Set: poly-acid
 
-Built 2026-11-13 by `tr8s rework` · 16 patterns · about 66 minutes · bank 8, kits 113-128
+Built 2026-11-16 by `tr8s rework` · 16 patterns · about 66 minutes · bank 8, kits 113-128
 
 ## Rig
 
@@ -91,7 +91,7 @@ Dub opening: the rim's 3-cycle and the kalimba throw into the delay. The bass vo
 | LT | light blue | 808 Low Tom |
 | MT | yellow | Deep SH Bass |
 | HT | light blue | Kalimba Mid |
-| RS | light green | Real Rim |
+| RS | light green | 808 Rim Shot |
 | HC | orange | 808 Hand Clap |
 | CH | blue | 909 Closed HH |
 | OH | dark blue | 909 Open HH |
@@ -115,6 +115,10 @@ Dub opening: the rim's 3-cycle and the kalimba throw into the delay. The bass vo
 
 - **Bass voice (yellow fader): MT.** No recorded line: it plays the pattern's hits at one pitch. With MT's CTRL on the filter cutoff (setup), opening it slowly over a phrase is the movement. Ride DECAY with it.
 - **Odd-cycle voices (green faders): RS** (RS/3). They pull against the four: mute them in the intro, bring one in at a time, and pull them out for the break so the 1 lands harder.
+
+### Steps
+
+- Added: RS steps 12, 15 in ACEG: PROB 60 %
 
 ### Moves
 
@@ -141,7 +145,7 @@ Warm-up: hypnotic · 130 BPM · energy 0.35 · made from 7-12 Msqto In Machine (
 | SD | orange | 909 Snare2 |
 | LT | light blue | Analog Tom |
 | MT | light blue | Modular Tom |
-| HT | light blue | 626 High Tom1 |
+| HT | light blue | 909 High Tom |
 | RS | pink | 909 Rim Shot |
 | HC | orange | 909 Hand Clap |
 | CH | blue | 909 Closed HH |
@@ -161,6 +165,11 @@ Warm-up: hypnotic · 130 BPM · energy 0.35 · made from 7-12 Msqto In Machine (
 | 81 | H | drop | 32 | 18 |
 | 113 | B | peak | 16 | 21 |
 | 129 | F | peak | 16 | 21 |
+
+### Steps
+
+- Already there: BD step probability in F (1 step)
+- Added: RS steps 4, 7 in ABD: PROB 70 %
 
 ### Moves
 
@@ -188,7 +197,7 @@ Warm-up: groove · 132 BPM · energy 0.45 · made from 7-01 Back 2 Basics (140 B
 | LT | light blue | Analog Tom |
 | MT | light blue | Can Tom |
 | HT | light blue | 909 High Tom |
-| RS | pink | Real Rim |
+| RS | pink | 808 Rim Shot |
 | HC | orange | 909 Hand Clap |
 | CH | blue | 909 Closed HH |
 | OH | dark blue | 909 Open HH |
@@ -207,6 +216,10 @@ Warm-up: groove · 132 BPM · energy 0.45 · made from 7-01 Back 2 Basics (140 B
 | 81 | B | drop | 32 | 18 |
 | 113 | C | peak | 16 | 25 |
 | 129 | F | peak | 16 | 30 |
+
+### Steps
+
+- Added: RS steps 4, 7 in BC: PROB 60 %
 
 ### Moves
 
@@ -258,8 +271,14 @@ The acid line is on HT (yellow) in this one. The CC track runs 16ths: a ride cup
 
 ### Voices
 
-- **Acid voice (yellow fader): HT.** It plays a recorded line in Fine Tune motion, so its CTRL knob is free: with HT's CTRL on the filter cutoff (setup) it is the squelch. Ride DECAY with it. Mute it for 8 bars and bring it back on a 1.
+- **Acid voice (yellow fader): HT.** It plays a recorded TUNE-knob sweep in Fine Tune motion (off the semitone grid, so in no key: the FM-1 plays no melody against it), so its CTRL knob is free: with HT's CTRL on the filter cutoff (setup) it is the squelch. Ride DECAY with it. Mute it for 8 bars and bring it back on a 1.
 - **Odd-cycle voices (green faders): MT, RS** (odd spacing). They pull against the four: mute them in the intro, bring one in at a time, and pull them out for the break so the 1 lands harder.
+
+### Steps
+
+- Already there: LT 1/2 ratchets in F G H F1 F2 (5 steps)
+- Already there: RS 1/2 ratchets in E H F1 (6 steps)
+- Added: CH steps 6, 14 in B: PROB 60 %
 
 ### Moves
 
@@ -289,7 +308,7 @@ Five voices on 3-step cycles against the four. MT carries the acid line; LT and 
 | LT | light green | Analog Tom |
 | MT | yellow | Prog.Trance Bass |
 | HT | green | Modular Tom |
-| RS | pink | MG888 Rim |
+| RS | pink | 808 Rim Shot |
 | HC | orange | Analog Clap1 |
 | CH | blue | Comp Closed HH |
 | OH | dark blue | Comp Open HH |
@@ -313,6 +332,10 @@ Five voices on 3-step cycles against the four. MT carries the acid line; LT and 
 
 - **Bass voice (yellow fader): MT.** No recorded line: it plays the pattern's hits at one pitch. With MT's CTRL on the filter cutoff (setup), opening it slowly over a phrase is the movement. Ride DECAY with it.
 - **Odd-cycle voices (green faders): LT, HT** (HT/3, LT/3, MT/3, RS/3, SD/3). They pull against the four: mute them in the intro, bring one in at a time, and pull them out for the break so the 1 lands harder.
+
+### Steps
+
+- Added: CH steps 4, 8, 12, 16 in ABEF: PROB 70 %
 
 ### Moves
 
@@ -340,7 +363,7 @@ Peak 1: approach · 138 BPM · energy 0.8 · made from 7-06 Senses (140 BPM, kit
 | LT | light blue | Modular Tom |
 | MT | light blue | Analog Tom |
 | HT | light blue | Sat Mod High Tom |
-| RS | pink | Real Rim |
+| RS | pink | 909 Rim Shot |
 | HC | orange | EDM Clap |
 | CH | blue | Comp Closed HH |
 | OH | dark blue | Comp Open HH |
@@ -359,6 +382,11 @@ Peak 1: approach · 138 BPM · energy 0.8 · made from 7-06 Senses (140 BPM, kit
 | 81 | C | drop | 32 | 28 |
 | 113 | F | peak | 16 | 29 |
 | 129 | D | peak | 16 | 37 |
+
+### Steps
+
+- Already there: HT step probability in B (4 steps)
+- Added: RS steps 5, 10 in BD: PROB 60 %
 
 ### Moves
 
@@ -390,8 +418,8 @@ The ride carries a pitched line (tune motion): ride it on its fader.
 | HT | light blue | Sat Mod High Tom |
 | RS | pink | 909 Rim Shot |
 | HC | orange | 909 Dist.Clap |
-| CH | blue | Comp Closed HH |
-| OH | dark blue | Comp Open HH |
+| CH | blue | 909 Closed HH |
+| OH | dark blue | 909 Open HH |
 | CC | purple | Industrial Hit1 |
 | RC | purple | 909 Ride Cymbal |
 
@@ -407,6 +435,10 @@ The ride carries a pitched line (tune motion): ride it on its fader.
 | 81 | G | drop | 32 | 46 |
 | 113 | F | peak | 16 | 47 |
 | 129 | H | peak | 16 | 61 |
+
+### Steps
+
+- Added: CH steps 14, 16 in CDEFGH: PROB 70 %
 
 ### Moves
 
@@ -436,7 +468,7 @@ Toms on 6- and 3-step cycles become a melodic polyrhythm: kalimba, mallet and ud
 | LT | green | Kalimba Mid |
 | MT | light blue | Tropical Mallet |
 | HT | light green | Udu Pot Short |
-| RS | pink | Cross Stick |
+| RS | pink | 808 Rim Shot |
 | HC | orange | 808 Finger Snap |
 | CH | blue | 808 Closed HH |
 | OH | dark blue | 808 Open HH |
@@ -459,6 +491,10 @@ Toms on 6- and 3-step cycles become a melodic polyrhythm: kalimba, mallet and ud
 ### Voices
 
 - **Odd-cycle voices (green faders): HT, LT** (HT/6, LT/3, MT/3). They pull against the four: mute them in the intro, bring one in at a time, and pull them out for the break so the 1 lands harder.
+
+### Steps
+
+- Added: CH step 15 in ABCDEFGH: PROB 70 %
 
 ### Moves
 
@@ -488,7 +524,7 @@ Rolling toms under a straight four. Saturated kit; the open hat is the push.
 | LT | light blue | Sat Mod Low Tom |
 | MT | light blue | Modular Tom |
 | HT | light blue | Sat Mod High Tom |
-| RS | pink | MG888 Rim |
+| RS | pink | 909 Rim Shot |
 | HC | orange | 909 Dist.Clap |
 | CH | blue | Sat Closed HH |
 | OH | dark blue | Sat Open HH |
@@ -507,6 +543,11 @@ Rolling toms under a straight four. Saturated kit; the open hat is the push.
 | 97 | C | peak | 16 | 48 |
 | 113 | D | peak | 16 | 58 |
 | 129 | E | breather (no kick) | 8 | 49 |
+
+### Steps
+
+- Already there: CH 1/2 ratchets in A B C D E G F2 (7 steps)
+- Added: OH steps 4, 8, 12, 16 in ABCDE: PROB 70 %
 
 ### Moves
 
@@ -536,7 +577,7 @@ HT carries an acid line, MT answers on a 3-step cycle. Lo-fi hats, metal on the 
 | LT | light blue | Analog Tom |
 | MT | light green | Modular Tom |
 | HT | yellow | Deep SH Bass |
-| RS | pink | Real Rim |
+| RS | pink | 909 Rim Shot |
 | HC | orange | MG888 Clap |
 | CH | blue | Lo-Bit Closed HH |
 | OH | dark blue | Lo-Bit Open HH |
@@ -560,6 +601,11 @@ HT carries an acid line, MT answers on a 3-step cycle. Lo-fi hats, metal on the 
 
 - **Bass voice (yellow fader): HT.** No recorded line: it plays the pattern's hits at one pitch. With HT's CTRL on the filter cutoff (setup), opening it slowly over a phrase is the movement. Ride DECAY with it.
 - **Odd-cycle voices (green faders): MT** (MT/3). They pull against the four: mute them in the intro, bring one in at a time, and pull them out for the break so the 1 lands harder.
+
+### Steps
+
+- Already there: CH 1/2 ratchets in F1 (2 steps)
+- Added: CH steps 3, 11 in ABCDEFGH: PROB 70 %
 
 ### Moves
 
@@ -589,7 +635,7 @@ The densest groove of the set: a rolling 16th rim over a hard four. Industrial s
 | LT | light blue | Sat Mod Low Tom |
 | MT | light blue | Modular Tom |
 | HT | light blue | Sat Mod High Tom |
-| RS | pink | MG888 Rim |
+| RS | pink | 909 Rim Shot |
 | HC | orange | 909 Dist.Clap |
 | CH | blue | Sat Closed HH |
 | OH | dark blue | Sat Open HH |
@@ -608,6 +654,10 @@ The densest groove of the set: a rolling 16th rim over a hard four. Industrial s
 | 81 | D | drop | 32 | 46 |
 | 113 | G | peak | 16 | 58 |
 | 129 | E | peak | 16 | 66 |
+
+### Steps
+
+- Added: RS steps 2, 6, 10, 14 in ABCDEFG: PROB 70 %
 
 ### Moves
 
@@ -659,8 +709,12 @@ Ambient acid: the MT line in a long reverb over a pad. A short rest after the ha
 
 ### Voices
 
-- **Acid voice (yellow fader): MT.** It plays a recorded line in Fine Tune motion, so its CTRL knob is free: with MT's CTRL on the filter cutoff (setup) it is the squelch. Ride DECAY with it. Mute it for 8 bars and bring it back on a 1.
+- **Acid voice (yellow fader): MT.** It plays a recorded TUNE-knob sweep in Fine Tune motion (off the semitone grid, so in no key: the FM-1 plays no melody against it), so its CTRL knob is free: with MT's CTRL on the filter cutoff (setup) it is the squelch. Ride DECAY with it. Mute it for 8 bars and bring it back on a 1.
 - **Odd-cycle voices (green faders): LT, HT** (odd spacing). They pull against the four: mute them in the intro, bring one in at a time, and pull them out for the break so the 1 lands harder.
+
+### Steps
+
+- Added: CH steps 2, 6, 10, 14 in ABCDG: PROB 70 %
 
 ### Moves
 
@@ -690,8 +744,8 @@ Peak 2: approach · 144 BPM · energy 0.85 · made from 4-12 The Lady (147 BPM, 
 | HT | light blue | Modular Tom |
 | RS | pink | 909 Rim Shot |
 | HC | orange | Poly Clap |
-| CH | blue | Comp Closed HH |
-| OH | dark blue | Comp Open HH |
+| CH | blue | 909 Closed HH |
+| OH | dark blue | 909 Open HH |
 | CC | purple | 909 Crash Cymbal |
 | RC | purple | 909 Ride Cymbal |
 
@@ -710,7 +764,11 @@ Peak 2: approach · 144 BPM · energy 0.85 · made from 4-12 The Lady (147 BPM, 
 
 ### Voices
 
-- **Acid voice (yellow fader): MT.** It plays a recorded line in Fine Tune motion, so its CTRL knob is free: with MT's CTRL on the filter cutoff (setup) it is the squelch. Ride DECAY with it. Mute it for 8 bars and bring it back on a 1.
+- **Acid voice (yellow fader): MT.** It plays a recorded TUNE-knob sweep in Fine Tune motion (off the semitone grid, so in no key: the FM-1 plays no melody against it), so its CTRL knob is free: with MT's CTRL on the filter cutoff (setup) it is the squelch. Ride DECAY with it. Mute it for 8 bars and bring it back on a 1.
+
+### Steps
+
+- Added: CH steps 2, 6, 10, 14 in DFGH: PROB 70 %
 
 ### Moves
 
@@ -760,6 +818,10 @@ The hardest kit of the set: saturated kick, industrial snare, metal on the rim, 
 | 113 | H | peak | 16 | 49 |
 | 129 | E | peak | 16 | 52 |
 
+### Steps
+
+- Added: RS steps 10, 12, 14 in CDEFGH: PROB 70 %
+
 ### Moves
 
 - **Intro:** mute everything but the kick and one hat; unmute a voice every 8 bars.
@@ -805,6 +867,16 @@ Closer: release · 142 BPM · energy 0.65 · made from 7-07 Camp Techno (146 BPM
 | 81 | C | drop | 32 | 29 |
 | 113 | D | peak | 16 | 29 |
 | 129 | B | peak | 16 | 30 |
+
+### Steps
+
+- Already there: SD 1/2 ratchets in F2 (1 step)
+- Already there: SD 1/4 ratchets in F2 (1 step)
+- Already there: SD step probability in F (1 step)
+- Already there: RS step probability in B C D (3 steps)
+- Already there: CH 1/4 ratchets in F1 F2 (8 steps)
+- Already there: OH step probability in C (2 steps)
+- Added: CH steps 9, 10 in BC: PROB 70 %
 
 ### Moves
 
@@ -853,6 +925,14 @@ Closer: light outro · 138 BPM · energy 0.3 · made from 7-14 Ghosted (130 BPM,
 | 81 | H | drop | 32 | 25 |
 | 113 | D | peak | 16 | 30 |
 | 129 | F | peak | 16 | 30 |
+
+### Steps
+
+- Already there: BD step probability in C (1 step)
+- Already there: SD 1/2 ratchets in F2 (1 step)
+- Already there: SD step probability in C D E F (4 steps)
+- Already there: HT 1/2 ratchets in F1 (1 step)
+- Added: OH steps 7, 15 in ABCDFH: PROB 70 %
 
 ### Moves
 

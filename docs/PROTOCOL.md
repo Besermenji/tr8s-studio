@@ -191,6 +191,7 @@ in SysEx. Kit 48 on screen is index 47 in a dump.
 | `19` | scale | **[V]** `0`=8th(T) `1`=16th(T) `2`=16th `3`=32nd |
 | `32` | shuffle | **[V]** offset-binary, `0x80` = 0, panel range −128…+127 |
 | `48` | variation mask | **[V]** bitmask of variations A–H holding data; the device **recomputes it on write**, so setting it is unnecessary |
+| `115` | Master Probability | **[M]** `101 + value` for the panel's −100…+100 % (`152` = +51, read back after setting it on the panel, firmware 3.00); `0` on patterns where it was never set, which plays as 0 |
 
 **[V] Critical:** per-pattern tempo, shuffle and kit are honoured only when the
 matching `[UTILITY] GENERAL` source is `PTN`, not `SYSTEM` (`TempoSrc`,
