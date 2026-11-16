@@ -190,7 +190,7 @@ in SysEx. Kit 48 on screen is index 47 in a dump.
 | `18` | kit number | **[V]** single byte, **1-based** panel numbering |
 | `19` | scale | **[V]** `0`=8th(T) `1`=16th(T) `2`=16th `3`=32nd |
 | `32` | shuffle | **[V]** offset-binary, `0x80` = 0, panel range −128…+127 |
-| `48` | variation mask | **[V]** bitmask of variations A–H holding data; the device **recomputes it on write**, so setting it is unnecessary |
+| `48` | variation mask | **[V]** bitmask of variations A–H holding data; the device **recomputes it on write**, so setting it is unnecessary. **[U]** 8-01, with all eight variations holding data, read `128` and then `1` after the player moved from H to A: the byte may be the selected variation instead |
 | `115` | Master Probability | **[M]** `101 + value` for the panel's −100…+100 % (`152` = +51, read back after setting it on the panel, firmware 3.00); `0` on patterns where it was never set, which plays as 0 |
 
 **[V] Critical:** per-pattern tempo, shuffle and kit are honoured only when the
@@ -387,6 +387,16 @@ arecord -D hw:1,0 -f FLOAT_LE -c 2 -r 96000
 giving individual instrument outputs; 2 channels gives the mix. Python's
 `wave` module cannot parse IEEE-float WAVs (format tag 3) — parse manually.
 
+**[V] macOS (2026-11-16, macOS 15.7, Roland's TR-8S driver 1.0.3):** ffmpeg's
+AVFoundation input opens the TR-8S and delivers frames, but every sample is zero,
+the mix included, at the device's 44.1 or 96 kHz. CoreAudio's AudioQueue (the route
+QuickTime takes) gets the real audio. So `tr8s-macrec` (`src/tr8s/macrec.swift`,
+compiled on first use) does the recording. Audio MIDI Setup runs the TR-8S at 96 kHz.
+
+**[V] USB Audio = INDIV** (UTILITY → GENERAL, manual p.45): the 14 inputs are
+1-2 the mix, 3-13 BD, SD, LT, MT, HT, RS, HC, CH, OH, CC, RC, and 14 EXT IN.
+Confirmed by tapping each pad once and finding each hit alone on its channel.
+
 `midi/pitch.py` implements a YIN detector. **Plain autocorrelation does not
 work** — it always peaks at the shortest lag and reports the frequency ceiling.
 
@@ -442,6 +452,9 @@ What did move:
 | `+34` | envelope length (decay or hold) | medium |
 | `+37` | filter or tone colour — brightness moves, pitch does not | medium |
 | `+5`, `+28`, `+29` | **selects or switches something.** The sound changes a lot, but not *with* the value | medium |
+
+**[M]** `+5` follows the tone (2026-11-16, kits 113-128): sample tones read `74`-`75`, ACB tones
+`77`-`81`. Five kits written with `104` there for an OH sample read back `75`.
 | `+38` | unclear — something moves, nothing dominates | low |
 
 **[V] `+5`, `+28` and `+29` are not tune parameters**, though the first pass
