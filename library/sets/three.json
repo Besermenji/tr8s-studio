@@ -1,0 +1,53 @@
+{
+  "name": "three",
+  "tracks": [
+    {
+      "style": "acid",
+      "name": "ACID",
+      "key": "A minor",
+      "energy": 0.7,
+      "seed": 11,
+      "slot": 0,
+      "kit_slot": null,
+      "synth": true,
+      "bars": 16,
+      "voicing": "acid",
+      "project": 0,
+      "arrange": true,
+      "length": 16,
+      "override": {}
+    },
+    {
+      "style": "dub",
+      "name": "DUB",
+      "key": "D minor",
+      "energy": 0.7,
+      "seed": 22,
+      "slot": 1,
+      "kit_slot": null,
+      "synth": true,
+      "bars": 16,
+      "voicing": "dub",
+      "project": 1,
+      "arrange": false,
+      "length": 16,
+      "override": {}
+    },
+    {
+      "style": "hypnotic",
+      "name": "HYPNOTIC",
+      "key": "F# phrygian",
+      "energy": 0.7,
+      "seed": 33,
+      "slot": 2,
+      "kit_slot": null,
+      "synth": true,
+      "bars": 8,
+      "voicing": "hypnotic",
+      "project": 2,
+      "arrange": true,
+      "length": 16,
+      "override": {}
+    }
+  ]
+}
