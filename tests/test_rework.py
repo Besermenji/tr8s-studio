@@ -435,3 +435,45 @@ def test_steps_only_sets_probability_on_the_machines_pattern_and_reads_no_source
     assert back.get_steps("A", "RS") == mine.get_steps("A", "RS")   # nothing rebuilt
     again = rework.build(d_, entries, d, sleep=lambda s: None, log=lambda *a: None, steps_only=True)
     assert again["patterns"] == [] and again["skipped"] == ["pattern 8-16"]
+
+
+def test_ctrl_map_by_role_and_tone_type():
+    from tr8s.kit import CTRL_BASE, CTRL_SEL
+    k = Kit.from_bytes(load_fixture_kit())
+    k.raw[CTRL_SEL:CTRL_BASE + 11] = bytes(12)                    # the blank kit: OFF, all "---"
+    ids = {"BD": 0, "MT": 300, "CH": 1, "LT": 2, "HT": 301}
+    for inst, tid in ids.items():
+        k.set(inst, "tone", tid)
+    tones = {"0": {"type": "ACB"}, "1": {"type": "ACB"}, "2": {"type": "ACB"},
+             "300": {"type": "SAMPLE"}, "301": {"type": "SAMPLE"}}
+    for inst in TRACKS:
+        if inst not in ids:
+            k.set(inst, "tone", 1)
+    roles = {**rework.DEFAULT_ROLE, "MT": "acid"}
+    notes = rework.apply_ctrl(k, roles, tones, "T")
+    assert k.ctrl_sel == 6                                        # User
+    assert k.ctrl("BD") == 6                                      # ACB kick: Attack, read on the panel
+    assert k.ctrl("MT") == 18                                     # sample acid: Filter Cutoff
+    assert k.ctrl("CH") == 3 and k.ctrl("OH") == 3                # hats: Delay Send
+    assert k.ctrl("SD") == 2 and k.ctrl("CC") == 2                # Reverb Send
+    assert k.ctrl("LT") == 3 and k.ctrl("HT") == 18               # a light voice: delay on ACB, filter on a sample
+    assert "MT CTRL FltCutoff" in notes
+    k.set("BD", "tone", 300)
+    rework.apply_ctrl(k, roles, tones, "T")
+    assert k.ctrl("BD") == 18                                     # a sample kick gets the filter
+    with pytest.raises(rework.ReworkError, match="not available"):
+        rework.apply_ctrl(k, {**roles, "SD": "acid"}, tones, "T",
+                          scheme={**rework.ROLE_CTRL, "acid": "FltCutoff"})   # SD is ACB here
+
+
+def test_patch_kit_copies_the_ctrl_map_only_when_asked():
+    from tr8s.kit import CTRL_BASE, CTRL_SEL
+    current = Kit.from_bytes(load_fixture_kit())
+    current.raw[CTRL_SEL:CTRL_BASE + 11] = bytes(12)
+    designed = current.copy()
+    designed.ctrl_sel = "User"
+    designed.set_ctrl("MT", 18)
+    k, what = rework.patch_kit(current, designed, {})
+    assert k.ctrl_sel == 0 and k.ctrl("MT") == 0 and what == []
+    k, what = rework.patch_kit(current, designed, {}, ctrl=True)
+    assert k.ctrl_sel == 6 and k.ctrl("MT") == 18 and what == ["CTRL map"]

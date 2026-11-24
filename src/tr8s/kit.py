@@ -6,6 +6,8 @@ Layer 2 — the Kit model. Parses and builds the 1312-byte blob.
       +0..1 tone   +2 tune   +3 decay   +4 level (READ-ONLY)
       +6 pan       +7 reverb +8 delay   +11 lfo depth (offset-binary, 0x80 = off)
       +28..+41     envelope/gain fields a SAMPLE tone needs (gain at +37)
+    42..52        fader colour per instrument
+    284           KIT: CTRL Sel        285..295  CTRL assignment per instrument
 
 Two hard-won rules, both in docs/PROTOCOL.md:
 
@@ -69,6 +71,35 @@ COLOR_COUNT = 12
 # from the panel; "white" is a placeholder.
 COLOUR_NAMES = ["red", "orange", "yellow", "light green", "green", "light blue",
                 "blue", "dark blue", "purple", "pink", "light pink", "white"]
+
+# The CTRL knobs (docs/PROTOCOL.md, "Kit header +284..+295"). **[V]** Header byte
+# +284 is KIT: CTRL Sel, the manual's list order (Reference Manual p.29): 0 OFF
+# means "the [CTRL] knobs do nothing", 6 User means each knob uses its own
+# assignment. +285..+295 are those per-instrument assignments, BD..RC.
+CTRL_SEL = 284
+CTRL_BASE = 285
+CTRL_SEL_NAMES = ["OFF", "Pan", "ReverbSend", "DelaySend", "LFODepth", "InstFX", "User"]
+# Assignment codes. 0-5 work on any tone. 6-8 are tone-specific ACB parameters,
+# of which only 6 on an ACB kick (Attack) has been read on the panel. 9-20 are
+# the sample parameters in the manual's order; 9 Coarse and 20 FltEnvAtk were
+# read on the panel (kit 74, 2026-11-24), the rest follow from the order.
+CTRL_ANY = {"---": 0, "Pan": 1, "ReverbSend": 2, "DelaySend": 3, "LFODepth": 4, "InstFX": 5}
+CTRL_ACB = {"Attack": 6}
+CTRL_SAMPLE = {"Coarse": 9, "Rate": 10, "Spread": 11, "BitReduce": 12, "Attack": 13,
+               "HoldMode": 14, "HoldTime": 15, "HoldStep": 16, "FltType": 17,
+               "FltCutoff": 18, "FltReso": 19, "FltEnvAtk": 20}
+
+
+def ctrl_code(name: str, tone_type: str, inst: str) -> int:
+    """The assignment code for a CTRL parameter on a tone of this type ("ACB" or
+    "SAMPLE"). Refuses a parameter the tone does not have."""
+    if name in CTRL_ANY:
+        return CTRL_ANY[name]
+    if tone_type == "SAMPLE" and name in CTRL_SAMPLE:
+        return CTRL_SAMPLE[name]
+    if tone_type == "ACB" and name in CTRL_ACB and inst == "BD":
+        return CTRL_ACB[name]          # 6 means something else on other ACB voices
+    raise KitError(f"{inst}: CTRL {name!r} is not available on a {tone_type} tone here")
 
 
 class KitError(ValueError):
@@ -148,6 +179,27 @@ class Kit:
 
     def colors(self) -> dict:
         return {i: self.color(i) for i in TRACKS}
+
+    @property
+    def ctrl_sel(self) -> int:
+        """KIT: CTRL Sel, an index into CTRL_SEL_NAMES."""
+        return self.raw[CTRL_SEL]
+
+    @ctrl_sel.setter
+    def ctrl_sel(self, value):
+        v = CTRL_SEL_NAMES.index(value) if isinstance(value, str) else int(value)
+        if not 0 <= v < len(CTRL_SEL_NAMES):
+            raise KitError(f"CTRL Sel must be one of {CTRL_SEL_NAMES}")
+        self.raw[CTRL_SEL] = v
+
+    def ctrl(self, inst: str) -> int:
+        """The instrument's own CTRL assignment code (used when CTRL Sel is User)."""
+        return self.raw[CTRL_BASE + TRACKS.index(inst)]
+
+    def set_ctrl(self, inst: str, code: int):
+        if not 0 <= int(code) <= 127:
+            raise KitError("a CTRL assignment code is 0..127")
+        self.raw[CTRL_BASE + TRACKS.index(inst)] = int(code)
 
     def has_sample_params(self, inst: str, minimum: int = 4) -> bool:
         """

@@ -173,9 +173,8 @@ writing worked, the recorded patterns were replaced with byte-exact ones.
 - Kit record bytes `+5`, `+9`, `+10` and most of `+12..+27`.
 - Which of `+28..+41` is which sample parameter — only that `+37` looks like
   gain and that they must be copied wholesale.
-- The CTRL knob assignment and `KIT: CTRL Sel` are **not** in the kit blob.
-  They are probably in the 752-byte system blob; a baseline of it is saved in
-  the data directory, so one diff would settle it.
+- CTRL assignment codes `6`-`8` on ACB tones other than the kick, and `21`
+  and up.
 - The last two of the ten variation blocks (believed to be fill-ins).
 
 ## The CTRL byte is not pitch just because I write pitch to it
@@ -188,7 +187,7 @@ Nothing was wrong with the decode. Byte `+2` really does hold Coarse Tune when
 Coarse Tune is what's assigned to that instrument's CTRL knob. The bug was that
 I only ever *wrote* CTRL, always as tune, and then read it back the same way.
 Factory patterns use CTRL for pan and for sends, and the assignment lives in
-system state that isn't in the kit blob — so software cannot check.
+the kit header (`+284..+295`), so the kit has to be read to know.
 
 Export now emits raw values for CTRL motion unless the caller passes
 `ctrl_is_coarse_tune`. Byte `+0` is always Tune, so fine motion still exports
@@ -921,3 +920,20 @@ A read-and-compare first is cheap. It found five kits whose OH byte `+5` differe
 design, and those kits got only their RS record. And one change, then listen: the player
 judges a voice heard on its own, not a kit changed all at once.
 
+
+## "Not in the kit" rested on one save, and the kits paid for it
+
+The CTRL knobs did nothing on all 16 set kits. The docs said the CTRL
+assignment was not in the kit blob, because saving a kit after changing it once
+"altered nothing", so nobody looked there. It is in the kit header: `+284` is
+`KIT: CTRL Sel` and `+285..+295` the per-instrument assignment. The blank
+DEFAULT kit, which the set kits were built from, has Sel = OFF; every factory
+kit has User.
+
+What found it was a diff of what was already on disk: twelve header bytes that
+were zero in DEFAULT and set in all sixteen factory kits. The manual's list
+order then named the codes from two panel readings, and one read, panel change
+and read again proved it. The "system blob baseline" the old note relied on did
+not exist on disk either. A negative result from one test is a lead, not a
+fact. Check it against what the factory content already shows before building
+on it.

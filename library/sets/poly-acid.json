@@ -8,6 +8,7 @@
   "reverb": 0,
   "delay": 0
  },
+ "ctrl": true,
  "soften": 0.25,
  "slots": [
   {

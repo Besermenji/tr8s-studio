@@ -268,11 +268,10 @@ byte and the mask byte must be written per note.
 **[I]** A step carrying both tune and CTRL motion presumably masks to `0x89`;
 untested.
 
-**[V] The CTRL byte's meaning is not knowable from the blob.** Byte `+0` is
-always Tune, but `+2` holds whatever is assigned to that instrument's CTRL knob
-— Coarse Tune, pan, a send. That assignment lives in system state, not the kit
-(see below), so reading `+2` as semitones is an assumption the caller has to
-supply. Factory patterns do carry CTRL motion that is *not* pitch: interpreting
+**[V] The CTRL byte's meaning is not knowable from the pattern blob.** Byte `+0`
+is always Tune, but `+2` holds whatever is assigned to that instrument's CTRL
+knob — Coarse Tune, pan, a send. That assignment lives in the **kit** (header
+`+284..+295`, see §3), so reading `+2` as semitones needs the kit as well. Factory patterns do carry CTRL motion that is *not* pitch: interpreting
 it as Coarse Tune produces notes like `D#10`.
 
 ### Building a blob
@@ -326,9 +325,25 @@ tone, copy a whole 52-byte record from a working sample instrument first.
 707 `42–43`, 727 `57–58`, 606 `72`. `tr8s_kit.py tones` labels 64 of them by
 reading the six single-machine factory kits.
 
-**[V]** The CTRL knob assignment and `KIT: CTRL Sel` are **not** in the kit
-blob — saving a kit after changing them altered nothing. **[I]** They most
-likely live in the system blob (752 bytes); undecoded.
+**[V] The CTRL knobs live in the kit header** (2026-11-24, #48; an earlier note
+here said they were not in the kit, which was wrong):
+
+| Offset | Field |
+|---|---|
+| `+284` | `KIT: CTRL Sel`, Reference Manual p.29 order: `0` OFF ("the knobs do nothing"), `1` Pan, `2` ReverbSend, `3` DelaySend, `4` LFO Depth, `5` InstFX, `6` User |
+| `+285..+295` | each instrument's own assignment, BD..RC, used when Sel is User |
+
+Assignment codes: `0` `---`, `1`-`5` as above (any tone), `6`-`8` ACB-only
+(`6` = Attack on an ACB kick, read on the panel), then the sample parameters in
+the manual's order: `9` Coarse, `10` Rate, `11` Spread, `12` BitReduce, `13`
+Attack, `14` HoldMode, `15` HoldTime, `16` HoldStep, `17` FltType, `18`
+FltCutoff, `19` FltReso, `20` FltEnvAtk (`9` and `20` read on the panel).
+
+Proof: kit 113 read, Sel set to User and BD to Attack on the panel, read again:
+`+284` 0→6 and `+285` 0→6 moved (the machine also filled the other ten with
+Pan), and the 752-byte system blob did not change. Every factory kit has
+Sel = 6; the blank DEFAULT kit has 0, so a kit built from it has dead knobs.
+`kit.Kit.ctrl_sel` / `set_ctrl` and `rework.ROLE_CTRL` write them.
 
 ---
 
@@ -366,7 +381,8 @@ stored `12`. Presence mask `0x09`. No calibration, no tuning error.
 3. Kit `CTRL Sel = User`: hold `[SHIFT]` + `[KIT]` → `KIT: CTRL` → `Sel`.
 4. **`MOTION [ON]` lit.**
 
-**[V]** Items 2 and 3 are **not** stored in the kit — see above.
+**[V]** Items 2 and 3 are stored in the kit header (`+284..+295`, §3), so
+software can set them.
 
 **[V] `MOTION [ON]` gates playback entirely.** Motion is recorded and stored
 regardless, but silent unless that button is lit. Software cannot set it, so
@@ -693,6 +709,10 @@ To move to pattern *n*, send three DT1 messages: `currentPattern = n`,
 `nextPattern = n`, and `patternSelect` as the four nibbles of `1 << (n % 16)`
 — a bitmask of which pad in the bank is lit. **[V]** Sending only the first
 does not move it.
+
+**[V] `currentKit` alone does not move the machine** (2026-11-24, kit 74
+sent while on 8-01: the panel stayed on kit 113). Switching kits stays a
+panel move until the missing companion write is found.
 
 **[V] These are write-only.** An RQ1 to any of them returns nothing, which is
 why sweeping for a readable "current pattern" found nothing: it is not that the

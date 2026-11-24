@@ -26,7 +26,7 @@ import time
 from pathlib import Path
 
 from .device import DeviceError, check_blob, panel_to_slot, slot_to_panel
-from .kit import REC_STRIDE, TRACKS, Kit
+from .kit import CTRL_BASE, CTRL_SEL, REC_STRIDE, TRACKS, Kit, KitError, ctrl_code
 from .pattern import PROB_STEP, STEPS, SUB_CODES, VARIATIONS, VELOCITY_MAX, VELOCITY_NORMAL, Pattern
 from .survey import analyse_pattern
 
@@ -47,6 +47,17 @@ ROLE_COLOURS = {
 DEFAULT_ROLE = {"BD": "kick", "SD": "snare", "HC": "snare", "CH": "hat", "OH": "open",
                 "CC": "cymbal", "RC": "cymbal", "RS": "rim",
                 "LT": "light", "MT": "light", "HT": "light"}
+
+# What each role's CTRL knob does, one scheme across the set (2026-11-24, #50). A role
+# names one parameter, or one per tone type: Filter Cutoff exists only on sample tones.
+_FILTER_OR_DELAY = {"SAMPLE": "FltCutoff", "ACB": "DelaySend"}
+ROLE_CTRL = {
+    "kick": {"SAMPLE": "FltCutoff", "ACB": "Attack"},
+    "acid": {"SAMPLE": "FltCutoff", "ACB": "DelaySend"},
+    "snare": "ReverbSend", "rim": "ReverbSend", "cymbal": "ReverbSend", "fx": "ReverbSend",
+    "hat": "DelaySend", "open": "DelaySend",
+    "odd1": _FILTER_OR_DELAY, "odd2": _FILTER_OR_DELAY, "light": _FILTER_OR_DELAY,
+}
 
 
 class ReworkError(ValueError):
@@ -290,7 +301,8 @@ def plan(spec: dict, survey_dir) -> list:
             "roles": r, "colours": {inst: ROLE_COLOURS[role] for inst, role in r.items()},
             "route": route(a), "blocks": a["blocks"], "poly_tracks": a["poly_tracks"],
             "pitched_motion": a["pitched_motion"],
-            "kit_design": s.get("kit"), "coarse_to_fine": s.get("coarse_to_fine", []),
+            "kit_design": s.get("kit"), "ctrl": bool(s.get("ctrl", spec.get("ctrl"))),
+            "coarse_to_fine": s.get("coarse_to_fine", []),
             "clear_ctrl": s.get("clear_ctrl", []), "acid": s.get("acid"),
             "tune_lines": tune_lines(pblob),
             "tune_offsets": tune_offsets(pblob, s.get("acid")),
@@ -328,7 +340,8 @@ def writes(entries: list, kits_only: bool = False, steps_only: bool = False,
                 ", ".join(f"{i} {t['tone']}" for i, t in e["kit_design"].items())
         else:
             what = f"copy of kit {e['source_kit_panel']} (from {e['source_panel']})"
-        w.append(f"kit {e['kit_panel']}: {what}; named {e['name']!r}, colours by role")
+        ctrl = ", CTRL knobs by role (CTRL Sel = User)" if e.get("ctrl") and e.get("kit_design") else ""
+        w.append(f"kit {e['kit_panel']}: {what}; named {e['name']!r}, colours by role{ctrl}")
     if kits_only:
         return w + ["no pattern content is written (--kits-only)"]
     w += [f"pattern {e['panel']}: copy of {e['source_panel']} {e['source_name']!r}, named "
@@ -482,7 +495,8 @@ def build(dev, entries: list, survey_dir, pause: float = 1.5, sleep=time.sleep, 
             current = None
         sleep(pause)
         if current is not None and designed and e["index"] in designed and not fresh_kits:
-            kit, what = patch_kit(Kit.from_bytes(current), kit, e.get("kit_design"))
+            kit, what = patch_kit(Kit.from_bytes(current), kit, e.get("kit_design"),
+                                  ctrl=bool(e.get("ctrl")))
             if what:
                 log(f"kit {e['kit_panel']}: {', '.join(what)}")
         if current is not None and same_kit(current, kit.to_bytes()):
@@ -624,17 +638,21 @@ def tone_index(tones: dict) -> dict:
 KIT_SPEC_FIELDS = ("tune", "decay", "pan", "reverb", "delay")
 
 
-def patch_kit(current: Kit, designed: Kit, design: dict) -> tuple:
+def patch_kit(current: Kit, designed: Kit, design: dict, ctrl: bool = False) -> tuple:
     """
     The machine's kit with the spec applied, and nothing else: the name and fader colours from the
     design; an instrument whose tone changes takes the designed record (its fader level kept); one
-    that keeps its tone gets only the spec's fields (tune, decay, pan, sends). Everything else stays
-    as the machine holds it: LFO, INST FX, sample parameters, whatever was set on the panel.
+    that keeps its tone gets only the spec's fields (tune, decay, pan, sends). With `ctrl`, CTRL Sel
+    and the per-instrument CTRL assignments come from the design too. Everything else stays as the
+    machine holds it: LFO, INST FX, sample parameters, whatever was set on the panel.
     Returns (kit, what changed).
     """
     k = current.copy()
     k.name = designed.name
     changed = []
+    if ctrl and k.raw[CTRL_SEL:CTRL_BASE + len(TRACKS)] != designed.raw[CTRL_SEL:CTRL_BASE + len(TRACKS)]:
+        k.raw[CTRL_SEL:CTRL_BASE + len(TRACKS)] = designed.raw[CTRL_SEL:CTRL_BASE + len(TRACKS)]
+        changed.append("CTRL map")
     for inst in TRACKS:
         k.set_color(inst, designed.color(inst))
         if inst not in (design or {}):
@@ -742,7 +760,31 @@ def design_kits(spec: dict, entries: list, survey_dir) -> dict:
             continue
         design = {i: {**defaults, **v} for i, v in e["kit_design"].items()}
         out[e["index"]] = design_kit(base, donors, design, tones, e["name"], e["colours"])
+        if e.get("ctrl"):
+            k, notes = out[e["index"]]
+            notes.extend(apply_ctrl(k, e["roles"], tones, e["name"]))
     return out
+
+
+def apply_ctrl(k: Kit, roles: dict, tones: dict, name: str = "", scheme: dict | None = None) -> list:
+    """Set CTRL Sel to User and give each instrument the CTRL parameter of its role (ROLE_CTRL),
+    picked by its tone's type. Returns one note per instrument."""
+    scheme = scheme or ROLE_CTRL
+    k.ctrl_sel = "User"
+    notes = []
+    for inst in TRACKS:
+        tid = k.get(inst, "tone")
+        ttype = (tones.get(str(tid)) or {}).get("type")
+        if ttype not in ("ACB", "SAMPLE"):
+            raise ReworkError(f"{name}/{inst}: tone {tid} is not in the tone list, so its CTRL cannot be chosen")
+        want = scheme[roles[inst]]
+        param = want[ttype] if isinstance(want, dict) else want
+        try:
+            k.set_ctrl(inst, ctrl_code(param, ttype, inst))
+        except KitError as err:
+            raise ReworkError(f"{name}: {err}") from None
+        notes.append(f"{inst} CTRL {param}")
+    return notes
 
 
 # ------------------------------------------------------------------ the FM-1 alongside the set
