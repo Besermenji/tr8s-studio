@@ -108,6 +108,19 @@ def test_the_cue_sheet_has_setup_legend_order_and_a_page_per_pattern(survey):
                  "### Route through A-H", "Last pattern."):
         assert part in md, part
     assert "Odd-cycle voices (green faders): RS" in md
+    assert "CTRL" not in md.split("## Fader colours")[0]
+
+
+def test_the_cue_sheet_names_the_kits_ctrl_map_when_the_spec_writes_one(survey):
+    from datetime import date
+    from tr8s.cuesheet import render_rework
+    d, spec, src = survey
+    entries = rework.plan(spec, d)
+    setup = render_rework(dict(spec, ctrl=True), entries, date(2026, 11, 25)).split("## Fader colours")[0]
+    assert "CTRL knobs: already set in each kit" in setup
+    assert "**snares, rims, cymbals and effects = reverb send**" in setup
+    assert "**closed hats and open hats = delay send**" in setup
+    assert "WRITE → System" not in setup.split("CTRL knobs")[1].split("\n")[0]
 
 
 def test_a_big_tempo_change_is_hidden_in_a_bridge():

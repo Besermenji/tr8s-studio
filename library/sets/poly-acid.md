@@ -1,6 +1,6 @@
 # Set: poly-acid
 
-Built 2026-11-16 by `tr8s rework` · 16 patterns · about 66 minutes · bank 8, kits 113-128
+Built 2026-11-25 by `tr8s rework` · 16 patterns · about 66 minutes · bank 8, kits 113-128
 
 ## Rig
 
@@ -15,7 +15,7 @@ Built 2026-11-16 by `tr8s rework` · 16 patterns · about 66 minutes · bank 8, 
 2. **MOTION [ON]** lit: several sources carry recorded knob motion, which is silent with MOTION off.
 3. AUTO FILL IN: knob on **16**, leave [ON] off until a pattern says so. FILL IN type: the pattern's own fills.
 4. Faders: start everything at about 3/4. Level is the fader's alone; nothing written to the machine sets it.
-5. CTRL map (hold CTRL SELECT, press the instrument, choose with VALUE; it is the machine's, so once covers every pattern): **MT and HT = filter cutoff** (the acid voices), **SD and RS = delay send** (throws), **CH and OH = decay or the INST FX**, **CC and RC = reverb send**. Then WRITE → System. [check] the exact parameter names in the panel's list.
+5. CTRL knobs: already set in each kit by `tr8s rework`, nothing to set on the panel: **kick = attack on an ACB tone, filter cutoff on a sample**; **acid voice, odd-cycle voices and light voice = delay send on an ACB tone, filter cutoff on a sample**; **snares, rims, cymbals and effects = reverb send**; **closed hats and open hats = delay send**.
 6. Know your rescue moves: **MUTE + CLEAR** clears every mute; **SHIFT + TEMPO** moves tempo in 0.1 BPM.
 
 ## Fader colours (the same in every kit of the set)
@@ -80,7 +80,7 @@ Built 2026-11-16 by `tr8s rework` · 16 patterns · about 66 minutes · bank 8, 
 
 Warm-up: light entry · 128 BPM · energy 0.25 · made from 5-01 Brisk Afternoon (125 BPM, kit 65) · about 4.5 min
 
-Dub opening: the rim's 3-cycle and the kalimba throw into the delay. The bass voice (MT) is there from bar 1: keep its filter almost shut.
+Dub opening: the rim's 3-cycle and the kalimba throw into the delay. The bass voice (MT) is there from bar 1: keep its filter almost shut. Accents (#52, #55, #56): velocity 100 on a few off-beats in every slot except this one (127 was too loud, 2026-11-25); ratchets in 8-05 G and 8-10 H. RS (#47): softer and sparser here (velocity 60, PROB 50 on the 1); every other slot keeps its rim, heard 2026-11-25.
 
 ### Kit 113
 
@@ -119,6 +119,15 @@ Dub opening: the rim's 3-cycle and the kalimba throw into the delay. The bass vo
 ### Steps
 
 - Added: RS steps 12, 15 in ACEG: PROB 60 %
+- Added: RS step 1 in ACEG: PROB 50 %
+- Added: RS steps 1, 15 in ACEG: velocity 60
+- Added: RS steps 9, 13 in BH: velocity 60
+- Added: RS steps 9, 12, 15 in DF: velocity 60
+- Added: MT step 15 in ACEG: velocity 80
+- Added: SD step 15 in ACEG: velocity 80
+- Added: SD step 7 in BDFH: velocity 80
+- Added: LT step 15 in ACEG: velocity 80
+- Added: HT step 15 in ACEG: velocity 80
 
 ### Moves
 
@@ -170,6 +179,12 @@ Warm-up: hypnotic · 130 BPM · energy 0.35 · made from 7-12 Msqto In Machine (
 
 - Already there: BD step probability in F (1 step)
 - Added: RS steps 4, 7 in ABD: PROB 70 %
+- Added: OH steps 7, 15 in ABCD: velocity 100
+- Added: RS step 7 in ABD: velocity 100
+- Added: RS steps 3, 7 in GH: velocity 100
+- Added: SD step 7 in FGH: velocity 100
+- Added: LT step 7 in EF: velocity 100
+- Added: MT step 15 in B: velocity 100
 
 ### Moves
 
@@ -220,6 +235,13 @@ Warm-up: groove · 132 BPM · energy 0.45 · made from 7-01 Back 2 Basics (140 B
 ### Steps
 
 - Added: RS steps 4, 7 in BC: PROB 60 %
+- Added: CH step 7 in B: velocity 100
+- Added: CH steps 3, 15 in F: velocity 100
+- Added: RS step 7 in BC: velocity 100
+- Added: SD step 7 in C: velocity 100
+- Added: LT step 3 in BCGH: velocity 100
+- Added: MT step 15 in DEF: velocity 100
+- Added: CC step 11 in G: velocity 100
 
 ### Moves
 
@@ -238,7 +260,7 @@ Warm-up: groove · 132 BPM · energy 0.45 · made from 7-01 Back 2 Basics (140 B
 
 Build: first acid · 134 BPM · energy 0.55 · made from 7-04 4am Roller (139 BPM, kit 100) · about 4.1 min
 
-The acid line is on HT (yellow) in this one. The CC track runs 16ths: a ride cup, not a crash.
+The acid line is on HT (yellow) in this one. The CC track runs 16ths: a ride cup, not a crash. DRIVE INST FX (#53) on the acid voice in all six acid slots, copied from factory kit 77 EXPCID; heard 2026-11-25, kept.
 
 ### Kit 116
 
@@ -279,6 +301,13 @@ The acid line is on HT (yellow) in this one. The CC track runs 16ths: a ride cup
 - Already there: LT 1/2 ratchets in F G H F1 F2 (5 steps)
 - Already there: RS 1/2 ratchets in E H F1 (6 steps)
 - Added: CH steps 6, 14 in B: PROB 60 %
+- Added: HT step 3 in ABC: velocity 100
+- Added: HT step 7 in EFGH: velocity 100
+- Added: HC step 3 in CD: velocity 100
+- Added: HC step 15 in EFGH: velocity 100
+- Added: LT step 7 in FGH: velocity 100
+- Added: MT step 7 in EFGH: velocity 100
+- Added: CC step 7 in EFGH: velocity 100
 
 ### Moves
 
@@ -336,6 +365,16 @@ Five voices on 3-step cycles against the four. MT carries the acid line; LT and 
 ### Steps
 
 - Added: CH steps 4, 8, 12, 16 in ABEF: PROB 70 %
+- Added: MT steps 7, 15 in AE: velocity 100
+- Added: MT step 11 in BF: velocity 100
+- Added: MT steps 7, 11 in CG: velocity 100
+- Added: MT step 14 in G: ratchet 1/2
+- Added: SD step 7 in ACEG: velocity 100
+- Added: SD step 11 in BF: velocity 100
+- Added: HC step 15 in F: velocity 100
+- Added: LT step 7 in E: velocity 100
+- Added: LT step 11 in F: velocity 100
+- Added: HT step 7 in G: velocity 100
 
 ### Moves
 
@@ -387,6 +426,13 @@ Peak 1: approach · 138 BPM · energy 0.8 · made from 7-06 Senses (140 BPM, kit
 
 - Already there: HT step probability in B (4 steps)
 - Added: RS steps 5, 10 in BD: PROB 60 %
+- Added: CH steps 3, 11 in ABDF: velocity 100
+- Added: CH step 3 in C: velocity 100
+- Added: SD step 7 in GH: velocity 100
+- Added: LT step 3 in CDF: velocity 100
+- Added: LT step 7 in H: velocity 100
+- Added: MT step 15 in ABCDF: velocity 100
+- Added: HT step 15 in BCD: velocity 100
 
 ### Moves
 
@@ -439,6 +485,13 @@ The ride carries a pitched line (tune motion): ride it on its fader.
 ### Steps
 
 - Added: CH steps 14, 16 in CDEFGH: PROB 70 %
+- Added: CH steps 7, 15 in CDEFGH: velocity 100
+- Added: RS step 7 in H: velocity 100
+- Added: SD step 11 in BCDEFGH: velocity 100
+- Added: LT step 3 in BCDEFGH: velocity 100
+- Added: HT step 11 in FGH: velocity 100
+- Added: CC step 11 in H: velocity 100
+- Added: RC step 7 in ABCDEFGH: velocity 100
 
 ### Moves
 
@@ -495,6 +548,19 @@ Toms on 6- and 3-step cycles become a melodic polyrhythm: kalimba, mallet and ud
 ### Steps
 
 - Added: CH step 15 in ABCDEFGH: PROB 70 %
+- Added: CH step 7 in ABCDEFGH: velocity 100
+- Added: RS step 15 in DH: velocity 100
+- Added: LT step 7 in ADEH: velocity 100
+- Added: LT step 15 in BF: velocity 100
+- Added: LT step 11 in CG: velocity 100
+- Added: MT step 11 in ADEH: velocity 100
+- Added: MT step 7 in BF: velocity 100
+- Added: MT step 15 in CG: velocity 100
+- Added: HT step 15 in AE: velocity 100
+- Added: HT step 11 in BF: velocity 100
+- Added: HT step 7 in CG: velocity 100
+- Added: HT step 3 in DH: velocity 100
+- Added: CC step 15 in ABCDEFGH: velocity 100
 
 ### Moves
 
@@ -548,6 +614,12 @@ Rolling toms under a straight four. Saturated kit; the open hat is the push.
 
 - Already there: CH 1/2 ratchets in A B C D E G F2 (7 steps)
 - Added: OH steps 4, 8, 12, 16 in ABCDE: PROB 70 %
+- Added: CH steps 7, 15 in ABCDEG: velocity 100
+- Added: RS steps 3, 15 in DEF: velocity 100
+- Added: LT step 7 in BCDEFGH: velocity 100
+- Added: MT step 7 in BCDEFGH: velocity 100
+- Added: HT step 3 in CDF: velocity 100
+- Added: RC step 3 in ABCDE: velocity 100
 
 ### Moves
 
@@ -606,6 +678,13 @@ HT carries an acid line, MT answers on a 3-step cycle. Lo-fi hats, metal on the 
 
 - Already there: CH 1/2 ratchets in F1 (2 steps)
 - Added: CH steps 3, 11 in ABCDEFGH: PROB 70 %
+- Added: HT steps 7, 11 in ACEG: velocity 100
+- Added: HT steps 3, 15 in BDFH: velocity 100
+- Added: HT step 12 in H: ratchet 1/2
+- Added: SD step 15 in H: velocity 100
+- Added: MT step 7 in ACEG: velocity 100
+- Added: MT step 15 in BDFH: velocity 100
+- Added: RC step 7 in ABCEFG: velocity 100
 
 ### Moves
 
@@ -658,6 +737,11 @@ The densest groove of the set: a rolling 16th rim over a hard four. Industrial s
 ### Steps
 
 - Added: RS steps 2, 6, 10, 14 in ABCDEFG: PROB 70 %
+- Added: CH steps 7, 15 in DEFGH: velocity 100
+- Added: RS steps 7, 15 in ABCDEFG: velocity 100
+- Added: SD step 7 in BEF: velocity 100
+- Added: HT step 3 in CDEF: velocity 100
+- Added: RC step 7 in EFGH: velocity 100
 
 ### Moves
 
@@ -715,6 +799,7 @@ Ambient acid: the MT line in a long reverb over a pad. A short rest after the ha
 ### Steps
 
 - Added: CH steps 2, 6, 10, 14 in ABCDG: PROB 70 %
+- Added: MT steps 11, 15 in CDEF: velocity 100
 
 ### Moves
 
@@ -769,6 +854,9 @@ Peak 2: approach · 144 BPM · energy 0.85 · made from 4-12 The Lady (147 BPM, 
 ### Steps
 
 - Added: CH steps 2, 6, 10, 14 in DFGH: PROB 70 %
+- Added: MT step 11 in ABCDEFGH: velocity 100
+- Added: LT step 15 in BC: velocity 100
+- Added: LT step 7 in DFGH: velocity 100
 
 ### Moves
 
@@ -821,6 +909,12 @@ The hardest kit of the set: saturated kick, industrial snare, metal on the rim, 
 ### Steps
 
 - Added: RS steps 10, 12, 14 in CDEFGH: PROB 70 %
+- Added: CH step 11 in EFGH: velocity 100
+- Added: RS steps 11, 15 in CDEFH: velocity 100
+- Added: RS step 11 in G: velocity 100
+- Added: SD step 15 in F: velocity 100
+- Added: MT step 15 in BCDEF: velocity 100
+- Added: RC step 7 in DEFGH: velocity 100
 
 ### Moves
 
@@ -877,6 +971,11 @@ Closer: release · 142 BPM · energy 0.65 · made from 7-07 Camp Techno (146 BPM
 - Already there: CH 1/4 ratchets in F1 F2 (8 steps)
 - Already there: OH step probability in C (2 steps)
 - Added: CH steps 9, 10 in BC: PROB 70 %
+- Added: CH steps 3, 15 in BC: velocity 100
+- Added: LT step 7 in ABDGH: velocity 100
+- Added: LT step 3 in C: velocity 100
+- Added: HT step 15 in H: velocity 100
+- Added: RC step 15 in D: velocity 100
 
 ### Moves
 
@@ -933,6 +1032,12 @@ Closer: light outro · 138 BPM · energy 0.3 · made from 7-14 Ghosted (130 BPM,
 - Already there: SD step probability in C D E F (4 steps)
 - Already there: HT 1/2 ratchets in F1 (1 step)
 - Added: OH steps 7, 15 in ABCDFH: PROB 70 %
+- Added: CH step 7 in DH: velocity 100
+- Added: LT step 7 in BDFG: velocity 100
+- Added: LT step 15 in H: velocity 100
+- Added: MT step 7 in BDEF: velocity 100
+- Added: HT step 15 in A: velocity 100
+- Added: HT step 7 in BEF: velocity 100
 
 ### Moves
 

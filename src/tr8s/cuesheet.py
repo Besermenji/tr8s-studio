@@ -208,12 +208,36 @@ SETUP = [
     "**MOTION [ON]** lit: several sources carry recorded knob motion, which is silent with MOTION off.",
     "AUTO FILL IN: knob on **16**, leave [ON] off until a pattern says so. FILL IN type: the pattern's own fills.",
     "Faders: start everything at about 3/4. Level is the fader's alone; nothing written to the machine sets it.",
-    "CTRL map (hold CTRL SELECT, press the instrument, choose with VALUE; it is the machine's, so once covers "
-    "every pattern): **MT and HT = filter cutoff** (the acid voices), **SD and RS = delay send** (throws), "
-    "**CH and OH = decay or the INST FX**, **CC and RC = reverb send**. Then WRITE → System. [check] the "
-    "exact parameter names in the panel's list.",
     "Know your rescue moves: **MUTE + CLEAR** clears every mute; **SHIFT + TEMPO** moves tempo in 0.1 BPM.",
 ]
+
+CTRL_ROLE_NAMES = {"kick": "kick", "acid": "acid voice", "odd1": "odd-cycle voices", "odd2": "odd-cycle voices",
+                   "light": "light voice", "snare": "snares", "rim": "rims", "cymbal": "cymbals",
+                   "fx": "effects", "hat": "closed hats", "open": "open hats"}
+CTRL_PARAM_NAMES = {"FltCutoff": "filter cutoff", "Attack": "attack", "ReverbSend": "reverb send",
+                    "DelaySend": "delay send"}
+
+
+def ctrl_line(scheme: dict) -> str:
+    """The setup line for a set whose kits carry their own CTRL map (spec `"ctrl": true`),
+    read from the scheme `rework` writes (`rework.ROLE_CTRL`), so the two cannot drift."""
+    def param(p):
+        return CTRL_PARAM_NAMES.get(p, p)
+
+    groups: dict[str, list] = {}
+    for role, want in scheme.items():
+        what = (f"{param(want['ACB'])} on an ACB tone, {param(want['SAMPLE'])} on a sample"
+                if isinstance(want, dict) else param(want))
+        names = groups.setdefault(what, [])
+        name = CTRL_ROLE_NAMES.get(role, role)
+        if name not in names:
+            names.append(name)
+
+    def join(names):
+        return names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1]
+    parts = "; ".join(f"**{join(n)} = {w}**" for w, n in groups.items())
+    return ("CTRL knobs: already set in each kit by `tr8s rework`, nothing to set on the panel: "
+            f"{parts}.")
 
 
 def _mins(bars: int, bpm: float) -> float:
@@ -379,7 +403,11 @@ def render_rework(spec: dict, entries: list, built_on, fm1: dict | None = None) 
            "## Rig", ""] + [f"- {x}" for x in REWORK_RIG]
     if fm1:
         out += [f"- {x}" for x in FM1_RIG]
-    setup = SETUP + (FM1_SETUP if fm1 else [])
+    setup = list(SETUP)
+    if spec.get("ctrl"):
+        from .rework import ROLE_CTRL
+        setup.insert(-1, ctrl_line(ROLE_CTRL))
+    setup += FM1_SETUP if fm1 else []
     out += ["", "## One-time setup on the panel", ""] + [f"{i}. {x}" for i, x in enumerate(setup, 1)]
     if fm1 and fm1.get("before_set"):
         out += ["", "## Before the set", "",
