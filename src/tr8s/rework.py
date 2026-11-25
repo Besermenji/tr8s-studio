@@ -26,7 +26,7 @@ import time
 from pathlib import Path
 
 from .device import DeviceError, check_blob, panel_to_slot, slot_to_panel
-from .kit import CTRL_BASE, CTRL_SEL, REC_STRIDE, TRACKS, Kit, KitError, ctrl_code
+from .kit import CTRL_BASE, CTRL_SEL, INST_FX_TYPES, REC_STRIDE, TRACKS, Kit, KitError, ctrl_code
 from .pattern import PROB_STEP, STEPS, SUB_CODES, VARIATIONS, VELOCITY_MAX, VELOCITY_NORMAL, Pattern
 from .survey import analyse_pattern
 
@@ -341,7 +341,9 @@ def writes(entries: list, kits_only: bool = False, steps_only: bool = False,
         else:
             what = f"copy of kit {e['source_kit_panel']} (from {e['source_panel']})"
         ctrl = ", CTRL knobs by role (CTRL Sel = User)" if e.get("ctrl") and e.get("kit_design") else ""
-        w.append(f"kit {e['kit_panel']}: {what}; named {e['name']!r}, colours by role{ctrl}")
+        fx = "".join(f", {i} INST FX from kit {t['fx_from']['kit']}/{t['fx_from']['inst']}"
+                     for i, t in (e.get("kit_design") or {}).items() if t.get("fx_from"))
+        w.append(f"kit {e['kit_panel']}: {what}; named {e['name']!r}, colours by role{ctrl}{fx}")
     if kits_only:
         return w + ["no pattern content is written (--kits-only)"]
     w += [f"pattern {e['panel']}: copy of {e['source_panel']} {e['source_name']!r}, named "
@@ -644,7 +646,8 @@ def patch_kit(current: Kit, designed: Kit, design: dict, ctrl: bool = False) -> 
     design; an instrument whose tone changes takes the designed record (its fader level kept); one
     that keeps its tone gets only the spec's fields (tune, decay, pan, sends). With `ctrl`, CTRL Sel
     and the per-instrument CTRL assignments come from the design too. Everything else stays as the
-    machine holds it: LFO, INST FX, sample parameters, whatever was set on the panel.
+    machine holds it: LFO, INST FX, sample parameters, whatever was set on the panel. An
+    instrument whose design names `fx_from` takes the designed INST FX block as well.
     Returns (kit, what changed).
     """
     k = current.copy()
@@ -657,6 +660,9 @@ def patch_kit(current: Kit, designed: Kit, design: dict, ctrl: bool = False) -> 
         k.set_color(inst, designed.color(inst))
         if inst not in (design or {}):
             continue
+        if design[inst].get("fx_from") and k.inst_fx(inst) != designed.inst_fx(inst):
+            k.set_inst_fx(inst, designed.inst_fx(inst))
+            changed.append(f"{inst} INST FX")
         if k.get(inst, "tone") != designed.get(inst, "tone"):
             o = Kit.record_offset(inst)
             level = k.raw[o + 4]
@@ -760,10 +766,30 @@ def design_kits(spec: dict, entries: list, survey_dir) -> dict:
             continue
         design = {i: {**defaults, **v} for i, v in e["kit_design"].items()}
         out[e["index"]] = design_kit(base, donors, design, tones, e["name"], e["colours"])
+        for inst, v in design.items():
+            if v.get("fx_from"):
+                out[e["index"]][1].append(apply_fx_from(out[e["index"]][0], inst, v["fx_from"], d,
+                                                        e["name"]))
         if e.get("ctrl"):
             k, notes = out[e["index"]]
             notes.extend(apply_ctrl(k, e["roles"], tones, e["name"]))
     return out
+
+
+def apply_fx_from(k: Kit, inst: str, src: dict, survey_dir, name: str = "") -> str:
+    """Copy a donor instrument's whole INST FX block into `k`. `src` is
+    {"kit": panel kit number, "inst": "LT"}, read from the survey's kit file."""
+    if not isinstance(src, dict) or set(src) != {"kit", "inst"} or src["inst"] not in TRACKS \
+            or not isinstance(src["kit"], int) or not 1 <= src["kit"] <= 128:
+        raise ReworkError(f"{name}/{inst}: fx_from is {{\"kit\": 1-128, \"inst\": one of {TRACKS}}}")
+    f = Path(survey_dir) / f"kit_{src['kit'] - 1:03d}.bin"
+    if not f.exists():
+        raise ReworkError(f"{name}/{inst}: no survey read of kit {src['kit']} at {f}")
+    donor = Kit.from_bytes(f.read_bytes())
+    block = donor.inst_fx(src["inst"])
+    k.set_inst_fx(inst, block)
+    kind = INST_FX_TYPES[block[0]] if block[0] < len(INST_FX_TYPES) else f"type {block[0]}"
+    return f"{inst} INST FX {kind} from kit {src['kit']} {donor.name.strip()}/{src['inst']}"
 
 
 def apply_ctrl(k: Kit, roles: dict, tones: dict, name: str = "", scheme: dict | None = None) -> list:

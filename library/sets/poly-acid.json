@@ -18,7 +18,7 @@
    "energy": 0.25,
    "label": "WARM-UP",
    "role": "Warm-up: light entry",
-   "notes": "Dub opening: the rim's 3-cycle and the kalimba throw into the delay. The bass voice (MT) is there from bar 1: keep its filter almost shut.",
+   "notes": "Dub opening: the rim's 3-cycle and the kalimba throw into the delay. The bass voice (MT) is there from bar 1: keep its filter almost shut. Accents (#52, #55, #56): velocity 100 on a few off-beats in every slot except this one (127 was too loud, 2026-11-25); ratchets in 8-05 G and 8-10 H.",
    "clear_ctrl": [
     "SD",
     "LT",
@@ -37,6 +37,36 @@
       15
      ],
      "prob": 60
+    },
+    {
+     "vars": "ACEG",
+     "inst": "MT",
+     "step": 15,
+     "velocity": 80
+    },
+    {
+     "vars": "ACEG",
+     "inst": "SD",
+     "step": 15,
+     "velocity": 80
+    },
+    {
+     "vars": "BDFH",
+     "inst": "SD",
+     "step": 7,
+     "velocity": 80
+    },
+    {
+     "vars": "ACEG",
+     "inst": "LT",
+     "step": 15,
+     "velocity": 80
+    },
+    {
+     "vars": "ACEG",
+     "inst": "HT",
+     "step": 15,
+     "velocity": 80
     }
    ],
    "kit": {
@@ -56,7 +86,11 @@
     "MT": {
      "tone": "Deep SH Bass",
      "decay": 110,
-     "reverb": 40
+     "reverb": 40,
+     "fx_from": {
+      "kit": 77,
+      "inst": "LT"
+     }
     },
     "HT": {
      "tone": "Kalimba Mid",
@@ -202,6 +236,48 @@
       7
      ],
      "prob": 70
+    },
+    {
+     "vars": "ABCD",
+     "inst": "OH",
+     "steps": [
+      7,
+      15
+     ],
+     "velocity": 100
+    },
+    {
+     "vars": "ABD",
+     "inst": "RS",
+     "step": 7,
+     "velocity": 100
+    },
+    {
+     "vars": "GH",
+     "inst": "RS",
+     "steps": [
+      3,
+      7
+     ],
+     "velocity": 100
+    },
+    {
+     "vars": "FGH",
+     "inst": "SD",
+     "step": 7,
+     "velocity": 100
+    },
+    {
+     "vars": "EF",
+     "inst": "LT",
+     "step": 7,
+     "velocity": 100
+    },
+    {
+     "vars": "B",
+     "inst": "MT",
+     "step": 15,
+     "velocity": 100
     }
    ],
    "master_prob": 20
@@ -306,6 +382,51 @@
       7
      ],
      "prob": 60
+    },
+    {
+     "vars": "B",
+     "inst": "CH",
+     "step": 7,
+     "velocity": 100
+    },
+    {
+     "vars": "F",
+     "inst": "CH",
+     "steps": [
+      3,
+      15
+     ],
+     "velocity": 100
+    },
+    {
+     "vars": "BC",
+     "inst": "RS",
+     "step": 7,
+     "velocity": 100
+    },
+    {
+     "vars": "C",
+     "inst": "SD",
+     "step": 7,
+     "velocity": 100
+    },
+    {
+     "vars": "BCGH",
+     "inst": "LT",
+     "step": 3,
+     "velocity": 100
+    },
+    {
+     "vars": "DEF",
+     "inst": "MT",
+     "step": 15,
+     "velocity": 100
+    },
+    {
+     "vars": "G",
+     "inst": "CC",
+     "step": 11,
+     "velocity": 100
     }
    ]
   },
@@ -316,7 +437,7 @@
    "energy": 0.55,
    "label": "ACID IN",
    "role": "Build: first acid",
-   "notes": "The acid line is on HT (yellow) in this one. The CC track runs 16ths: a ride cup, not a crash.",
+   "notes": "The acid line is on HT (yellow) in this one. The CC track runs 16ths: a ride cup, not a crash. DRIVE INST FX (#53) on the acid voice in all six acid slots, copied from factory kit 77 EXPCID; heard 2026-11-25, kept.",
    "clear_ctrl": [
     "HC"
    ],
@@ -341,7 +462,11 @@
     "HT": {
      "tone": "Deep SH Bass",
      "decay": 110,
-     "reverb": 30
+     "reverb": 30,
+     "fx_from": {
+      "kit": 77,
+      "inst": "LT"
+     }
     },
     "RS": {
      "tone": "707 Rim Shot/CB",
@@ -393,6 +518,48 @@
       14
      ],
      "prob": 60
+    },
+    {
+     "vars": "ABC",
+     "inst": "HT",
+     "step": 3,
+     "velocity": 100
+    },
+    {
+     "vars": "EFGH",
+     "inst": "HT",
+     "step": 7,
+     "velocity": 100
+    },
+    {
+     "vars": "CD",
+     "inst": "HC",
+     "step": 3,
+     "velocity": 100
+    },
+    {
+     "vars": "EFGH",
+     "inst": "HC",
+     "step": 15,
+     "velocity": 100
+    },
+    {
+     "vars": "FGH",
+     "inst": "LT",
+     "step": 7,
+     "velocity": 100
+    },
+    {
+     "vars": "EFGH",
+     "inst": "MT",
+     "step": 7,
+     "velocity": 100
+    },
+    {
+     "vars": "EFGH",
+     "inst": "CC",
+     "step": 7,
+     "velocity": 100
     }
    ]
   },
@@ -429,7 +596,11 @@
     "MT": {
      "tone": "Prog.Trance Bass",
      "decay": 110,
-     "reverb": 30
+     "reverb": 30,
+     "fx_from": {
+      "kit": 77,
+      "inst": "LT"
+     }
     },
     "HT": {
      "tone": "Modular Tom",
@@ -486,6 +657,72 @@
       16
      ],
      "prob": 70
+    },
+    {
+     "vars": "AE",
+     "inst": "MT",
+     "steps": [
+      7,
+      15
+     ],
+     "velocity": 100
+    },
+    {
+     "vars": "BF",
+     "inst": "MT",
+     "step": 11,
+     "velocity": 100
+    },
+    {
+     "vars": "CG",
+     "inst": "MT",
+     "steps": [
+      7,
+      11
+     ],
+     "velocity": 100
+    },
+    {
+     "vars": "G",
+     "inst": "MT",
+     "step": 14,
+     "sub": "1/2"
+    },
+    {
+     "vars": "ACEG",
+     "inst": "SD",
+     "step": 7,
+     "velocity": 100
+    },
+    {
+     "vars": "BF",
+     "inst": "SD",
+     "step": 11,
+     "velocity": 100
+    },
+    {
+     "vars": "F",
+     "inst": "HC",
+     "step": 15,
+     "velocity": 100
+    },
+    {
+     "vars": "E",
+     "inst": "LT",
+     "step": 7,
+     "velocity": 100
+    },
+    {
+     "vars": "F",
+     "inst": "LT",
+     "step": 11,
+     "velocity": 100
+    },
+    {
+     "vars": "G",
+     "inst": "HT",
+     "step": 7,
+     "velocity": 100
     }
    ]
   },
@@ -582,6 +819,51 @@
       10
      ],
      "prob": 60
+    },
+    {
+     "vars": "ABDF",
+     "inst": "CH",
+     "steps": [
+      3,
+      11
+     ],
+     "velocity": 100
+    },
+    {
+     "vars": "C",
+     "inst": "CH",
+     "step": 3,
+     "velocity": 100
+    },
+    {
+     "vars": "GH",
+     "inst": "SD",
+     "step": 7,
+     "velocity": 100
+    },
+    {
+     "vars": "CDF",
+     "inst": "LT",
+     "step": 3,
+     "velocity": 100
+    },
+    {
+     "vars": "H",
+     "inst": "LT",
+     "step": 7,
+     "velocity": 100
+    },
+    {
+     "vars": "ABCDF",
+     "inst": "MT",
+     "step": 15,
+     "velocity": 100
+    },
+    {
+     "vars": "BCD",
+     "inst": "HT",
+     "step": 15,
+     "velocity": 100
     }
    ],
    "master_prob": 20
@@ -685,6 +967,51 @@
       16
      ],
      "prob": 70
+    },
+    {
+     "vars": "CDEFGH",
+     "inst": "CH",
+     "steps": [
+      7,
+      15
+     ],
+     "velocity": 100
+    },
+    {
+     "vars": "H",
+     "inst": "RS",
+     "step": 7,
+     "velocity": 100
+    },
+    {
+     "vars": "BCDEFGH",
+     "inst": "SD",
+     "step": 11,
+     "velocity": 100
+    },
+    {
+     "vars": "BCDEFGH",
+     "inst": "LT",
+     "step": 3,
+     "velocity": 100
+    },
+    {
+     "vars": "FGH",
+     "inst": "HT",
+     "step": 11,
+     "velocity": 100
+    },
+    {
+     "vars": "H",
+     "inst": "CC",
+     "step": 11,
+     "velocity": 100
+    },
+    {
+     "vars": "ABCDEFGH",
+     "inst": "RC",
+     "step": 7,
+     "velocity": 100
     }
    ],
    "master_prob": 20
@@ -773,6 +1100,84 @@
       15
      ],
      "prob": 70
+    },
+    {
+     "vars": "ABCDEFGH",
+     "inst": "CH",
+     "step": 7,
+     "velocity": 100
+    },
+    {
+     "vars": "DH",
+     "inst": "RS",
+     "step": 15,
+     "velocity": 100
+    },
+    {
+     "vars": "ADEH",
+     "inst": "LT",
+     "step": 7,
+     "velocity": 100
+    },
+    {
+     "vars": "BF",
+     "inst": "LT",
+     "step": 15,
+     "velocity": 100
+    },
+    {
+     "vars": "CG",
+     "inst": "LT",
+     "step": 11,
+     "velocity": 100
+    },
+    {
+     "vars": "ADEH",
+     "inst": "MT",
+     "step": 11,
+     "velocity": 100
+    },
+    {
+     "vars": "BF",
+     "inst": "MT",
+     "step": 7,
+     "velocity": 100
+    },
+    {
+     "vars": "CG",
+     "inst": "MT",
+     "step": 15,
+     "velocity": 100
+    },
+    {
+     "vars": "AE",
+     "inst": "HT",
+     "step": 15,
+     "velocity": 100
+    },
+    {
+     "vars": "BF",
+     "inst": "HT",
+     "step": 11,
+     "velocity": 100
+    },
+    {
+     "vars": "CG",
+     "inst": "HT",
+     "step": 7,
+     "velocity": 100
+    },
+    {
+     "vars": "DH",
+     "inst": "HT",
+     "step": 3,
+     "velocity": 100
+    },
+    {
+     "vars": "ABCDEFGH",
+     "inst": "CC",
+     "step": 15,
+     "velocity": 100
     }
    ],
    "master_prob": -20
@@ -868,6 +1273,48 @@
       16
      ],
      "prob": 70
+    },
+    {
+     "vars": "ABCDEG",
+     "inst": "CH",
+     "steps": [
+      7,
+      15
+     ],
+     "velocity": 100
+    },
+    {
+     "vars": "DEF",
+     "inst": "RS",
+     "steps": [
+      3,
+      15
+     ],
+     "velocity": 100
+    },
+    {
+     "vars": "BCDEFGH",
+     "inst": "LT",
+     "step": 7,
+     "velocity": 100
+    },
+    {
+     "vars": "BCDEFGH",
+     "inst": "MT",
+     "step": 7,
+     "velocity": 100
+    },
+    {
+     "vars": "CDF",
+     "inst": "HT",
+     "step": 3,
+     "velocity": 100
+    },
+    {
+     "vars": "ABCDE",
+     "inst": "RC",
+     "step": 3,
+     "velocity": 100
     }
    ],
    "master_prob": 30
@@ -910,7 +1357,11 @@
     "HT": {
      "tone": "Deep SH Bass",
      "decay": 100,
-     "reverb": 20
+     "reverb": 20,
+     "fx_from": {
+      "kit": 77,
+      "inst": "LT"
+     }
     },
     "RS": {
      "tone": "909 Rim Shot",
@@ -960,6 +1411,54 @@
       11
      ],
      "prob": 70
+    },
+    {
+     "vars": "ACEG",
+     "inst": "HT",
+     "steps": [
+      7,
+      11
+     ],
+     "velocity": 100
+    },
+    {
+     "vars": "BDFH",
+     "inst": "HT",
+     "steps": [
+      3,
+      15
+     ],
+     "velocity": 100
+    },
+    {
+     "vars": "H",
+     "inst": "HT",
+     "step": 12,
+     "sub": "1/2"
+    },
+    {
+     "vars": "H",
+     "inst": "SD",
+     "step": 15,
+     "velocity": 100
+    },
+    {
+     "vars": "ACEG",
+     "inst": "MT",
+     "step": 7,
+     "velocity": 100
+    },
+    {
+     "vars": "BDFH",
+     "inst": "MT",
+     "step": 15,
+     "velocity": 100
+    },
+    {
+     "vars": "ABCEFG",
+     "inst": "RC",
+     "step": 7,
+     "velocity": 100
     }
    ],
    "master_prob": 20
@@ -1057,6 +1556,42 @@
       14
      ],
      "prob": 70
+    },
+    {
+     "vars": "DEFGH",
+     "inst": "CH",
+     "steps": [
+      7,
+      15
+     ],
+     "velocity": 100
+    },
+    {
+     "vars": "ABCDEFG",
+     "inst": "RS",
+     "steps": [
+      7,
+      15
+     ],
+     "velocity": 100
+    },
+    {
+     "vars": "BEF",
+     "inst": "SD",
+     "step": 7,
+     "velocity": 100
+    },
+    {
+     "vars": "CDEF",
+     "inst": "HT",
+     "step": 3,
+     "velocity": 100
+    },
+    {
+     "vars": "EFGH",
+     "inst": "RC",
+     "step": 7,
+     "velocity": 100
     }
    ]
   },
@@ -1092,7 +1627,11 @@
      "tone": "Deep SH Bass",
      "decay": 120,
      "reverb": 90,
-     "delay": 50
+     "delay": 50,
+     "fx_from": {
+      "kit": 77,
+      "inst": "LT"
+     }
     },
     "HT": {
      "tone": "Kalimba High",
@@ -1152,6 +1691,15 @@
       14
      ],
      "prob": 70
+    },
+    {
+     "vars": "CDEF",
+     "inst": "MT",
+     "steps": [
+      11,
+      15
+     ],
+     "velocity": 100
     }
    ],
    "master_prob": -30
@@ -1180,7 +1728,11 @@
     "MT": {
      "tone": "Prog.Trance Bass",
      "decay": 105,
-     "reverb": 30
+     "reverb": 30,
+     "fx_from": {
+      "kit": 77,
+      "inst": "LT"
+     }
     },
     "HT": {
      "tone": "Modular Tom",
@@ -1235,6 +1787,24 @@
       14
      ],
      "prob": 70
+    },
+    {
+     "vars": "ABCDEFGH",
+     "inst": "MT",
+     "step": 11,
+     "velocity": 100
+    },
+    {
+     "vars": "BC",
+     "inst": "LT",
+     "step": 15,
+     "velocity": 100
+    },
+    {
+     "vars": "DFGH",
+     "inst": "LT",
+     "step": 7,
+     "velocity": 100
     }
    ],
    "master_prob": 20
@@ -1333,6 +1903,45 @@
       14
      ],
      "prob": 70
+    },
+    {
+     "vars": "EFGH",
+     "inst": "CH",
+     "step": 11,
+     "velocity": 100
+    },
+    {
+     "vars": "CDEFH",
+     "inst": "RS",
+     "steps": [
+      11,
+      15
+     ],
+     "velocity": 100
+    },
+    {
+     "vars": "G",
+     "inst": "RS",
+     "step": 11,
+     "velocity": 100
+    },
+    {
+     "vars": "F",
+     "inst": "SD",
+     "step": 15,
+     "velocity": 100
+    },
+    {
+     "vars": "BCDEF",
+     "inst": "MT",
+     "step": 15,
+     "velocity": 100
+    },
+    {
+     "vars": "DEFGH",
+     "inst": "RC",
+     "step": 7,
+     "velocity": 100
     }
    ],
    "master_prob": 30
@@ -1432,6 +2041,39 @@
       10
      ],
      "prob": 70
+    },
+    {
+     "vars": "BC",
+     "inst": "CH",
+     "steps": [
+      3,
+      15
+     ],
+     "velocity": 100
+    },
+    {
+     "vars": "ABDGH",
+     "inst": "LT",
+     "step": 7,
+     "velocity": 100
+    },
+    {
+     "vars": "C",
+     "inst": "LT",
+     "step": 3,
+     "velocity": 100
+    },
+    {
+     "vars": "H",
+     "inst": "HT",
+     "step": 15,
+     "velocity": 100
+    },
+    {
+     "vars": "D",
+     "inst": "RC",
+     "step": 15,
+     "velocity": 100
     }
    ],
    "master_prob": -10
@@ -1517,6 +2159,42 @@
       15
      ],
      "prob": 70
+    },
+    {
+     "vars": "DH",
+     "inst": "CH",
+     "step": 7,
+     "velocity": 100
+    },
+    {
+     "vars": "BDFG",
+     "inst": "LT",
+     "step": 7,
+     "velocity": 100
+    },
+    {
+     "vars": "H",
+     "inst": "LT",
+     "step": 15,
+     "velocity": 100
+    },
+    {
+     "vars": "BDEF",
+     "inst": "MT",
+     "step": 7,
+     "velocity": 100
+    },
+    {
+     "vars": "A",
+     "inst": "HT",
+     "step": 15,
+     "velocity": 100
+    },
+    {
+     "vars": "BEF",
+     "inst": "HT",
+     "step": 7,
+     "velocity": 100
     }
    ],
    "master_prob": -20

@@ -451,6 +451,24 @@ Ranked by how much time each cost.
 7. **[V] Level is device-owned**, and **[V] kit writes are not live** while
    pattern writes are.
 
+## Kit tail +960: INST FX
+
+**[M]** The 352 bytes after the instrument records are one 32-byte block per
+instrument, BD..RC, at `960 + i*32` (2026-11-25, #53). Block byte `+0` is the INST FX type and
+fits the Reference Manual's list order (p.34): `0` THRU, `1` HPF, `2` LPF, `3` LPF/HPF,
+`4` H BOOST, `5` L BOOST, `6` L/H BOOST, `7` ISOLATOR, `8` TRANSIENT, `9` COMPRESSOR,
+`10` DRIVE, `11` COMP+DRV, `12` CRUSHER, `13` SATURATOR, `14` FREQ SHIFT, `15` RING MOD,
+`16` SPREAD. The evidence:
+- The Golab hard-techno kits hold `13` on every instrument.
+- The factory drum kits mostly hold `10`.
+- The factory acid kits hold `0` on the kick.
+- The blank DEFAULT kit holds `12` with all parameters zero and sounds clean, which this order doesn't explain.
+
+The parameter bytes (`+5..+22`) are not mapped, and `+23..+31` are always zero.
+[V] Copying a whole block from factory kit 77 "EXPCID" (its LT, type `10`) onto the acid
+voice of six set kits gave a drive the user kept. `rework` does this with a kit design's
+`fx_from`.
+
 ## Kit record: the unidentified bytes, swept
 
 All 43 unidentified offsets in a kit instrument record were swept across nine

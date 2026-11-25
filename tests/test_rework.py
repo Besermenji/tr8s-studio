@@ -477,3 +477,25 @@ def test_patch_kit_copies_the_ctrl_map_only_when_asked():
     assert k.ctrl_sel == 0 and k.ctrl("MT") == 0 and what == []
     k, what = rework.patch_kit(current, designed, {}, ctrl=True)
     assert k.ctrl_sel == 6 and k.ctrl("MT") == 18 and what == ["CTRL map"]
+
+
+def test_fx_from_copies_a_donor_inst_fx_block_and_patch_kit_carries_only_named_ones(tmp_path):
+    donor = Kit.from_bytes(load_fixture_kit())
+    block = bytes([10, 0, 0, 0, 0, 128, 128, 40, 8, 47, 3]) + bytes(21)   # type 10 DRIVE
+    donor.set_inst_fx("LT", block)
+    donor.name = "EXPCID"
+    (tmp_path / "kit_076.bin").write_bytes(donor.to_bytes())           # panel kit 77
+    current = Kit.from_bytes(load_fixture_kit())
+    current.set_inst_fx("CH", bytes([1]) + bytes(31))                   # an HPF set on the panel
+    designed = current.copy()
+    designed.set_inst_fx("CH", bytes(32))
+    note = rework.apply_fx_from(designed, "HT", {"kit": 77, "inst": "LT"}, tmp_path, "T")
+    assert designed.inst_fx("HT") == block and note == "HT INST FX DRIVE from kit 77 EXPCID/LT"
+    k, what = rework.patch_kit(current, designed, {"HT": {"tone": "x", "fx_from": {"kit": 77, "inst": "LT"}},
+                                                   "CH": {"tone": "y"}})
+    assert k.inst_fx("HT") == block and "HT INST FX" in what
+    assert k.inst_fx("CH")[0] == 1                                      # not named: the panel's stays
+    with pytest.raises(rework.ReworkError, match="fx_from"):
+        rework.apply_fx_from(designed, "HT", {"kit": 77}, tmp_path, "T")
+    with pytest.raises(rework.ReworkError, match="no survey read"):
+        rework.apply_fx_from(designed, "HT", {"kit": 5, "inst": "LT"}, tmp_path, "T")

@@ -89,6 +89,16 @@ CTRL_SAMPLE = {"Coarse": 9, "Rate": 10, "Spread": 11, "BitReduce": 12, "Attack":
                "HoldMode": 14, "HoldTime": 15, "HoldStep": 16, "FltType": 17,
                "FltCutoff": 18, "FltReso": 19, "FltEnvAtk": 20}
 
+# INST FX (docs/PROTOCOL.md, "Kit tail +960: INST FX"). **[M]** One 32-byte block per
+# instrument after the records, BD..RC. Block byte 0 is the type and fits the manual's
+# list order (Reference Manual p.34: 0 THRU .. 10 DRIVE .. 13 SATURATOR .. 16 SPREAD);
+# the parameter bytes are not mapped, so a block is copied whole from a donor kit.
+INST_FX_BASE = 960
+INST_FX_STRIDE = 32
+INST_FX_TYPES = ["THRU", "HPF", "LPF", "LPF/HPF", "H BOOST", "L BOOST", "L/H BOOST",
+                 "ISOLATOR", "TRANSIENT", "COMPRESSOR", "DRIVE", "COMP+DRV", "CRUSHER",
+                 "SATURATOR", "FREQ SHIFT", "RING MOD", "SPREAD"]
+
 
 def ctrl_code(name: str, tone_type: str, inst: str) -> int:
     """The assignment code for a CTRL parameter on a tone of this type ("ACB" or
@@ -200,6 +210,17 @@ class Kit:
         if not 0 <= int(code) <= 127:
             raise KitError("a CTRL assignment code is 0..127")
         self.raw[CTRL_BASE + TRACKS.index(inst)] = int(code)
+
+    def inst_fx(self, inst: str) -> bytes:
+        """The instrument's 32-byte INST FX block (see INST_FX_BASE)."""
+        o = INST_FX_BASE + TRACKS.index(inst) * INST_FX_STRIDE
+        return bytes(self.raw[o:o + INST_FX_STRIDE])
+
+    def set_inst_fx(self, inst: str, block: bytes):
+        if len(block) != INST_FX_STRIDE:
+            raise KitError(f"an INST FX block is {INST_FX_STRIDE} bytes")
+        o = INST_FX_BASE + TRACKS.index(inst) * INST_FX_STRIDE
+        self.raw[o:o + INST_FX_STRIDE] = block
 
     def has_sample_params(self, inst: str, minimum: int = 4) -> bool:
         """
