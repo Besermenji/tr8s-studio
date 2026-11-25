@@ -18,7 +18,7 @@
    "energy": 0.25,
    "label": "WARM-UP",
    "role": "Warm-up: light entry",
-   "notes": "Dub opening: the rim's 3-cycle and the kalimba throw into the delay. The bass voice (MT) is there from bar 1: keep its filter almost shut. Accents (#52, #55, #56): velocity 100 on a few off-beats in every slot except this one (127 was too loud, 2026-11-25); ratchets in 8-05 G and 8-10 H.",
+   "notes": "Dub opening: the rim's 3-cycle and the kalimba throw into the delay. The bass voice (MT) is there from bar 1: keep its filter almost shut. Accents (#52, #55, #56): velocity 100 on a few off-beats in every slot except this one (127 was too loud, 2026-11-25); ratchets in 8-05 G and 8-10 H. RS (#47): softer and sparser here (velocity 60, PROB 50 on the 1); every other slot keeps its rim, heard 2026-11-25.",
    "clear_ctrl": [
     "SD",
     "LT",
@@ -37,6 +37,40 @@
       15
      ],
      "prob": 60
+    },
+    {
+     "vars": "ACEG",
+     "inst": "RS",
+     "step": 1,
+     "prob": 50
+    },
+    {
+     "vars": "ACEG",
+     "inst": "RS",
+     "steps": [
+      1,
+      15
+     ],
+     "velocity": 60
+    },
+    {
+     "vars": "BH",
+     "inst": "RS",
+     "steps": [
+      9,
+      13
+     ],
+     "velocity": 60
+    },
+    {
+     "vars": "DF",
+     "inst": "RS",
+     "steps": [
+      9,
+      12,
+      15
+     ],
+     "velocity": 60
     },
     {
      "vars": "ACEG",
@@ -330,7 +364,7 @@
     },
     "CC": {
      "tone": "909 Crash Cymbal",
-     "decay": 140
+     "decay": 90
     },
     "RC": {
      "tone": "909 Ride Cymbal",
